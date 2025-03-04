@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import SensorCard, { SensorData } from "./SensorCard";
 import TrackingMap, { TrackingObject } from "./TrackingMap";
 import { 
@@ -18,7 +19,7 @@ import {
   sendCommandToSensor 
 } from "@/services/sensorService";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Settings } from "lucide-react";
 
 const Dashboard: React.FC = () => {
   const [sensors, setSensors] = useState<SensorData[]>([]);
@@ -123,15 +124,28 @@ const Dashboard: React.FC = () => {
               Real-time dashboard for sensor data and object tracking
             </PageSubtitle>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2"
-            onClick={handleRefresh}
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2"
+              onClick={handleRefresh}
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>Refresh</span>
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="gap-2"
+              asChild
+            >
+              <Link to="/admin">
+                <Settings className="h-4 w-4" />
+                <span>Admin</span>
+              </Link>
+            </Button>
+          </div>
         </div>
       </PageHeader>
 
@@ -167,8 +181,7 @@ const Dashboard: React.FC = () => {
                   key={sensor.id} 
                   sensor={sensor} 
                   onClick={() => handleSensorClick(sensor)}
-                  className="animate-fade-up"
-                  style={{ animationDelay: `${index * 100 + 200}ms` }}
+                  className={`animate-fade-up [animation-delay:${index * 100 + 200}ms]`}
                 />
               ))
             )}
