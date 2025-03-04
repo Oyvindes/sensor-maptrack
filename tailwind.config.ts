@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				sensor: {
+					'temp': 'hsl(var(--sensor-temp))',
+					'humidity': 'hsl(var(--sensor-humidity))',
+					'battery': 'hsl(var(--sensor-battery))',
+					'proximity': 'hsl(var(--sensor-proximity))',
+					'signal': 'hsl(var(--sensor-signal))',
 				}
 			},
 			borderRadius: {
@@ -84,11 +92,47 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					from: { opacity: '0' },
+					to: { opacity: '1' }
+				},
+				'fade-up': {
+					from: { 
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					to: { 
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'pulse-soft': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.8' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				},
+				'ping-subtle': {
+					'75%, 100%': {
+						transform: 'scale(1.5)',
+						opacity: '0'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.5s ease-out',
+				'fade-up': 'fade-up 0.7s ease-out',
+				'pulse-soft': 'pulse-soft 3s infinite ease-in-out',
+				'float': 'float 6s infinite ease-in-out',
+				'ping-subtle': 'ping-subtle 2s cubic-bezier(0, 0, 0.2, 1) infinite'
+			},
+			backdropBlur: {
+				'xs': '2px',
 			}
 		}
 	},
