@@ -1,120 +1,145 @@
 
-import React, { useState } from "react";
-import { Plus, Folder, MoreVertical } from "lucide-react";
+import React, { useState } from 'react';
+import { SensorFolder, Company } from '@/types/users';
 import { Button } from "@/components/ui/button";
+import { Plus, Folder, Edit, Trash } from "lucide-react";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
-import { SensorFolder } from "@/types/users";
 import { Badge } from "@/components/ui/badge";
-import { SensorData } from "@/components/SensorCard";
-import SensorFolderEditor from "./SensorFolderEditor";
+import SensorFolderEditor from './SensorFolderEditor';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 interface SensorFolderListProps {
   folders: SensorFolder[];
-  sensors: (SensorData & { folderId?: string })[];
-  companyId?: string;
-  onFolderSelect: (folder: SensorFolder) => void;
-  onAddNew: () => void;
-  onSensorSelect: (sensor: SensorData) => void;
+  companies: Company[];
+  selectedCompanyId?: string;
+  onFolderCreate: (folder: Omit<SensorFolder, "id" | "createdAt">) => Promise<void>;
+  onFolderUpdate: (folderId: string, data: Partial<SensorFolder>) => Promise<void>;
+  onFolderSelect?: (folderId: string) => void;
 }
 
-const SensorFolderList: React.FC<SensorFolderListProps> = ({ 
-  folders, 
-  sensors,
-  companyId,
-  onFolderSelect, 
-  onAddNew,
-  onSensorSelect
+const SensorFolderList: React.FC<SensorFolderListProps> = ({
+  folders,
+  companies,
+  selectedCompanyId,
+  onFolderCreate,
+  onFolderUpdate,
+  onFolderSelect
 }) => {
-  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentFolder, setCurrentFolder] = useState<SensorFolder | null>(null);
   
-  // Filter folders by company if a company ID is provided
-  const filteredFolders = companyId 
-    ? folders.filter(folder => folder.companyId === companyId)
+  // Filter folders by selected company if applicable
+  const filteredFolders = selectedCompanyId
+    ? folders.filter(folder => folder.companyId === selectedCompanyId)
     : folders;
-  
-  const toggleFolder = (folderId: string) => {
-    setExpandedFolders(prev => 
-      prev.includes(folderId)
-        ? prev.filter(id => id !== folderId)
-        : [...prev, folderId]
-    );
+
+  const handleAddNew = () => {
+    const newFolder: SensorFolder = {
+      id: `temp-${Date.now()}`,
+      name: "",
+      description: "",
+      companyId: selectedCompanyId || "",
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    setCurrentFolder(newFolder);
+    setIsEditing(true);
   };
-  
+
+  const handleEdit = (folder: SensorFolder) => {
+    setCurrentFolder(folder);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setCurrentFolder(null);
+  };
+
+  const handleSave = async (folder: SensorFolder) => {
+    try {
+      if (folder.id.startsWith('temp-')) {
+        // Creating new folder
+        const { id, createdAt, ...folderData } = folder;
+        await onFolderCreate(folderData);
+      } else {
+        // Updating existing folder
+        const { id, ...updates } = folder;
+        await onFolderUpdate(id, updates);
+      }
+      setIsEditing(false);
+      setCurrentFolder(null);
+    } catch (error) {
+      console.error("Error saving folder:", error);
+      toast.error("Failed to save folder");
+    }
+  };
+
+  const getCompanyName = (companyId: string) => {
+    const company = companies.find(c => c.id === companyId);
+    return company ? company.name : 'Unknown Company';
+  };
+
+  if (isEditing && currentFolder) {
+    return (
+      <SensorFolderEditor
+        folder={currentFolder}
+        companies={companies}
+        onSave={handleSave}
+        onCancel={handleCancel}
+      />
+    );
+  }
+
   return (
     <SectionContainer>
       <div className="flex justify-between items-center mb-4">
         <SectionTitle>Sensor Folders</SectionTitle>
-        <Button 
-          onClick={onAddNew} 
-          size="sm" 
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Folder</span>
+        <Button size="sm" onClick={handleAddNew}>
+          <Plus className="h-4 w-4 mr-1" /> Add Folder
         </Button>
       </div>
-      
-      <div className="grid grid-cols-1 gap-4">
-        {filteredFolders.map(folder => {
-          // Get sensors in this folder
-          const folderSensors = sensors.filter(sensor => sensor.folderId === folder.id);
-          const isExpanded = expandedFolders.includes(folder.id);
-          
-          return (
-            <div 
-              key={folder.id}
-              className="glass-card rounded-lg"
-            >
-              <div 
-                className="p-4 cursor-pointer hover:bg-accent/10 flex justify-between items-center"
-                onClick={() => toggleFolder(folder.id)}
-              >
-                <div className="flex items-center gap-2">
-                  <Folder className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium">{folder.name}</h3>
-                  <Badge variant="outline">{folderSensors.length} sensors</Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onFolderSelect(folder);
-                    }}
-                  >
-                    Edit
-                  </Button>
+
+      {filteredFolders.length === 0 && (
+        <Alert className="mb-4">
+          <AlertTitle>No folders found</AlertTitle>
+          <AlertDescription>
+            {selectedCompanyId 
+              ? "This company doesn't have any sensor folders yet. Create your first folder to organize sensors."
+              : "No folders found. Select a company or create a new folder."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="space-y-2">
+        {filteredFolders.map(folder => (
+          <div
+            key={folder.id}
+            className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
+            onClick={() => onFolderSelect && onFolderSelect(folder.id)}
+          >
+            <div className="flex items-center space-x-3">
+              <Folder className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <div className="font-medium">{folder.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {folder.description || "No description"}
                 </div>
               </div>
-              
-              {isExpanded && folderSensors.length > 0 && (
-                <div className="px-4 pb-4 pt-2 border-t border-border">
-                  <h4 className="text-sm font-medium mb-2">Sensors in this folder:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {folderSensors.map(sensor => (
-                      <div 
-                        key={sensor.id}
-                        className="p-2 rounded-md bg-background hover:bg-accent/10 cursor-pointer text-sm flex justify-between items-center"
-                        onClick={() => onSensorSelect(sensor)}
-                      >
-                        <div>{sensor.name}</div>
-                        <Badge 
-                          variant={
-                            sensor.status === "online" ? "default" : 
-                            sensor.status === "warning" ? "warning" : "secondary"
-                          }
-                        >
-                          {sensor.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          );
-        })}
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">
+                {getCompanyName(folder.companyId)}
+              </Badge>
+              <Button variant="ghost" size="sm" onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(folder);
+              }}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
     </SectionContainer>
   );

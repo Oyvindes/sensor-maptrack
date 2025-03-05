@@ -24,6 +24,13 @@ export const getMockCompanies = (): Company[] => {
       industry: "Energy",
       createdAt: "2023-05-10",
       status: "inactive"
+    },
+    {
+      id: "company-004",
+      name: "Briks",
+      industry: "Technology",
+      createdAt: "2023-10-15",
+      status: "active"
     }
   ];
 };
@@ -78,6 +85,16 @@ export const getMockUsers = (): User[] => {
       role: "admin",
       companyId: "company-003",
       lastLogin: "2023-08-13T16:30:00",
+      status: "active"
+    },
+    {
+      id: "user-006",
+      name: "Oe Briks",
+      email: "oe@briks.no",
+      password: "Briks42!", // In a real app, this would be hashed
+      role: "admin",
+      companyId: "company-004",
+      lastLogin: new Date().toISOString(),
       status: "active"
     }
   ];

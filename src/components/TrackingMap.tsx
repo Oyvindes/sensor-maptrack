@@ -1,108 +1,114 @@
 
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
-import { Icon } from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { cn } from '@/lib/utils';
-import { Map, Navigation } from 'lucide-react';
+import React from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { Sensor, Device } from "@/types/sensors";
 
-export type TrackingObject = {
-  id: string;
-  name: string;
-  position: {
-    lat: number;
-    lng: number;
-  };
-  lastUpdated: string;
-  speed?: number;
-  direction?: number;
-  batteryLevel?: number;
-};
+// Fix Leaflet icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "/marker-icon-2x.png",
+  iconUrl: "/marker-icon.png",
+  shadowUrl: "/marker-shadow.png",
+});
 
-type TrackingMapProps = {
-  objects?: TrackingObject[];
-  className?: string;
-  centerPosition?: { lat: number; lng: number };
-  onObjectSelect?: (object: TrackingObject) => void;
-};
-
-// Fix for Leaflet icons
-// This addresses an issue with Leaflet marker icons in bundled environments
-const customIcon = new Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+// Custom marker icon
+const customIcon = new L.Icon({
+  iconUrl: "/marker-icon.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  shadowUrl: "/marker-shadow.png",
   shadowSize: [41, 41],
 });
 
-const TrackingMap: React.FC<TrackingMapProps> = ({
-  objects = [],
-  className,
-  centerPosition = { lat: 40.7128, lng: -74.006 }, // New York as default
-  onObjectSelect,
-}) => {
-  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+interface TrackingMapProps {
+  devices?: Device[];
+  sensors?: Sensor[];
+  highlightId?: string;
+  onDeviceClick?: (deviceId: string) => void;
+  onSensorClick?: (sensorId: string) => void;
+  className?: string;
+}
 
-  // Handle object selection
-  const handleObjectClick = (object: TrackingObject) => {
-    setSelectedObjectId(object.id);
-    if (onObjectSelect) {
-      onObjectSelect(object);
+const TrackingMap: React.FC<TrackingMapProps> = ({
+  devices = [],
+  sensors = [],
+  highlightId,
+  onDeviceClick,
+  onSensorClick,
+  className = "h-[500px] w-full rounded-md border",
+}) => {
+  // Find map center based on first device or sensor, or default to Norway
+  const getMapCenter = () => {
+    if (devices.length > 0 && devices[0].location) {
+      return [devices[0].location.lat, devices[0].location.lng];
     }
+    if (sensors.length > 0 && sensors[0].location) {
+      return [sensors[0].location.lat, sensors[0].location.lng];
+    }
+    // Default to Norway
+    return [60.472, 8.468];
   };
 
   return (
-    <div className={cn("relative rounded-2xl overflow-hidden h-[600px]", className)}>
-      <MapContainer 
-        center={[centerPosition.lat, centerPosition.lng]} 
-        zoom={13} 
-        className="h-full w-full rounded-xl z-0"
-        zoomControl={false}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <ZoomControl position="bottomright" />
-        
-        {objects.map((object) => (
-          <Marker 
-            key={object.id}
-            position={[object.position.lat, object.position.lng]}
+    <MapContainer
+      center={getMapCenter() as [number, number]}
+      zoom={6}
+      className={className}
+      zoomControl={true}
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      />
+      
+      {/* Display devices */}
+      {devices.map((device) => (
+        device.location && (
+          <Marker
+            key={device.id}
+            position={[device.location.lat, device.location.lng] as [number, number]}
             icon={customIcon}
             eventHandlers={{
-              click: () => handleObjectClick(object),
+              click: () => onDeviceClick && onDeviceClick(device.id),
             }}
           >
             <Popup>
-              <div className="p-1">
-                <h3 className="font-medium text-sm">{object.name}</h3>
-                <div className="text-xs text-gray-600 mt-1">
-                  {object.speed !== undefined && (
-                    <div>Speed: {object.speed} mph</div>
-                  )}
-                  {object.batteryLevel !== undefined && (
-                    <div>Battery: {object.batteryLevel}%</div>
-                  )}
-                  <div className="mt-1 text-gray-500">
-                    Last updated: {object.lastUpdated}
-                  </div>
-                </div>
+              <div>
+                <h3 className="font-bold">{device.name}</h3>
+                <p>Type: {device.type}</p>
+                <p>Status: {device.status}</p>
               </div>
             </Popup>
           </Marker>
-        ))}
-      </MapContainer>
+        )
+      ))}
       
-      {/* Custom overlay for mobile and info */}
-      <div className="absolute bottom-4 right-4 glass-card rounded-lg p-1.5 flex flex-col gap-2 z-[1000]">
-        <button className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-secondary transition-all-ease">
-          <Navigation className="h-5 w-5 text-primary" />
-        </button>
-      </div>
-    </div>
+      {/* Display sensors */}
+      {sensors.map((sensor) => (
+        sensor.location && (
+          <Marker
+            key={sensor.id}
+            position={[sensor.location.lat, sensor.location.lng] as [number, number]}
+            icon={customIcon}
+            eventHandlers={{
+              click: () => onSensorClick && onSensorClick(sensor.id),
+            }}
+          >
+            <Popup>
+              <div>
+                <h3 className="font-bold">{sensor.name}</h3>
+                <p>Type: {sensor.type}</p>
+                <p>Status: {sensor.status}</p>
+                <p>Last Reading: {sensor.lastReading?.value} {sensor.unit}</p>
+              </div>
+            </Popup>
+          </Marker>
+        )
+      ))}
+    </MapContainer>
   );
 };
 
