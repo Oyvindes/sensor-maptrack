@@ -35,13 +35,32 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            {/* Redirect root to login if not authenticated, otherwise to admin */}
+            <Route 
+              path="/" 
+              element={
+                isUserAuthenticated() ? 
+                <Navigate to="/admin" replace /> : 
+                <Navigate to="/login" replace />
+              } 
+            />
             <Route path="/login" element={<Login />} />
-            <Route path="/admin" element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            } />
+            <Route 
+              path="/index" 
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
