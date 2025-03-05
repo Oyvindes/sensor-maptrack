@@ -17,7 +17,6 @@ import SensorFolderEditor from "@/components/admin/SensorFolderEditor";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { Company, User, SensorFolder } from "@/types/users";
 import { Device, Sensor, TrackingObject } from "@/types/sensors";
-import ModeSwitcher from "@/components/admin/ModeSwitcher";
 import { SensorData } from "@/components/SensorCard";
 
 const mapDeviceToTrackingObject = (device: Device): TrackingObject => {
@@ -46,7 +45,7 @@ const Admin = () => {
     "editFolder"
   >("listCompanies");
   
-  const [currentAdminMode, setCurrentAdminMode] = useState<"sensors" | "devices" | "users" | "folders">("sensors");
+  const [activeTab, setActiveTab] = useState<"companies" | "users" | "sensors" | "devices" | "folders">("companies");
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedSensor, setSelectedSensor] = useState<SensorData & { folderId?: string; companyId?: string } | null>(null);
@@ -234,17 +233,21 @@ const Admin = () => {
     setMode("editFolder");
   };
 
-  const handleModeChange = (newMode: "sensors" | "devices" | "users" | "folders") => {
-    setCurrentAdminMode(newMode);
-    switch (newMode) {
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as "companies" | "users" | "sensors" | "devices" | "folders");
+    
+    switch (value) {
+      case "companies":
+        setMode("listCompanies");
+        break;
+      case "users":
+        setMode("listUsers");
+        break;
       case "sensors":
         setMode("listSensors");
         break;
       case "devices":
         setMode("listDevices");
-        break;
-      case "users":
-        setMode("listUsers");
         break;
       case "folders":
         setMode("listFolders");
@@ -260,13 +263,13 @@ const Admin = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <AdminHeader />
 
-      <div className="container mx-auto p-4 pb-24">
+      <div className="container mx-auto p-4 pb-20">
         <SectionContainer>
           <SectionTitle>Admin Controls</SectionTitle>
           <p>Manage your system's data and settings.</p>
         </SectionContainer>
 
-        <Tabs defaultValue="companies" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="companies">Companies</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
@@ -367,11 +370,6 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
-
-      <ModeSwitcher 
-        currentMode={currentAdminMode}
-        onModeChange={handleModeChange}
-      />
     </div>
   );
 };
