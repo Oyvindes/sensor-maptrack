@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Navigation, Mail, ExternalLink } from "lucide-react";
+import { Navigation, Mail, ExternalLink, AlertTriangle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { 
   Dialog, 
   DialogContent, 
@@ -27,6 +27,7 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [isSendingDirections, setIsSendingDirections] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const getGoogleMapsUrl = () => {
     let googleMapsUrl = "";
@@ -49,12 +50,16 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
       }
     }
     
-    // Fallback to address if location coordinates aren't available
     if (address) {
       googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
     }
     
     return googleMapsUrl;
+  };
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   const sendDirectionsEmail = async () => {
@@ -63,19 +68,18 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
       return;
     }
 
+    if (!validateEmail(emailAddress)) {
+      setEmailError("Please enter a valid email address");
+      return;
+    } else {
+      setEmailError(null);
+    }
+
     try {
       setIsSendingDirections(true);
       
-      // Simulate API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const googleMapsUrl = getGoogleMapsUrl();
       
-      // In a real implementation, this would call an API endpoint to send the email
-      console.log(`Sending directions for project to ${emailAddress}`);
-      console.log(`Directions URL: ${googleMapsUrl}`);
-      
-      // Email content that would be sent
       const emailSubject = "Directions to Project Location";
       const emailBody = `
         Hello,
@@ -91,14 +95,30 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
         Thank you!
       `;
       
-      console.log("Email Subject:", emailSubject);
-      console.log("Email Body:", emailBody);
+      const emailData = {
+        to: emailAddress,
+        subject: emailSubject,
+        body: emailBody,
+        from: "notifications@projectservice.com"
+      };
+      
+      console.log("Sending email with data:", emailData);
+      
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      if (emailAddress.includes("error.com")) {
+        throw new Error("Email server rejected the request");
+      }
+      
+      if (emailAddress.includes("delay.com")) {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
       
       toast.success(`Directions sent to ${emailAddress}`);
       setDialogOpen(false);
     } catch (error) {
       console.error("Error sending directions:", error);
-      toast.error("Failed to send directions");
+      toast.error("Failed to send directions: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsSendingDirections(false);
     }
@@ -126,7 +146,9 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
     <div className="mt-2 flex gap-2">
       <Dialog open={dialogOpen} onOpenChange={(open) => {
         setDialogOpen(open);
-        // Update SensorFolderEditor parent component about dialog state
+        if (!open) {
+          setEmailError(null);
+        }
         if (window) {
           const event = new CustomEvent('directionsDialogStateChange', { 
             detail: { isOpen: open } 
@@ -165,21 +187,45 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
             </div>
             
             <div className="flex flex-col space-y-2">
-              <Label htmlFor="emailAddress">Email Address</Label>
+              <Label htmlFor="emailAddress" className="flex justify-between">
+                <span>Email Address</span>
+                {isSendingDirections && <span className="text-sm text-muted-foreground">Sending...</span>}
+              </Label>
               <Input 
                 id="emailAddress" 
                 type="email" 
                 placeholder="Enter email address" 
                 value={emailAddress} 
-                onChange={(e) => setEmailAddress(e.target.value)} 
+                onChange={(e) => {
+                  setEmailAddress(e.target.value);
+                  if (emailError) setEmailError(null);
+                }}
+                className={emailError ? "border-red-500" : ""}
+                disabled={isSendingDirections}
               />
+              {emailError && (
+                <div className="text-sm text-red-500 mt-1">{emailError}</div>
+              )}
             </div>
+            
+            <Alert variant="default" className="bg-muted/50">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Information</AlertTitle>
+              <AlertDescription>
+                Enter any email to test the send function. Try these test addresses:
+                <ul className="mt-2 list-disc pl-5 text-xs">
+                  <li><code>test@error.com</code> - Simulates an email server error</li>
+                  <li><code>test@delay.com</code> - Simulates a slow email server</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
             
             <Button
               type="button"
               variant="outline"
               onClick={openDirectionsInNewTab}
               className="w-full gap-2"
+              disabled={isSendingDirections}
             >
               <ExternalLink className="h-4 w-4" />
               <span>Open Directions in New Tab</span>
@@ -204,7 +250,7 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
               className="gap-2"
             >
               <Navigation className="h-4 w-4" />
-              <span>Send Directions</span>
+              <span>{isSendingDirections ? "Sending..." : "Send Directions"}</span>
             </Button>
           </DialogFooter>
         </DialogContent>
