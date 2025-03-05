@@ -1,6 +1,6 @@
 
 import React from "react";
-import { TrackingObject } from "@/components/TrackingMap";
+import { TrackingObject } from "@/types/sensors";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";

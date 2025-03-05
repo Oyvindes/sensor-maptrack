@@ -3,7 +3,7 @@ import React from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { Sensor, Device } from "@/types/sensors";
+import { Sensor, Device, TrackingObject } from "@/types/sensors";
 
 // Fix Leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -26,21 +26,25 @@ const customIcon = new L.Icon({
 interface TrackingMapProps {
   devices?: Device[];
   sensors?: Sensor[];
+  objects?: TrackingObject[];
   highlightId?: string;
   onDeviceClick?: (deviceId: string) => void;
   onSensorClick?: (sensorId: string) => void;
+  onObjectSelect?: (object: TrackingObject) => void;
   className?: string;
 }
 
 const TrackingMap: React.FC<TrackingMapProps> = ({
   devices = [],
   sensors = [],
+  objects = [],
   highlightId,
   onDeviceClick,
   onSensorClick,
+  onObjectSelect,
   className = "h-[500px] w-full rounded-md border",
 }) => {
-  // Find map center based on first device or sensor, or default to Norway
+  // Find map center based on first device, sensor, or tracking object, or default to Norway
   const getMapCenter = () => {
     if (devices.length > 0 && devices[0].location) {
       return [devices[0].location.lat, devices[0].location.lng];
@@ -48,13 +52,18 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
     if (sensors.length > 0 && sensors[0].location) {
       return [sensors[0].location.lat, sensors[0].location.lng];
     }
+    if (objects.length > 0) {
+      return [objects[0].position.lat, objects[0].position.lng];
+    }
     // Default to Norway
     return [60.472, 8.468];
   };
 
+  const mapCenter = getMapCenter() as [number, number];
+
   return (
     <MapContainer
-      center={getMapCenter() as [number, number]}
+      center={mapCenter}
       zoom={6}
       className={className}
     >
@@ -105,8 +114,29 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           </Marker>
         )
       ))}
+
+      {/* Display tracking objects */}
+      {objects.map((object) => (
+        <Marker
+          key={object.id}
+          position={[object.position.lat, object.position.lng] as [number, number]}
+          eventHandlers={{
+            click: () => onObjectSelect && onObjectSelect(object),
+          }}
+        >
+          <Popup>
+            <div>
+              <h3 className="font-bold">{object.name}</h3>
+              <p>Speed: {object.speed} mph</p>
+              <p>Battery: {object.batteryLevel}%</p>
+              <p>Last Updated: {object.lastUpdated}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   );
 };
 
+export type { TrackingMapProps };
 export default TrackingMap;

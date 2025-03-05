@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { PageContainer, ContentContainer } from "@/components/Layout";
@@ -65,7 +64,6 @@ const Admin: React.FC = () => {
         const usersData = getMockUsers();
         const foldersData = getMockSensorFolders();
         
-        // If user is not master admin, filter data by company
         if (currentUser && !isMasterAdmin && userCompanyId) {
           const filteredCompanies = companiesData.filter(company => 
             company.id === userCompanyId
@@ -89,10 +87,8 @@ const Admin: React.FC = () => {
           setUsers(filteredUsers);
           setFolders(filteredFolders);
           
-          // For non-master admins, set their company as the current company
           setCurrentCompanyId(userCompanyId);
         } else {
-          // For master admin, show all data
           setSensors(sensorsData);
           setCompanies(companiesData);
           setUsers(usersData);
@@ -119,7 +115,6 @@ const Admin: React.FC = () => {
     setSelectedUser(null);
     setSelectedFolder(null);
     
-    // Don't reset company ID for non-master users
     if (isMasterAdmin) {
       setCurrentCompanyId(undefined);
     }
@@ -338,6 +333,10 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleFolderSelect = (folder: SensorFolder) => {
+    setSelectedFolder(folder);
+  };
+
   return (
     <PageContainer>
       <AdminHeader />
@@ -390,7 +389,7 @@ const Admin: React.FC = () => {
               folders={folders}
               sensors={sensors}
               companyId={currentCompanyId}
-              onFolderSelect={setSelectedFolder}
+              onFolderSelect={handleFolderSelect}
               onAddNew={handleAddNewFolder}
               onSensorSelect={setSelectedSensor}
             />

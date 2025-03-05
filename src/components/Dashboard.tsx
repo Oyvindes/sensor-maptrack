@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import SensorCard, { SensorData } from "./SensorCard";
-import TrackingMap, { TrackingObject } from "./TrackingMap";
+import TrackingMap from "./TrackingMap";
+import { TrackingObject } from "@/types/sensors";
 import { 
   PageContainer, 
   PageHeader, 

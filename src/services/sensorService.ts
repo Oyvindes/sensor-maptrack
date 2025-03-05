@@ -1,6 +1,5 @@
-
 import { SensorData } from "@/components/SensorCard";
-import { TrackingObject } from "@/components/TrackingMap";
+import { TrackingObject } from "@/types/sensors";
 
 // This is a mock service for demo purposes
 // In a real application, this would call actual API endpoints

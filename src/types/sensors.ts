@@ -30,3 +30,13 @@ export interface Device {
   companyId: string;
   folderId?: string;
 }
+
+export interface TrackingObject {
+  id: string;
+  name: string;
+  position: Location;
+  lastUpdated: string;
+  speed: number;
+  direction: number;
+  batteryLevel: number;
+}
