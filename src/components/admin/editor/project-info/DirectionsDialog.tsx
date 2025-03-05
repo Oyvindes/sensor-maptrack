@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Navigation, Mail, ExternalLink, AlertTriangle } from "lucide-react";
+import { Navigation, Mail, ExternalLink, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { 
   Dialog, 
@@ -14,6 +15,7 @@ import {
   DialogTitle, 
   DialogTrigger
 } from "@/components/ui/dialog";
+import { sendEmail, getEmailConfigInfo } from "@/services/email/emailService";
 
 interface DirectionsDialogProps {
   address: string | undefined;
@@ -28,6 +30,7 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
   const [emailAddress, setEmailAddress] = useState("");
   const [isSendingDirections, setIsSendingDirections] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [showSmtpInfo, setShowSmtpInfo] = useState(false);
 
   const getGoogleMapsUrl = () => {
     let googleMapsUrl = "";
@@ -102,20 +105,12 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
         from: "notifications@projectservice.com"
       };
       
-      console.log("Sending email with data:", emailData);
+      const success = await sendEmail(emailData);
       
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      if (emailAddress.includes("error.com")) {
-        throw new Error("Email server rejected the request");
+      if (success) {
+        toast.success(`Directions sent to ${emailAddress}`);
+        setDialogOpen(false);
       }
-      
-      if (emailAddress.includes("delay.com")) {
-        await new Promise(resolve => setTimeout(resolve, 3000));
-      }
-      
-      toast.success(`Directions sent to ${emailAddress}`);
-      setDialogOpen(false);
     } catch (error) {
       console.error("Error sending directions:", error);
       toast.error("Failed to send directions: " + (error instanceof Error ? error.message : "Unknown error"));
@@ -140,7 +135,13 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
     }
   };
 
+  const toggleSmtpInfo = () => {
+    setShowSmtpInfo(!showSmtpInfo);
+  };
+
   if (!address) return null;
+
+  const smtpConfig = getEmailConfigInfo();
 
   return (
     <div className="mt-2 flex gap-2">
@@ -212,11 +213,35 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Information</AlertTitle>
               <AlertDescription>
-                Enter any email to test the send function. Try these test addresses:
-                <ul className="mt-2 list-disc pl-5 text-xs">
-                  <li><code>test@error.com</code> - Simulates an email server error</li>
-                  <li><code>test@delay.com</code> - Simulates a slow email server</li>
-                </ul>
+                <p className="mb-2">Microsoft 365 SMTP is configured for sending emails.</p>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-1 text-xs gap-1"
+                  onClick={toggleSmtpInfo}
+                >
+                  <Info className="h-3 w-3" />
+                  {showSmtpInfo ? "Hide Configuration" : "Show Configuration"}
+                </Button>
+                
+                {showSmtpInfo && (
+                  <div className="mt-2 text-xs p-2 bg-background/80 rounded border">
+                    <p><strong>SMTP Host:</strong> {smtpConfig.host}</p>
+                    <p><strong>SMTP Port:</strong> {smtpConfig.port}</p>
+                    <p><strong>Secure:</strong> {smtpConfig.secure ? "Yes" : "No"}</p>
+                    <p><strong>Auth User:</strong> {smtpConfig.authUser}</p>
+                    <p className="mt-1 italic">Note: To fully enable this feature, the SMTP credentials need to be configured.</p>
+                  </div>
+                )}
+                
+                <div className="mt-2">
+                  Test addresses:
+                  <ul className="mt-1 list-disc pl-5 text-xs">
+                    <li><code>test@error.com</code> - Simulates an email server error</li>
+                    <li><code>test@delay.com</code> - Simulates a slow email server</li>
+                  </ul>
+                </div>
               </AlertDescription>
             </Alert>
             
