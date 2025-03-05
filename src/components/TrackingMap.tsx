@@ -64,11 +64,13 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   return (
     <div className={className}>
       <MapContainer
+        // Unlike Google Maps, react-leaflet's MapContainer takes a center and zoom prop directly
         center={mapCenter}
         zoom={6}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
+          // The react-leaflet TileLayer component uses these props directly
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />

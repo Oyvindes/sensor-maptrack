@@ -18,7 +18,7 @@ const ModeSwitcher: React.FC<ModeSwitcherProps> = ({
   onModeChange = () => {} 
 }) => {
   return (
-    <div className="flex justify-center mb-8">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10">
       <div className="glass-card rounded-lg p-1 flex space-x-1">
         <Button
           variant={currentMode === "sensors" ? "default" : "ghost"}
