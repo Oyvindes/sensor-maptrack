@@ -28,6 +28,7 @@ const FoldersTab: React.FC<FoldersTabProps> = ({
 }) => {
   const currentUser = getCurrentUser();
   
+  // Note: Folders are now for organization only, not ownership
   const handleFolderCreate = async (folderData: Omit<SensorFolder, "id" | "createdAt">) => {
     try {
       const response = await createSensorFolder(folderData);

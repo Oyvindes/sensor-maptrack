@@ -62,6 +62,7 @@ export function useFolderHandlers(
     }
     
     // For new folders, set the company ID to the user's company
+    // Folders are now just for organization within a company
     const companyId = currentUser.role === 'master' 
       ? (companies[0]?.id || "system") 
       : currentUser.companyId;

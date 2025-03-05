@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/services/authService";
@@ -104,6 +105,7 @@ const Admin = () => {
               mode={mode}
               sensors={sensors}
               selectedSensor={selectedSensor}
+              folders={sensorFolders}
               onSensorSelect={sensorHandlers.handleSensorSelect}
               onSensorSave={sensorHandlers.handleSensorSave}
               onSensorCancel={sensorHandlers.handleSensorCancel}

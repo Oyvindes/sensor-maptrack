@@ -17,8 +17,8 @@ export interface Sensor {
   location?: Location;
   lastReading?: SensorReading;
   unit: string;
-  companyId: string;
-  folderId?: string;
+  companyId: string;  // Primary ownership is now by company
+  folderId?: string;  // Folder is now just for organization, not ownership
 }
 
 export interface Device {
@@ -27,8 +27,8 @@ export interface Device {
   type: string;
   status: "online" | "offline" | "maintenance";
   location?: Location;
-  companyId: string;
-  folderId?: string;
+  companyId: string;  // Primary ownership is now by company
+  folderId?: string;  // Folder is now just for organization, not ownership
 }
 
 export interface TrackingObject {

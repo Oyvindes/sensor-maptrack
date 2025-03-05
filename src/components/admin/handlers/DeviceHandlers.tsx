@@ -1,5 +1,7 @@
 
 import { Device, TrackingObject } from "@/types/sensors";
+import { getCurrentUser } from "@/services/authService";
+import { toast } from "sonner";
 
 export interface DeviceHandlers {
   handleDeviceSelect: (device: Device) => void;
@@ -18,6 +20,7 @@ export function useDeviceHandlers(
   setMode: React.Dispatch<React.SetStateAction<string>>,
   companies: { id: string }[]
 ): DeviceHandlers {
+  const currentUser = getCurrentUser();
 
   const mapDeviceToTrackingObject = (device: Device): TrackingObject => {
     return {
@@ -28,11 +31,17 @@ export function useDeviceHandlers(
       speed: 0,
       direction: 0,
       batteryLevel: 100,
-      ...(device.folderId && { folderId: device.folderId }) // Add folderId if it exists
+      ...(device.folderId && { folderId: device.folderId }) // Keep folderId for organization purposes
     };
   };
   
   const handleDeviceSelect = (device: Device) => {
+    // Check if user has permissions for this device
+    if (!canEditDevice(device)) {
+      toast.error("You don't have permission to edit this device");
+      return;
+    }
+    
     setSelectedDevice(device);
     setMode("editDevice");
   };
@@ -40,6 +49,12 @@ export function useDeviceHandlers(
   const handleTrackingObjectSelect = (object: TrackingObject) => {
     const device = devices.find(d => d.id === object.id);
     if (device) {
+      // Check if user has permissions for this device
+      if (!canEditDevice(device)) {
+        toast.error("You don't have permission to edit this device");
+        return;
+      }
+      
       // If the tracking object has a folderId, make sure it's preserved
       if ((object as any).folderId && !device.folderId) {
         device.folderId = (object as any).folderId;
@@ -50,6 +65,12 @@ export function useDeviceHandlers(
   };
 
   const handleDeviceSave = (updatedDevice: Device) => {
+    // Check permissions again before saving
+    if (!canEditDevice(updatedDevice)) {
+      toast.error("You don't have permission to modify this device");
+      return;
+    }
+    
     setDevices(devices.map(d => d.id === updatedDevice.id ? updatedDevice : d));
     
     // When updating tracking objects, preserve the folderId
@@ -70,15 +91,39 @@ export function useDeviceHandlers(
   };
 
   const handleAddNewDevice = () => {
+    if (!currentUser) {
+      toast.error("You must be logged in to create devices");
+      return;
+    }
+    
+    // For new devices, set the company ID to the user's company
+    const companyId = currentUser.role === 'master' 
+      ? (companies[0]?.id || "system") 
+      : currentUser.companyId;
+    
     setSelectedDevice({
       id: `device-${Date.now().toString().slice(-3)}`,
       name: "",
       type: "",
       status: "online",
       location: { lat: 0, lng: 0 },
-      companyId: companies[0]?.id || "system"
+      companyId: companyId
     });
     setMode("editDevice");
+  };
+  
+  // Helper function to check if user can edit a specific device
+  const canEditDevice = (device: Device): boolean => {
+    if (!currentUser) return false;
+    
+    // Site-wide admins can edit any device
+    if (currentUser.role === 'master') return true;
+    
+    // Company admins can edit devices in their company
+    if (currentUser.role === 'admin' && device.companyId === currentUser.companyId) return true;
+    
+    // Regular users can edit devices in their company
+    return device.companyId === currentUser.companyId;
   };
 
   return {
