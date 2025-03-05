@@ -40,28 +40,28 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Mock response with Norwegian addresses
+      // Create realistic Norwegian address suggestions based on the query
       const mockAddresses: AddressSuggestion[] = [
         {
-          address: `${query.charAt(0).toUpperCase() + query.slice(1)} 10`,
-          postcode: "0150",
-          city: "Oslo",
-          lat: 59.9139,
-          lng: 10.7522
+          address: query,
+          postcode: "7083",
+          city: "Leinstrand",
+          lat: 63.3287,
+          lng: 10.2755
         },
         {
-          address: `${query.charAt(0).toUpperCase() + query.slice(1)} 25`,
-          postcode: "0153",
-          city: "Oslo",
-          lat: 59.9111,
-          lng: 10.7528
+          address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') + 2}`,
+          postcode: "7083",
+          city: "Leinstrand",
+          lat: 63.3290,
+          lng: 10.2760
         },
         {
-          address: `${query.charAt(0).toUpperCase() + query.slice(1)} 5`,
-          postcode: "5020",
-          city: "Bergen",
-          lat: 60.3913,
-          lng: 5.3221
+          address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') - 2}`,
+          postcode: "7083", 
+          city: "Leinstrand",
+          lat: 63.3284,
+          lng: 10.2752
         }
       ];
       
@@ -80,7 +80,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
 
   const handleSelectAddress = (suggestion: AddressSuggestion) => {
     const fullAddress = `${suggestion.address}, ${suggestion.postcode} ${suggestion.city}, Norway`;
-    onChange("address", fullAddress);
+    onChange("address" as keyof SensorFolder, fullAddress);
     
     // If the API provides coordinates, we can store them as well
     if (suggestion.lat && suggestion.lng) {
@@ -168,7 +168,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
           <Input
             id="address"
             value={formData.address || ""}
-            onChange={(e) => onChange("address", e.target.value)}
+            onChange={(e) => onChange("address" as keyof SensorFolder, e.target.value)}
             placeholder="Full address of the project location"
             className="mt-2"
           />
@@ -180,7 +180,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
         <Textarea
           id="description"
           value={formData.description || ""}
-          onChange={(e) => onChange("description", e.target.value)}
+          onChange={(e) => onChange("description" as keyof SensorFolder, e.target.value)}
           rows={3}
         />
       </div>
