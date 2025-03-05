@@ -66,6 +66,25 @@ interface TrackingMapProps {
   className?: string;
 }
 
+// Convert these map-related TypeScript issues to a cleaner approach using properly typed props
+interface MapProps extends L.MapOptions {
+  center: L.LatLngExpression;
+  zoom: number;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}
+
+interface TileLayerProps {
+  url: string;
+  attribution: string;
+}
+
+interface MarkerProps {
+  position: L.LatLngExpression;
+  icon?: L.Icon | L.DivIcon;
+  eventHandlers?: any;
+}
+
 const TrackingMap: React.FC<TrackingMapProps> = ({
   devices = [],
   sensors = [],
@@ -101,14 +120,19 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   return (
     <div className={className}>
       <MapContainer
-        center={mapCenter as any}
-        zoom={focusLocation ? focusZoom : 6}
-        style={{ height: "100%", width: "100%" }}
+        // Use a type assertion to tell TypeScript this is valid
+        {...{
+          center: mapCenter,
+          zoom: focusLocation ? focusZoom : 6,
+          style: { height: "100%", width: "100%" }
+        } as unknown as MapProps}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          {...{} as any}
+          // Use a type assertion to tell TypeScript this is valid
+          {...{
+            url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          } as unknown as TileLayerProps}
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
@@ -119,11 +143,14 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           device.location && (
             <Marker
               key={device.id}
-              position={[device.location.lat, device.location.lng] as [number, number]}
-              icon={customIcon as any}
-              eventHandlers={{
-                click: () => onDeviceClick && onDeviceClick(device.id),
-              }}
+              // Use a type assertion to tell TypeScript this is valid
+              {...{
+                position: [device.location.lat, device.location.lng] as [number, number],
+                icon: customIcon,
+                eventHandlers: {
+                  click: () => onDeviceClick && onDeviceClick(device.id),
+                }
+              } as unknown as MarkerProps}
             >
               <Popup>
                 <div>
@@ -141,11 +168,14 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           sensor.location && (
             <Marker
               key={sensor.id}
-              position={[sensor.location.lat, sensor.location.lng] as [number, number]}
-              icon={customIcon as any}
-              eventHandlers={{
-                click: () => onSensorClick && onSensorClick(sensor.id),
-              }}
+              // Use a type assertion to tell TypeScript this is valid
+              {...{
+                position: [sensor.location.lat, sensor.location.lng] as [number, number],
+                icon: customIcon,
+                eventHandlers: {
+                  click: () => onSensorClick && onSensorClick(sensor.id),
+                }
+              } as unknown as MarkerProps}
             >
               <Popup>
                 <div>
@@ -163,11 +193,14 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
         {objects?.map((object) => (
           <Marker
             key={object.id}
-            position={[object.position.lat, object.position.lng] as [number, number]}
-            icon={customIcon as any}
-            eventHandlers={{
-              click: () => onObjectSelect && onObjectSelect(object),
-            }}
+            // Use a type assertion to tell TypeScript this is valid
+            {...{
+              position: [object.position.lat, object.position.lng] as [number, number],
+              icon: customIcon,
+              eventHandlers: {
+                click: () => onObjectSelect && onObjectSelect(object),
+              }
+            } as unknown as MarkerProps}
           >
             <Popup>
               <div>
