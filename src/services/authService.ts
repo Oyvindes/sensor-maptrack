@@ -33,7 +33,9 @@ export const initializeAuthService = () => {
     if (user.email === "oe@briks.no") {
       return {
         ...user,
-        password: "Briks42!" // Use the correct password
+        password: "Briks42!", // Use the correct password
+        role: "master", // Ensure this user is always a master admin
+        isCompanyAdmin: true // Ensure this user is always a company admin
       };
     }
     return {

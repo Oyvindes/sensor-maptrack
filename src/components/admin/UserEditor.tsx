@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Company } from "@/types/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,18 +25,44 @@ const UserEditor: React.FC<UserEditorProps> = ({
   const [formData, setFormData] = useState<User>(user);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Always ensure oe@briks.no is a master admin
+  useEffect(() => {
+    if (formData.email === "oe@briks.no" && formData.role !== "master") {
+      setFormData(prev => ({ ...prev, role: "master", isCompanyAdmin: true }));
+    }
+  }, [formData.email, formData.role]);
+
   const handleChange = (field: keyof User, value: string | boolean) => {
+    // Prevent changing role for oe@briks.no
+    if (field === "role" && formData.email === "oe@briks.no") {
+      return; // Don't allow role change for this specific user
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Ensure oe@briks.no is always master and company admin before saving
+    if (formData.email === "oe@briks.no") {
+      const updatedUser = {
+        ...formData,
+        role: "master",
+        isCompanyAdmin: true
+      };
+      onSave(updatedUser);
+    } else {
+      onSave(formData);
+    }
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  // Check if user is the protected oe@briks.no account
+  const isProtectedUser = formData.email === "oe@briks.no";
 
   return (
     <SectionContainer>
@@ -104,6 +130,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
           <Select
             value={formData.role}
             onValueChange={(value: "admin" | "user" | "master") => handleChange("role", value)}
+            disabled={isProtectedUser} // Disable role selection for protected user
           >
             <SelectTrigger>
               <SelectValue placeholder="Select role" />
@@ -111,11 +138,16 @@ const UserEditor: React.FC<UserEditorProps> = ({
             <SelectContent>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="user">User</SelectItem>
-              {user.id === "master-001" && (
+              {(user.id === "master-001" || isProtectedUser) && (
                 <SelectItem value="master">Master Admin</SelectItem>
               )}
             </SelectContent>
           </Select>
+          {isProtectedUser && (
+            <p className="text-sm text-amber-500 mt-1">
+              This user is a permanent site-wide admin and cannot be changed.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -128,7 +160,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
               <SelectValue placeholder="Select company" />
             </SelectTrigger>
             <SelectContent>
-              {user.role === "master" && (
+              {(user.role === "master" || isProtectedUser) && (
                 <SelectItem value="system">System</SelectItem>
               )}
               {companies.map(company => (
@@ -140,14 +172,18 @@ const UserEditor: React.FC<UserEditorProps> = ({
           </Select>
         </div>
 
-        {formData.role === "admin" && (
+        {(formData.role === "admin" || isProtectedUser) && (
           <div className="flex items-center space-x-2">
             <Switch
               id="company-admin"
-              checked={formData.isCompanyAdmin === true}
+              checked={formData.isCompanyAdmin === true || isProtectedUser}
               onCheckedChange={(checked) => handleChange("isCompanyAdmin", checked)}
+              disabled={isProtectedUser} // Disable switch for protected user
             />
             <Label htmlFor="company-admin">Company Administrator</Label>
+            {isProtectedUser && (
+              <span className="text-xs text-amber-500">(cannot be changed)</span>
+            )}
           </div>
         )}
 
@@ -156,6 +192,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
           <Select
             value={formData.status}
             onValueChange={(value: "active" | "inactive") => handleChange("status", value)}
+            disabled={isProtectedUser} // Disable status selection for protected user
           >
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
@@ -165,6 +202,11 @@ const UserEditor: React.FC<UserEditorProps> = ({
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
+          {isProtectedUser && (
+            <p className="text-sm text-amber-500 mt-1">
+              This user must remain active.
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-4">

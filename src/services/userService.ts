@@ -94,11 +94,11 @@ export const getMockUsers = (): User[] => {
       name: "Oe Briks",
       email: "oe@briks.no",
       password: "Briks42!", // Using the correct password
-      role: "admin",
+      role: "master", // Updated to master role to ensure site-wide admin
       companyId: "company-004",
       lastLogin: new Date().toISOString(),
       status: "active",
-      isCompanyAdmin: true // Set as company admin
+      isCompanyAdmin: true // Keep as company admin
     }
   ];
 };
