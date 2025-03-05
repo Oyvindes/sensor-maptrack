@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -88,6 +87,17 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 
   const mapCenter = getMapCenter() as [number, number];
 
+  useEffect(() => {
+    // Disable auto-close for popups when clicking inside them (for buttons)
+    const style = document.createElement('style');
+    style.innerHTML = `.leaflet-popup-content-wrapper { pointer-events: auto; }`;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div className={className}>
       <MapContainer
@@ -110,10 +120,15 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
               key={device.id}
               position={[device.location.lat, device.location.lng] as [number, number]}
               eventHandlers={{
-                click: () => onDeviceClick && onDeviceClick(device.id),
+                click: (e) => {
+                  // Only trigger device click if not clicking on popup content
+                  if (!e.originalEvent.target.closest('.leaflet-popup-content-wrapper')) {
+                    onDeviceClick && onDeviceClick(device.id);
+                  }
+                },
               }}
             >
-              <Popup>
+              <Popup closeButton={false}>
                 {renderCustomPopup ? renderCustomPopup(device) : (
                   <div>
                     <h3 className="font-bold">{device.name}</h3>

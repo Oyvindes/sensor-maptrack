@@ -74,6 +74,9 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 
   // Function to render custom popups
   const renderCustomPopup = (device: any) => {
+    // Find the corresponding project
+    const project = projects.find(p => p.id === device.id);
+    
     return (
       <div className="flex flex-col gap-0.5 p-0.5">
         <h3 className="font-bold text-sm">{device.name}</h3>
@@ -84,8 +87,8 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
         <Button 
           size="sm" 
           className="mt-0.5 w-full h-6 text-xs px-1 py-0"
-          onClick={() => {
-            const project = projects.find(p => p.id === device.id);
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent event bubbling
             if (project) {
               onProjectSelect(project);
             }
