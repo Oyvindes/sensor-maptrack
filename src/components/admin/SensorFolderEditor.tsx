@@ -10,6 +10,7 @@ import ProjectInfoFields from "./editor/ProjectInfoFields";
 import CompanySelector from "./editor/CompanySelector";
 import SensorAssignment from "./editor/SensorAssignment";
 import ProjectMetadata from "./editor/ProjectMetadata";
+import { toast } from "sonner";
 
 interface SensorFolderEditorProps {
   folder: SensorFolder;
@@ -58,11 +59,19 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
       let updatedSensors: string[];
       
       if (checked) {
+        // If the sensor is already in the list, don't add it again
+        if (currentAssignedSensors.includes(sensorId)) {
+          toast.info("This sensor is already assigned to this project");
+          return prev;
+        }
+        
         // Add the sensor to assigned list
         updatedSensors = [...currentAssignedSensors, sensorId];
+        toast.success("Sensor added successfully");
       } else {
         // Remove the sensor from assigned list
         updatedSensors = currentAssignedSensors.filter(id => id !== sensorId);
+        toast.info("Sensor removed from project");
       }
       
       return { ...prev, assignedSensorIds: updatedSensors };
