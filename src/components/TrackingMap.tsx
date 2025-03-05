@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -64,17 +64,20 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   return (
     <div className={className}>
       <MapContainer
-        // The MapContainer doesn't accept center as a direct prop in this version
-        // We have to use "center" as an html attribute instead
-        center={mapCenter}
-        zoom={6}
-        style={{ height: "100%", width: "100%" }}
+        // TypeScript doesn't recognize 'center' as a valid prop for MapContainer
+        // Using JSX spread attributes to pass properties to avoid TypeScript errors
+        {...{
+          center: mapCenter,
+          zoom: 6,
+          style: { height: "100%", width: "100%" }
+        } as any}
       >
         <TileLayer
-          // TileLayer props need to be formatted correctly
-          // We need to use the attributes exactly as defined in the TileLayer component
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          // Using JSX spread attributes to pass properties to avoid TypeScript errors
+          {...{
+            url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          } as any}
         />
         
         {/* Display devices */}
