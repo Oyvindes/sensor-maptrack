@@ -89,7 +89,6 @@ export function useAdminState() {
   };
 
   return {
-    // State
     mode,
     setMode,
     activeTab,
@@ -116,7 +115,6 @@ export function useAdminState() {
     setTrackingObjects,
     sensorFolders,
     setSensorFolders,
-    // Handlers
     handleTabChange
   };
 }

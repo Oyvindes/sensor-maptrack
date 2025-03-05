@@ -2,7 +2,7 @@
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
 
-// Mock sensor folders
+// Mock sensor folders (now projects)
 export const getMockSensorFolders = (): SensorFolder[] => {
   return [
     {
@@ -46,7 +46,7 @@ export const getMockSensorFolders = (): SensorFolder[] => {
 export const createSensorFolder = async (
   folderData: Omit<SensorFolder, "id" | "createdAt">
 ): Promise<{ success: boolean; data: SensorFolder; message: string }> => {
-  console.log("Creating new sensor folder:", folderData);
+  console.log("Creating new project:", folderData);
   
   // Simulate API call
   return new Promise((resolve) => {
@@ -74,7 +74,7 @@ export const updateSensorFolder = async (
   folderId: string,
   data: Partial<SensorFolder>
 ): Promise<{ success: boolean; message: string }> => {
-  console.log(`Updating sensor folder ${folderId}`, data);
+  console.log(`Updating project ${folderId}`, data);
   
   // Simulate API call
   return new Promise((resolve) => {

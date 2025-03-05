@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SensorFolder, Company } from '@/types/users';
 import { Button } from "@/components/ui/button";
@@ -33,23 +32,18 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
   const [currentFolder, setCurrentFolder] = useState<SensorFolder | null>(null);
   const currentUser = getCurrentUser();
   
-  // Filter folders based on user role and permissions
   const filteredFolders = folders.filter(folder => {
-    // Site-wide admin (master) can see all folders
     if (currentUser?.role === 'master') {
       return true;
     }
     
-    // Regular admin can see folders from their company only
     if (currentUser?.role === 'admin') {
       return folder.companyId === currentUser.companyId;
     }
     
-    // Regular users can only see folders from their company
     return folder.companyId === currentUser?.companyId;
   });
 
-  // Further filter by selected company if applicable
   const displayedFolders = selectedCompanyId
     ? filteredFolders.filter(folder => folder.companyId === selectedCompanyId)
     : filteredFolders;
@@ -105,17 +99,13 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
     return company ? company.name : 'Unknown Company';
   };
 
-  // Check if user can edit a specific folder
   const canEditFolder = (folder: SensorFolder) => {
     if (!currentUser) return false;
     
-    // Site-wide admins can edit any folder
     if (currentUser.role === 'master') return true;
     
-    // Company admins can edit folders in their company
     if (currentUser.role === 'admin' && folder.companyId === currentUser.companyId) return true;
     
-    // Regular users can edit only folders they've created
     if (folder.createdBy === currentUser.id) return true;
     
     return false;
@@ -135,19 +125,19 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
   return (
     <SectionContainer>
       <div className="flex justify-between items-center mb-4">
-        <SectionTitle>Sensor Folders</SectionTitle>
+        <SectionTitle>Projects</SectionTitle>
         <Button size="sm" onClick={handleAddNew}>
-          <Plus className="h-4 w-4 mr-1" /> Add Folder
+          <Plus className="h-4 w-4 mr-1" /> Add Project
         </Button>
       </div>
 
       {displayedFolders.length === 0 && (
         <Alert className="mb-4">
-          <AlertTitle>No folders found</AlertTitle>
+          <AlertTitle>No projects found</AlertTitle>
           <AlertDescription>
             {selectedCompanyId 
-              ? "This company doesn't have any sensor folders yet. Create your first folder to organize sensors."
-              : "No folders found. Select a company or create a new folder."}
+              ? "This company doesn't have any projects yet. Create your first project to organize sensors."
+              : "No projects found. Select a company or create a new project."}
           </AlertDescription>
         </Alert>
       )}
