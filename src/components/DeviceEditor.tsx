@@ -6,16 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X } from "lucide-react";
-import { SensorFolder } from "@/types/users";
+import { Company } from "@/types/users";
 
 interface DeviceEditorProps {
   device: Device;
-  folders?: SensorFolder[];
+  companies?: Company[];
   onSave: (updatedDevice: Device) => void;
   onCancel: () => void;
 }
 
-const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, folders = [], onSave, onCancel }) => {
+const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onSave, onCancel }) => {
   const [editedDevice, setEditedDevice] = useState<Device>({ ...device });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,10 +37,10 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, folders = [], onSav
     }));
   };
 
-  const handleFolderChange = (value: string) => {
+  const handleCompanyChange = (value: string) => {
     setEditedDevice(prev => ({
       ...prev,
-      folderId: value === "none" ? undefined : value
+      companyId: value
     }));
   };
   
@@ -121,19 +121,18 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, folders = [], onSav
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="folderId">Folder</Label>
+          <Label htmlFor="companyId">Company</Label>
           <Select 
-            value={editedDevice.folderId || "none"} 
-            onValueChange={handleFolderChange}
+            value={editedDevice.companyId} 
+            onValueChange={handleCompanyChange}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select folder" />
+              <SelectValue placeholder="Select company" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {folders.map(folder => (
-                <SelectItem key={folder.id} value={folder.id}>
-                  {folder.name}
+              {companies.map(company => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { SensorData, SensorType, SensorValue } from "./SensorCard";
 import { Button } from "@/components/ui/button";
@@ -6,17 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X, Plus, Trash2 } from "lucide-react";
-import { SensorFolder } from "@/types/users";
+import { Company } from "@/types/users";
 
 interface SensorEditorProps {
-  sensor: SensorData & { folderId?: string };
-  folders?: SensorFolder[];
-  onSave: (updatedSensor: SensorData & { folderId?: string }) => void;
+  sensor: SensorData & { companyId?: string };
+  companies?: Company[];
+  onSave: (updatedSensor: SensorData & { companyId?: string }) => void;
   onCancel: () => void;
 }
 
-const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSave, onCancel }) => {
-  const [editedSensor, setEditedSensor] = useState<SensorData & { folderId?: string }>({ ...sensor });
+const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, companies = [], onSave, onCancel }) => {
+  const [editedSensor, setEditedSensor] = useState<SensorData & { companyId?: string }>({ ...sensor });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -62,10 +61,10 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSav
     }));
   };
 
-  const handleFolderChange = (value: string) => {
+  const handleCompanyChange = (value: string) => {
     setEditedSensor(prev => ({
       ...prev,
-      folderId: value === "none" ? undefined : value
+      companyId: value
     }));
   };
   
@@ -208,19 +207,18 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSav
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="folderId">Folder</Label>
+          <Label htmlFor="companyId">Company</Label>
           <Select 
-            value={editedSensor.folderId || "none"} 
-            onValueChange={handleFolderChange}
+            value={editedSensor.companyId || ""} 
+            onValueChange={handleCompanyChange}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select folder" />
+              <SelectValue placeholder="Select company" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {folders.map(folder => (
-                <SelectItem key={folder.id} value={folder.id}>
-                  {folder.name}
+              {companies.map(company => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
                 </SelectItem>
               ))}
             </SelectContent>

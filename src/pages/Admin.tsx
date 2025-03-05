@@ -105,7 +105,7 @@ const Admin = () => {
               mode={mode}
               sensors={sensors}
               selectedSensor={selectedSensor}
-              folders={sensorFolders}
+              companies={companies}
               onSensorSelect={sensorHandlers.handleSensorSelect}
               onSensorSave={sensorHandlers.handleSensorSave}
               onSensorCancel={sensorHandlers.handleSensorCancel}
@@ -118,7 +118,7 @@ const Admin = () => {
               mode={mode}
               trackingObjects={trackingObjects}
               selectedDevice={selectedDevice}
-              folders={sensorFolders}
+              companies={companies}
               onDeviceSelect={deviceHandlers.handleTrackingObjectSelect}
               onDeviceSave={deviceHandlers.handleDeviceSave}
               onDeviceCancel={deviceHandlers.handleDeviceCancel}

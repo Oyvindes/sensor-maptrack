@@ -3,13 +3,13 @@ import React from "react";
 import { SensorData } from "@/components/SensorCard";
 import SensorList from "@/components/admin/SensorList";
 import SensorEditor from "@/components/SensorEditor";
-import { SensorFolder } from "@/types/users";
+import { Company } from "@/types/users";
 
 interface SensorsTabProps {
   mode: string;
   sensors: (SensorData & { folderId?: string; companyId?: string })[];
   selectedSensor: (SensorData & { folderId?: string; companyId?: string }) | null;
-  folders?: SensorFolder[];
+  companies?: Company[];
   onSensorSelect: (sensor: SensorData & { folderId?: string }) => void;
   onSensorSave: (sensor: SensorData & { folderId?: string; companyId?: string }) => void;
   onSensorCancel: () => void;
@@ -20,7 +20,7 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
   mode,
   sensors,
   selectedSensor,
-  folders = [],
+  companies = [],
   onSensorSelect,
   onSensorSave,
   onSensorCancel,
@@ -38,7 +38,7 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
       {mode === "editSensor" && selectedSensor && (
         <SensorEditor
           sensor={selectedSensor}
-          folders={folders}
+          companies={companies}
           onSave={onSensorSave}
           onCancel={onSensorCancel}
         />
