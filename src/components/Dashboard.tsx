@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -21,22 +20,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Settings } from "lucide-react";
 
-// For demo purposes only - in a real app, you would use environment variables
-// This is a placeholder and should be replaced with your actual API key
-const GOOGLE_MAPS_API_KEY = "";
-
 const Dashboard: React.FC = () => {
   const [sensors, setSensors] = useState<SensorData[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
 
-  // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // In a real application, we would fetch from actual APIs
         const sensorsData = getMockSensors();
         const objectsData = getMockTrackingObjects();
         
@@ -52,9 +45,7 @@ const Dashboard: React.FC = () => {
 
     fetchData();
     
-    // Set up a polling interval for real-time updates
     const interval = setInterval(() => {
-      // Update with slightly different values to simulate real-time changes
       setSensors(prev => 
         prev.map(sensor => ({
           ...sensor,
@@ -69,7 +60,6 @@ const Dashboard: React.FC = () => {
         }))
       );
       
-      // Update object positions slightly to simulate movement
       setTrackingObjects(prev => 
         prev.map(obj => ({
           ...obj,
@@ -88,7 +78,6 @@ const Dashboard: React.FC = () => {
   const handleSensorClick = async (sensor: SensorData) => {
     setSelectedSensor(sensor);
     
-    // Example of sending a command to a sensor
     try {
       const result = await sendCommandToSensor(sensor.id, "get_status");
       if (result.success) {
@@ -110,7 +99,6 @@ const Dashboard: React.FC = () => {
   const handleRefresh = () => {
     toast.info("Refreshing data...");
     
-    // Simulate refreshing data
     setTimeout(() => {
       setSensors(getMockSensors());
       setTrackingObjects(getMockTrackingObjects());
@@ -160,7 +148,6 @@ const Dashboard: React.FC = () => {
             objects={trackingObjects} 
             className="w-full animate-fade-up [animation-delay:300ms]"
             onObjectSelect={handleObjectSelect}
-            apiKey={GOOGLE_MAPS_API_KEY}
           />
         </SectionContainer>
 
