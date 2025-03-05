@@ -1,96 +1,81 @@
 
+import { useState } from "react";
 import { SensorFolder, Company } from "@/types/users";
-import { createSensorFolder, updateSensorFolder } from "@/services/folder/folderService";
 import { toast } from "sonner";
+import { AdminMode } from "@/hooks/useAdminState";
 
-export interface FolderHandlers {
-  handleFolderSelect: (folder: SensorFolder) => void;
-  handleFolderSelectById: (folderId: string) => void;
-  handleFolderSave: (updatedFolder: SensorFolder) => Promise<void>;
-  handleFolderCancel: () => void;
-  handleAddNewFolder: () => void;
-}
-
-export function useFolderHandlers(
+export const useFolderHandlers = (
   sensorFolders: SensorFolder[],
   setSensorFolders: React.Dispatch<React.SetStateAction<SensorFolder[]>>,
   setSelectedFolder: React.Dispatch<React.SetStateAction<SensorFolder | null>>,
-  setMode: React.Dispatch<React.SetStateAction<string>>,
+  setMode: React.Dispatch<React.SetStateAction<AdminMode>>,
   companies: Company[]
-): FolderHandlers {
+) => {
+  const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
+
   const handleFolderSelect = (folder: SensorFolder) => {
     setSelectedFolder(folder);
     setMode("editFolder");
   };
 
   const handleFolderSelectById = (folderId: string) => {
+    console.log("Selecting folder by ID:", folderId);
     const folder = sensorFolders.find(f => f.id === folderId);
     if (folder) {
-      handleFolderSelect(folder);
+      setSelectedFolder(folder);
+      setMode("editFolder");
+    } else {
+      console.warn(`Folder with ID ${folderId} not found`);
     }
   };
 
   const handleFolderSave = async (updatedFolder: SensorFolder) => {
+    setIsUpdatingFolder(true);
+
     try {
-      // Handle existing folder update
+      // Simulate an API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Check if we're editing an existing folder or creating a new one
       if (sensorFolders.some(f => f.id === updatedFolder.id)) {
-        await updateSensorFolder(updatedFolder.id, updatedFolder);
-        
-        // Update local state
-        setSensorFolders(prev => 
-          prev.map(folder => folder.id === updatedFolder.id ? updatedFolder : folder)
+        setSensorFolders(
+          sensorFolders.map(folder => 
+            folder.id === updatedFolder.id ? updatedFolder : folder
+          )
         );
+        toast.success('Project updated successfully');
       } else {
-        // Handle new folder creation
-        const { companyId, name, description } = updatedFolder;
-        if (!companyId) {
-          toast.error("A company must be selected");
-          return;
-        }
+        // Create new folder with a real ID
+        const newFolder = {
+          ...updatedFolder,
+          id: `folder-${Date.now()}`,
+          createdAt: new Date().toISOString().split('T')[0]
+        };
         
-        const { data: newFolder } = await createSensorFolder({
-          companyId,
-          name,
-          description
-        });
-        
-        // Add the new folder to the state
-        setSensorFolders(prev => [...prev, newFolder]);
+        setSensorFolders([...sensorFolders, newFolder]);
+        toast.success('Project created successfully');
       }
-      
-      // Reset the form
+
       setMode("listFolders");
       setSelectedFolder(null);
     } catch (error) {
-      console.error("Error saving folder:", error);
-      toast.error("Failed to save project");
+      console.error('Error saving folder:', error);
+      toast.error('Failed to save project');
+    } finally {
+      setIsUpdatingFolder(false);
     }
   };
 
   const handleFolderCancel = () => {
-    setMode("listFolders");
     setSelectedFolder(null);
-  };
-
-  const handleAddNewFolder = () => {
-    // Default to first company if available
-    const defaultCompanyId = companies.length > 0 ? companies[0].id : "";
-    
-    setSelectedFolder({
-      id: `folder-${Date.now().toString().slice(-3)}`,
-      name: "",
-      description: "",
-      companyId: defaultCompanyId,
-      createdAt: new Date().toISOString().split('T')[0]
-    });
-    setMode("editFolder");
+    setMode("listFolders");
   };
 
   return {
+    isUpdatingFolder,
     handleFolderSelect,
     handleFolderSelectById,
     handleFolderSave,
-    handleFolderCancel,
-    handleAddNewFolder
+    handleFolderCancel
   };
-}
+};

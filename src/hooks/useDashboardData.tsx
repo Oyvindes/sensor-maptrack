@@ -11,6 +11,7 @@ import {
 } from '@/services/sensorService';
 import { getMockSensorFolders } from '@/services/folder/folderService';
 import { getCurrentUser } from '@/services/authService';
+import { useNavigate } from "react-router-dom";
 
 export function useDashboardData() {
   const [sensors, setSensors] = useState<SensorData[]>([]);
@@ -19,6 +20,7 @@ export function useDashboardData() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
   const currentUser = getCurrentUser();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,8 +100,16 @@ export function useDashboardData() {
   };
 
   const handleProjectSelect = (project: SensorFolder) => {
-    toast.info(`Project: ${project.name}`, {
-      description: `${project.description || project.address || 'No description'}`
+    console.log("Navigating to admin for project:", project.id);
+    // Navigate to admin page and set the folder tab and selected folder
+    navigate('/admin');
+    
+    // Store the selected project ID in sessionStorage so we can select it after navigation
+    sessionStorage.setItem('selectedProjectId', project.id);
+    sessionStorage.setItem('adminActiveTab', 'folders');
+    
+    toast.info(`Opening project: ${project.name}`, {
+      description: 'Redirecting to project details'
     });
   };
 

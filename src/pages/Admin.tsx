@@ -52,6 +52,29 @@ const Admin = () => {
   
   const currentUser = getCurrentUser();
 
+  // Check for selected project from dashboard navigation
+  useEffect(() => {
+    const selectedProjectId = sessionStorage.getItem('selectedProjectId');
+    const storedActiveTab = sessionStorage.getItem('adminActiveTab');
+    
+    if (selectedProjectId && sensorFolders.length > 0) {
+      // Clear the session storage items
+      sessionStorage.removeItem('selectedProjectId');
+      sessionStorage.removeItem('adminActiveTab');
+      
+      // Find the folder with the matching ID
+      const folder = sensorFolders.find(f => f.id === selectedProjectId);
+      
+      if (folder) {
+        console.log("Found folder to select:", folder.id);
+        // Switch to folders tab
+        handleTabChange(storedActiveTab || 'folders');
+        // Select the folder and switch to edit mode
+        folderHandlers.handleFolderSelectById(folder.id);
+      }
+    }
+  }, [sensorFolders]);
+
   if (!currentUser) {
     return <div>Not authenticated</div>;
   }
