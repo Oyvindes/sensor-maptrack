@@ -8,7 +8,7 @@ export const getMockDevices = (): Device[] => {
       name: "Gateway 1",
       type: "gateway",
       status: "online",
-      location: { lat: 59.9139, lng: 10.7522 },
+      location: { lat: 63.429343, lng: 10.395264 }, // NTNU Gløshaugen
       companyId: "company-001"
     },
     {
@@ -16,7 +16,7 @@ export const getMockDevices = (): Device[] => {
       name: "Router 1",
       type: "router",
       status: "online",
-      location: { lat: 59.9239, lng: 10.7422 },
+      location: { lat: 63.431880, lng: 10.403909 }, // Trondheim Torg
       companyId: "company-001"
     },
     {
@@ -24,7 +24,7 @@ export const getMockDevices = (): Device[] => {
       name: "Tracker 1",
       type: "tracker",
       status: "offline",
-      location: { lat: 59.9339, lng: 10.7622 },
+      location: { lat: 63.426035, lng: 10.410142 }, // St. Olavs Hospital
       companyId: "company-002"
     }
   ];
