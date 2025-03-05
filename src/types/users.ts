@@ -31,6 +31,7 @@ export interface SensorFolder {
   projectNumber?: string; // New field for project number
   address?: string; // New field for project address
   assignedSensorIds?: string[]; // New field for assigned sensors
+  location?: { lat: number; lng: number } | string; // New field for geolocation
 }
 
 export interface LoginCredentials {
