@@ -3,17 +3,22 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { TrackingObject } from "@/types/sensors";
 import { SensorData } from "@/components/SensorCard";
+import { SensorFolder } from "@/types/users"; 
 import { 
   getMockSensors, 
   getMockTrackingObjects,
   sendCommandToSensor 
 } from '@/services/sensorService';
+import { getMockSensorFolders } from '@/services/folder/folderService';
+import { getCurrentUser } from '@/services/authService';
 
 export function useDashboardData() {
   const [sensors, setSensors] = useState<SensorData[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
+  const [projects, setProjects] = useState<SensorFolder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,12 +26,19 @@ export function useDashboardData() {
       try {
         const sensorsData = getMockSensors();
         const objectsData = getMockTrackingObjects();
+        const projectsData = getMockSensorFolders();
         
         // Filter out sensors that don't have a folderId
         const filteredSensors = sensorsData.filter(sensor => sensor.folderId);
         
+        // Filter projects based on user's company if not master admin
+        const filteredProjects = currentUser?.role === 'master' 
+          ? projectsData 
+          : projectsData.filter(project => project.companyId === currentUser?.companyId);
+        
         setSensors(filteredSensors);
         setTrackingObjects(objectsData);
+        setProjects(filteredProjects);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data");
@@ -68,7 +80,7 @@ export function useDashboardData() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentUser]);
 
   const handleSensorClick = async (sensor: SensorData) => {
     setSelectedSensor(sensor);
@@ -85,6 +97,12 @@ export function useDashboardData() {
     }
   };
 
+  const handleProjectSelect = (project: SensorFolder) => {
+    toast.info(`Project: ${project.name}`, {
+      description: `${project.description || project.address || 'No description'}`
+    });
+  };
+
   const handleObjectSelect = (object: TrackingObject) => {
     toast.info(`${object.name} selected`, {
       description: `Speed: ${object.speed}mph, Battery: ${object.batteryLevel}%`
@@ -95,8 +113,17 @@ export function useDashboardData() {
     toast.info("Refreshing data...");
     
     setTimeout(() => {
-      setSensors(getMockSensors());
+      const sensorsData = getMockSensors();
+      const filteredSensors = sensorsData.filter(sensor => sensor.folderId);
+      const projectsData = getMockSensorFolders();
+      
+      const filteredProjects = currentUser?.role === 'master' 
+        ? projectsData 
+        : projectsData.filter(project => project.companyId === currentUser?.companyId);
+      
+      setSensors(filteredSensors);
       setTrackingObjects(getMockTrackingObjects());
+      setProjects(filteredProjects);
       toast.success("Data refreshed successfully");
     }, 1000);
   };
@@ -104,10 +131,12 @@ export function useDashboardData() {
   return {
     sensors,
     trackingObjects,
+    projects,
     isLoading,
     selectedSensor,
     handleSensorClick,
     handleObjectSelect,
+    handleProjectSelect,
     handleRefresh
   };
 }

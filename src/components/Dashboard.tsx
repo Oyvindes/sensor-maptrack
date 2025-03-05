@@ -3,16 +3,16 @@ import React from "react";
 import { PageContainer, ContentContainer } from "./Layout";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import DashboardHeader from "./dashboard/DashboardHeader";
-import TrackingSection from "./dashboard/TrackingSection";
+import ProjectsSection from "./dashboard/ProjectsSection";
 import SensorSection from "./dashboard/SensorSection";
 
 const Dashboard: React.FC = () => {
   const {
     sensors,
-    trackingObjects,
+    projects,
     isLoading,
     handleSensorClick,
-    handleObjectSelect,
+    handleProjectSelect,
     handleRefresh
   } = useDashboardData();
 
@@ -21,9 +21,10 @@ const Dashboard: React.FC = () => {
       <DashboardHeader onRefresh={handleRefresh} />
 
       <ContentContainer>
-        <TrackingSection 
-          trackingObjects={trackingObjects} 
-          onObjectSelect={handleObjectSelect} 
+        <ProjectsSection 
+          projects={projects} 
+          isLoading={isLoading}
+          onProjectSelect={handleProjectSelect} 
         />
         
         <SensorSection 
