@@ -306,7 +306,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
                     <span>Send Directions</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md fixed z-[100] bg-background">
                   <DialogHeader>
                     <DialogTitle>Send Directions</DialogTitle>
                     <DialogDescription>
