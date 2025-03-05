@@ -1,8 +1,9 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Plus } from "lucide-react";
+import { RefreshCcw, Plus, Settings } from "lucide-react";
 import { getCurrentUser } from "@/services/authService";
+import { Link } from "react-router-dom";
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
@@ -14,6 +15,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onAddNewProject
 }) => {
   const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === "admin" || currentUser?.role === "master";
   
   return (
     <div className="sticky top-0 z-10 w-full backdrop-blur-md bg-background/80">
@@ -32,6 +34,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               onClick={onAddNewProject}
             >
               <Plus className="w-4 h-4 mr-1" /> Add Project
+            </Button>
+          )}
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              asChild
+            >
+              <Link to="/admin">
+                <Settings className="w-4 h-4 mr-1" /> Admin
+              </Link>
             </Button>
           )}
           <Button 
