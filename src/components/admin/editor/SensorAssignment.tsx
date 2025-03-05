@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link, Plus, Camera, X, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
