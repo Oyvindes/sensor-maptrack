@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SensorFolder, Company } from '@/types/users';
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import SensorFolderEditor from './SensorFolderEditor';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
+import { getCurrentUser } from '@/services/authService';
 
 interface SensorFolderListProps {
   folders: SensorFolder[];
@@ -29,10 +31,29 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<SensorFolder | null>(null);
+  const currentUser = getCurrentUser();
   
-  const filteredFolders = selectedCompanyId
-    ? folders.filter(folder => folder.companyId === selectedCompanyId)
-    : folders;
+  // Filter folders based on user role and permissions
+  const filteredFolders = folders.filter(folder => {
+    // Site-wide admin (master) can see all folders
+    if (currentUser?.role === 'master') {
+      return true;
+    }
+    
+    // Regular admin can see folders from their company only
+    if (currentUser?.role === 'admin') {
+      return folder.companyId === currentUser.companyId;
+    }
+    
+    // Regular users can only see folders they've created (for now we don't track creator,
+    // so we'll just check company until that's implemented)
+    return folder.companyId === currentUser?.companyId;
+  });
+
+  // Further filter by selected company if applicable
+  const displayedFolders = selectedCompanyId
+    ? filteredFolders.filter(folder => folder.companyId === selectedCompanyId)
+    : filteredFolders;
 
   const handleAddNew = () => {
     if (onAddNew) {
@@ -44,7 +65,7 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
       id: `temp-${Date.now()}`,
       name: "",
       description: "",
-      companyId: selectedCompanyId || "",
+      companyId: selectedCompanyId || currentUser?.companyId || "",
       createdAt: new Date().toISOString().split('T')[0]
     };
     setCurrentFolder(newFolder);
@@ -83,6 +104,20 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
     return company ? company.name : 'Unknown Company';
   };
 
+  // Check if user can edit a specific folder
+  const canEditFolder = (folder: SensorFolder) => {
+    if (!currentUser) return false;
+    
+    // Site-wide admins can edit any folder
+    if (currentUser.role === 'master') return true;
+    
+    // Company admins can edit folders in their company
+    if (currentUser.role === 'admin' && folder.companyId === currentUser.companyId) return true;
+    
+    // Regular users can edit only folders they've created (for now just company match)
+    return folder.companyId === currentUser.companyId;
+  };
+
   if (isEditing && currentFolder) {
     return (
       <SensorFolderEditor
@@ -103,7 +138,7 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
         </Button>
       </div>
 
-      {filteredFolders.length === 0 && (
+      {displayedFolders.length === 0 && (
         <Alert className="mb-4">
           <AlertTitle>No folders found</AlertTitle>
           <AlertDescription>
@@ -115,7 +150,7 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
       )}
 
       <div className="space-y-2">
-        {filteredFolders.map(folder => (
+        {displayedFolders.map(folder => (
           <div
             key={folder.id}
             className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
@@ -134,12 +169,14 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
               <Badge variant="secondary">
                 {getCompanyName(folder.companyId)}
               </Badge>
-              <Button variant="ghost" size="sm" onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(folder);
-              }}>
-                <Edit className="h-4 w-4" />
-              </Button>
+              {canEditFolder(folder) && (
+                <Button variant="ghost" size="sm" onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(folder);
+                }}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         ))}

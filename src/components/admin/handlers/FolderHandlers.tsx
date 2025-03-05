@@ -1,5 +1,7 @@
 
 import { SensorFolder } from "@/types/users";
+import { getCurrentUser } from "@/services/authService";
+import { toast } from "sonner";
 
 export interface FolderHandlers {
   handleFolderSelect: (folder: SensorFolder) => void;
@@ -16,8 +18,15 @@ export function useFolderHandlers(
   setMode: React.Dispatch<React.SetStateAction<string>>,
   companies: { id: string }[]
 ): FolderHandlers {
+  const currentUser = getCurrentUser();
   
   const handleFolderSelect = (folder: SensorFolder) => {
+    // Check if user has permission to edit this folder
+    if (!canEditFolder(folder)) {
+      toast.error("You don't have permission to edit this folder");
+      return;
+    }
+    
     setSelectedFolder(folder);
     setMode("editFolder");
   };
@@ -30,6 +39,12 @@ export function useFolderHandlers(
   };
 
   const handleFolderSave = (updatedFolder: SensorFolder) => {
+    // Check permission again before saving
+    if (!canEditFolder(updatedFolder)) {
+      toast.error("You don't have permission to modify this folder");
+      return;
+    }
+    
     setSensorFolders(sensorFolders.map(f => f.id === updatedFolder.id ? updatedFolder : f));
     setMode("listFolders");
     setSelectedFolder(null);
@@ -41,13 +56,37 @@ export function useFolderHandlers(
   };
 
   const handleAddNewFolder = () => {
+    if (!currentUser) {
+      toast.error("You must be logged in to create folders");
+      return;
+    }
+    
+    // For new folders, set the company ID to the user's company
+    const companyId = currentUser.role === 'master' 
+      ? (companies[0]?.id || "system") 
+      : currentUser.companyId;
+    
     setSelectedFolder({
       id: `folder-${Date.now().toString().slice(-3)}`,
       name: "",
-      companyId: companies[0]?.id || "system",
+      companyId: companyId,
       createdAt: new Date().toISOString().split('T')[0]
     });
     setMode("editFolder");
+  };
+  
+  // Helper function to check if user can edit a specific folder
+  const canEditFolder = (folder: SensorFolder): boolean => {
+    if (!currentUser) return false;
+    
+    // Site-wide admins can edit any folder
+    if (currentUser.role === 'master') return true;
+    
+    // Company admins can edit folders in their company
+    if (currentUser.role === 'admin' && folder.companyId === currentUser.companyId) return true;
+    
+    // Regular users can edit only folders they've created (for now just company match)
+    return folder.companyId === currentUser.companyId;
   };
 
   return {
