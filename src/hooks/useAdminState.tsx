@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { getMockCompanies, getMockSensorFolders, getMockUsers } from "@/services/userService";
+import { getMockCompanies } from "@/services/company/companyService";
+import { getMockUsers } from "@/services/user/userService";
+import { getMockSensorFolders } from "@/services/folder/folderService";
 import { getMockDevices, getMockSensors, getMockTrackingObjects } from "@/services/sensorService";
 import { mapDeviceToTrackingObject } from "@/services/device/mockDeviceData";
 import { Company, User, SensorFolder } from "@/types/users";

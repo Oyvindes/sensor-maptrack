@@ -1,4 +1,3 @@
-
 import { User, LoginCredentials } from "@/types/users";
 import { toast } from "sonner";
 
@@ -17,7 +16,7 @@ let mockUsers: User[] = [
 ];
 
 // Import and add all users from userService
-import { getMockUsers } from "./userService";
+import { getMockUsers } from "./user/userService";
 
 // Initialize the authenticated user state
 let currentUser: User | null = null;
