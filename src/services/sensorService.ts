@@ -1,5 +1,6 @@
+
 import { SensorData } from "@/components/SensorCard";
-import { TrackingObject } from "@/types/sensors";
+import { TrackingObject, Device } from "@/types/sensors";
 
 // This is a mock service for demo purposes
 // In a real application, this would call actual API endpoints
@@ -114,6 +115,35 @@ export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
       lastUpdated: new Date().toLocaleTimeString(),
       folderId: "folder-004"
     },
+  ];
+};
+
+export const getMockDevices = (): Device[] => {
+  return [
+    {
+      id: "device-001",
+      name: "Gateway 1",
+      type: "gateway",
+      status: "online",
+      location: { lat: 59.9139, lng: 10.7522 },
+      companyId: "company-001"
+    },
+    {
+      id: "device-002",
+      name: "Router 1",
+      type: "router",
+      status: "online",
+      location: { lat: 59.9239, lng: 10.7422 },
+      companyId: "company-001"
+    },
+    {
+      id: "device-003",
+      name: "Tracker 1",
+      type: "tracker",
+      status: "offline",
+      location: { lat: 59.9339, lng: 10.7622 },
+      companyId: "company-002"
+    }
   ];
 };
 

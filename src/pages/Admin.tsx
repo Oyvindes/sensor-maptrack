@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/services/authService";
 import { getMockCompanies, getMockSensorFolders } from "@/services/userService";
-import { getMockDevices, getMockSensors } from "@/services/sensorService";
+import { getMockDevices, getMockSensors, getMockTrackingObjects } from "@/services/sensorService";
 import AdminHeader from "@/components/admin/AdminHeader";
 import CompanyList from "@/components/admin/CompanyList";
 import CompanyEditor from "@/components/admin/CompanyEditor";
@@ -17,8 +18,9 @@ import SensorFolderEditor from "@/components/admin/SensorFolderEditor";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { Company, User, SensorFolder } from "@/types/users";
 import { Device, Sensor } from "@/types/sensors";
-import { TrackingObject } from "@/types/sensors";
 import ModeSwitcher from "@/components/admin/ModeSwitcher";
+import { getMockUsers } from "@/services/userService";
+import { SensorData } from "@/components/SensorCard";
 
 const Admin = () => {
   const [mode, setMode] = useState<
@@ -34,16 +36,17 @@ const Admin = () => {
     "editFolder"
   >("listCompanies");
   
+  const [currentAdminMode, setCurrentAdminMode] = useState<"sensors" | "devices" | "users" | "folders">("sensors");
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedSensor, setSelectedSensor] = useState<Sensor | null>(null);
-  const [selectedDevice, setSelectedDevice] = useState<TrackingObject | null>(null);
+  const [selectedSensor, setSelectedSensor] = useState<SensorData & { folderId?: string; companyId?: string } | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<SensorFolder | null>(null);
   
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [sensors, setSensors] = useState<Sensor[]>([]);
-  const [devices, setDevices] = useState<TrackingObject[]>([]);
+  const [sensors, setSensors] = useState<(SensorData & { folderId?: string; companyId?: string })[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
   const [sensorFolders, setSensorFolders] = useState<SensorFolder[]>([]);
   
   const currentUser = getCurrentUser();
@@ -52,7 +55,10 @@ const Admin = () => {
     // Fetch mock data on component mount
     setCompanies(getMockCompanies());
     setUsers(getMockUsers());
-    setSensors(getMockSensors());
+    setSensors(getMockSensors().map(sensor => ({
+      ...sensor,
+      companyId: "company-001" // Adding the required companyId property
+    })));
     setDevices(getMockDevices());
     setSensorFolders(getMockSensorFolders());
   }, []);
@@ -117,12 +123,12 @@ const Admin = () => {
   };
 
   // Handlers for sensor operations
-  const handleSensorSelect = (sensor: Sensor) => {
+  const handleSensorSelect = (sensor: SensorData & { folderId?: string; companyId?: string }) => {
     setSelectedSensor(sensor);
     setMode("editSensor");
   };
 
-  const handleSensorSave = (updatedSensor: Sensor) => {
+  const handleSensorSave = (updatedSensor: SensorData & { folderId?: string; companyId?: string }) => {
     setSensors(sensors.map(s => s.id === updatedSensor.id ? updatedSensor : s));
     setMode("listSensors");
     setSelectedSensor(null);
@@ -135,23 +141,25 @@ const Admin = () => {
 
   const handleAddNewSensor = () => {
     setSelectedSensor({
-      companyId: companies[0]?.id || "system",
       id: `sensor-${Date.now().toString().slice(-3)}`,
       name: "",
-      type: "",
-      unit: "",
-      status: "active"
+      type: "temperature",
+      value: 0,
+      unit: "°C",
+      status: "online",
+      lastUpdated: new Date().toLocaleTimeString(),
+      companyId: companies[0]?.id || "system"
     });
     setMode("editSensor");
   };
 
   // Handlers for device operations
-  const handleDeviceSelect = (device: TrackingObject) => {
+  const handleDeviceSelect = (device: Device) => {
     setSelectedDevice(device);
     setMode("editDevice");
   };
 
-  const handleDeviceSave = (updatedDevice: TrackingObject) => {
+  const handleDeviceSave = (updatedDevice: Device) => {
     setDevices(devices.map(d => d.id === updatedDevice.id ? updatedDevice : d));
     setMode("listDevices");
     setSelectedDevice(null);
@@ -166,11 +174,10 @@ const Admin = () => {
     setSelectedDevice({
       id: `device-${Date.now().toString().slice(-3)}`,
       name: "",
-      position: { lat: 0, lng: 0 },
-      lastUpdated: new Date().toISOString(),
-      speed: 0,
-      direction: 0,
-      batteryLevel: 100
+      type: "",
+      status: "online",
+      location: { lat: 0, lng: 0 },
+      companyId: companies[0]?.id || "system"
     });
     setMode("editDevice");
   };
@@ -202,6 +209,25 @@ const Admin = () => {
     setMode("editFolder");
   };
 
+  // Handle mode change for the ModeSwitcher
+  const handleModeChange = (newMode: "sensors" | "devices" | "users" | "folders") => {
+    setCurrentAdminMode(newMode);
+    switch (newMode) {
+      case "sensors":
+        setMode("listSensors");
+        break;
+      case "devices":
+        setMode("listDevices");
+        break;
+      case "users":
+        setMode("listUsers");
+        break;
+      case "folders":
+        setMode("listFolders");
+        break;
+    }
+  };
+
   if (!currentUser) {
     return <div>Not authenticated</div>;
   }
@@ -231,6 +257,7 @@ const Admin = () => {
                 companies={companies}
                 onCompanySelect={handleCompanySelect}
                 onAddNew={handleAddNewCompany}
+                onViewUsers={() => {}} // Adding required prop
               />
             )}
             {mode === "editCompany" && selectedCompany && (
@@ -246,6 +273,7 @@ const Admin = () => {
             {mode === "listUsers" && (
               <UserList
                 users={users}
+                companies={companies} // Adding required prop
                 onUserSelect={handleUserSelect}
                 onAddNew={handleAddNewUser}
               />
@@ -270,8 +298,8 @@ const Admin = () => {
             )}
             {mode === "editSensor" && selectedSensor && (
               <SensorEditor
-                sensor={selectedSensor}
-                onSave={handleSensorSave}
+                sensor={selectedSensor as any}
+                onSave={handleSensorSave as any}
                 onCancel={handleSensorCancel}
               />
             )}
@@ -287,8 +315,8 @@ const Admin = () => {
             )}
             {mode === "editDevice" && selectedDevice && (
               <DeviceEditor
-                device={selectedDevice}
-                onSave={handleDeviceSave}
+                device={selectedDevice as any}
+                onSave={handleDeviceSave as any}
                 onCancel={handleDeviceCancel}
               />
             )}
@@ -305,6 +333,7 @@ const Admin = () => {
             {mode === "editFolder" && selectedFolder && (
               <SensorFolderEditor
                 folder={selectedFolder}
+                companies={companies} // Adding required prop
                 onSave={handleFolderSave}
                 onCancel={handleFolderCancel}
               />
@@ -313,7 +342,10 @@ const Admin = () => {
         </Tabs>
       </div>
 
-      <ModeSwitcher />
+      <ModeSwitcher 
+        currentMode={currentAdminMode}
+        onModeChange={handleModeChange}
+      />
     </div>
   );
 };

@@ -14,8 +14,8 @@ interface ModeSwitcherProps {
 }
 
 const ModeSwitcher: React.FC<ModeSwitcherProps> = ({ 
-  currentMode, 
-  onModeChange 
+  currentMode = "sensors", 
+  onModeChange = () => {} 
 }) => {
   return (
     <div className="flex justify-center mb-8">
