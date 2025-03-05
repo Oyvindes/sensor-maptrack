@@ -101,20 +101,13 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   return (
     <div className={className}>
       <MapContainer
-        // TypeScript doesn't recognize 'center' as a valid prop for MapContainer
-        // Using JSX spread attributes to pass properties to avoid TypeScript errors
-        {...{
-          center: mapCenter,
-          zoom: focusLocation ? focusZoom : 6,
-          style: { height: "100%", width: "100%" }
-        } as any}
+        center={mapCenter}
+        zoom={focusLocation ? focusZoom : 6}
+        style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          // Using JSX spread attributes to pass properties to avoid TypeScript errors
-          {...{
-            url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          } as any}
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
@@ -126,8 +119,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={device.id}
               position={[device.location.lat, device.location.lng] as [number, number]}
-              // Using the same JSX spread syntax to fix TypeScript icon error
-              {...{ icon: customIcon } as any}
+              icon={customIcon}
               eventHandlers={{
                 click: () => onDeviceClick && onDeviceClick(device.id),
               }}
@@ -149,8 +141,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={sensor.id}
               position={[sensor.location.lat, sensor.location.lng] as [number, number]}
-              // Using the same JSX spread syntax to fix TypeScript icon error
-              {...{ icon: customIcon } as any}
+              icon={customIcon}
               eventHandlers={{
                 click: () => onSensorClick && onSensorClick(sensor.id),
               }}
@@ -172,8 +163,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={object.id}
             position={[object.position.lat, object.position.lng] as [number, number]}
-            // Using the same JSX spread syntax to fix TypeScript icon error
-            {...{ icon: customIcon } as any}
+            icon={customIcon}
             eventHandlers={{
               click: () => onObjectSelect && onObjectSelect(object),
             }}
