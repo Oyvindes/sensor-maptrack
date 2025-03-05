@@ -64,13 +64,15 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   return (
     <div className={className}>
       <MapContainer
-        // The center prop needs to be passed as a separate property
+        // The MapContainer doesn't accept center as a direct prop in this version
+        // We have to use "center" as an html attribute instead
         center={mapCenter}
         zoom={6}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          // Fix the props for TileLayer
+          // TileLayer props need to be formatted correctly
+          // We need to use the attributes exactly as defined in the TileLayer component
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />

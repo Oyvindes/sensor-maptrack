@@ -15,7 +15,7 @@ interface ModeSwitcherProps {
 
 const ModeSwitcher: React.FC<ModeSwitcherProps> = ({ 
   currentMode = "sensors", 
-  onModeChange 
+  onModeChange
 }) => {
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10">

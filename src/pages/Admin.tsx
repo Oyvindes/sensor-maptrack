@@ -344,8 +344,8 @@ const Admin = () => {
           <TabsContent value="devices">
             {mode === "listDevices" && (
               <DeviceList
-                devices={devices}
-                onDeviceSelect={handleDeviceSelect}
+                devices={trackingObjects}
+                onDeviceSelect={handleTrackingObjectSelect}
                 onAddNew={handleAddNewDevice}
               />
             )}
