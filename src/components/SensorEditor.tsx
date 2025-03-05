@@ -52,7 +52,7 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSav
   const handleFolderChange = (value: string) => {
     setEditedSensor(prev => ({
       ...prev,
-      folderId: value
+      folderId: value === "none" ? undefined : value
     }));
   };
   
@@ -146,14 +146,14 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSav
         <div className="space-y-2">
           <Label htmlFor="folderId">Folder</Label>
           <Select 
-            value={editedSensor.folderId || ""} 
+            value={editedSensor.folderId || "none"} 
             onValueChange={handleFolderChange}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select folder" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {folders.map(folder => (
                 <SelectItem key={folder.id} value={folder.id}>
                   {folder.name}

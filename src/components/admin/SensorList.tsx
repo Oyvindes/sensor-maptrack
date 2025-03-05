@@ -1,7 +1,7 @@
 
 import React from "react";
 import { SensorData } from "@/components/SensorCard";
-import { Plus, Folder } from "lucide-react";
+import { Plus, Folder, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
@@ -37,14 +37,22 @@ const SensorList: React.FC<SensorListProps> = ({
           return (
             <div 
               key={sensor.id}
-              className="glass-card p-4 rounded-lg cursor-pointer hover:shadow-md transition-all-ease"
-              onClick={() => onSensorSelect(sensor)}
+              className="glass-card p-4 rounded-lg hover:shadow-md transition-all-ease"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`sensor-pulse ${getSensorColor(sensor.type)}`}>
-                  <IconComponent className="h-5 w-5" />
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={`sensor-pulse ${getSensorColor(sensor.type)}`}>
+                    <IconComponent className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-medium">{sensor.name}</h3>
                 </div>
-                <h3 className="font-medium">{sensor.name}</h3>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => onSensorSelect(sensor)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </div>
               <div className="text-sm text-muted-foreground">
                 {sensor.type} - {sensor.value} {sensor.unit}
