@@ -8,9 +8,19 @@ import { Sensor, Device, TrackingObject } from "@/types/sensors";
 // Fix Leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+  iconRetinaUrl: "/marker-icon-2x.png",
+  iconUrl: "/marker-icon.png",
+  shadowUrl: "/marker-shadow.png",
+});
+
+// Custom marker icon
+const customIcon = new L.Icon({
+  iconUrl: "/marker-icon.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: "/marker-shadow.png",
+  shadowSize: [41, 41],
 });
 
 // Helper component to programmatically change map view
@@ -65,41 +75,51 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
       return focusLocation;
     }
     if (devices.length > 0 && devices[0].location) {
-      return [devices[0].location.lat, devices[0].location.lng] as [number, number];
+      return [devices[0].location.lat, devices[0].location.lng];
     }
     if (sensors.length > 0 && sensors[0].location) {
-      return [sensors[0].location.lat, sensors[0].location.lng] as [number, number];
+      return [sensors[0].location.lat, sensors[0].location.lng];
     }
     if (objects.length > 0) {
-      return [objects[0].position.lat, objects[0].position.lng] as [number, number];
+      return [objects[0].position.lat, objects[0].position.lng];
     }
     // Default to Norway
-    return [60.472, 8.468] as [number, number];
+    return [60.472, 8.468];
   };
 
-  const mapCenter = getMapCenter();
+  const mapCenter = getMapCenter() as [number, number];
 
   return (
     <div className={className}>
-      <MapContainer 
-        center={mapCenter} 
-        zoom={focusLocation ? focusZoom : 6} 
-        style={{ height: "100%", width: "100%" }}
+      <MapContainer
+        // TypeScript doesn't recognize 'center' as a valid prop for MapContainer
+        // Using JSX spread attributes to pass properties to avoid TypeScript errors
+        {...{
+          center: mapCenter,
+          zoom: focusLocation ? focusZoom : 6,
+          style: { height: "100%", width: "100%" }
+        } as any}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          // Using JSX spread attributes to pass properties to avoid TypeScript errors
+          {...{
+            url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          } as any}
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
         {focusLocation && <FlyToLocation position={focusLocation} zoom={focusZoom} />}
         
         {/* Display devices */}
-        {devices.map((device) => 
+        {devices.map((device) => (
           device.location && (
             <Marker
               key={device.id}
-              position={[device.location.lat, device.location.lng]}
+              position={[device.location.lat, device.location.lng] as [number, number]}
+              eventHandlers={{
+                click: () => onDeviceClick && onDeviceClick(device.id),
+              }}
             >
               <Popup>
                 <div>
@@ -110,14 +130,17 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
               </Popup>
             </Marker>
           )
-        )}
+        ))}
         
         {/* Display sensors */}
-        {sensors.map((sensor) => 
+        {sensors.map((sensor) => (
           sensor.location && (
             <Marker
               key={sensor.id}
-              position={[sensor.location.lat, sensor.location.lng]}
+              position={[sensor.location.lat, sensor.location.lng] as [number, number]}
+              eventHandlers={{
+                click: () => onSensorClick && onSensorClick(sensor.id),
+              }}
             >
               <Popup>
                 <div>
@@ -129,13 +152,16 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
               </Popup>
             </Marker>
           )
-        )}
+        ))}
 
         {/* Display tracking objects */}
         {objects?.map((object) => (
           <Marker
             key={object.id}
-            position={[object.position.lat, object.position.lng]}
+            position={[object.position.lat, object.position.lng] as [number, number]}
+            eventHandlers={{
+              click: () => onObjectSelect && onObjectSelect(object),
+            }}
           >
             <Popup>
               <div>
