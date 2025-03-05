@@ -53,11 +53,22 @@ export function useAdminState() {
     setCompanies(getMockCompanies());
     setUsers(getMockUsers());
     
-    setSensors(getMockSensors().map(sensor => ({
-      ...sensor,
-      type: sensor.type || "temperature",
-      unit: sensor.unit || "°C"
-    })));
+    // Make sure all sensors have the values property properly set
+    setSensors(getMockSensors().map(sensor => {
+      // Ensure sensor has values array
+      if (!sensor.values || !Array.isArray(sensor.values)) {
+        // Convert old format to new format if needed
+        return {
+          ...sensor,
+          values: [{
+            type: "temperature",
+            value: 0,
+            unit: "°C"
+          }]
+        };
+      }
+      return sensor;
+    }));
     
     const deviceData = getMockDevices();
     setDevices(deviceData);

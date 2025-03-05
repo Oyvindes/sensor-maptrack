@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
-import { SensorData, SensorType } from "./SensorCard";
+import { SensorData, SensorType, SensorValue } from "./SensorCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, X } from "lucide-react";
+import { Save, X, Plus, Trash2 } from "lucide-react";
 import { SensorFolder } from "@/types/users";
 
 interface SensorEditorProps {
@@ -26,20 +26,33 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSav
     }));
   };
   
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditedSensor(prev => ({
-      ...prev,
-      [name]: parseFloat(value)
-    }));
+  const handleValueChange = (index: number, field: keyof SensorValue, value: any) => {
+    setEditedSensor(prev => {
+      const newValues = [...prev.values];
+      newValues[index] = {
+        ...newValues[index],
+        [field]: field === 'value' ? parseFloat(value) : value
+      };
+      return {
+        ...prev,
+        values: newValues
+      };
+    });
   };
   
-  const handleTypeChange = (value: string) => {
-    setEditedSensor(prev => ({
-      ...prev,
-      type: value as SensorType,
-      unit: getDefaultUnit(value as SensorType)
-    }));
+  const handleTypeChange = (index: number, value: string) => {
+    setEditedSensor(prev => {
+      const newValues = [...prev.values];
+      newValues[index] = {
+        ...newValues[index],
+        type: value as SensorType,
+        unit: getDefaultUnit(value as SensorType)
+      };
+      return {
+        ...prev,
+        values: newValues
+      };
+    });
   };
   
   const handleStatusChange = (value: string) => {
@@ -53,6 +66,27 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSav
     setEditedSensor(prev => ({
       ...prev,
       folderId: value === "none" ? undefined : value
+    }));
+  };
+  
+  const addSensorValue = () => {
+    setEditedSensor(prev => ({
+      ...prev,
+      values: [
+        ...prev.values,
+        {
+          type: "temperature",
+          value: 0,
+          unit: "°C"
+        }
+      ]
+    }));
+  };
+  
+  const removeSensorValue = (index: number) => {
+    setEditedSensor(prev => ({
+      ...prev,
+      values: prev.values.filter((_, i) => i !== index)
     }));
   };
   
@@ -72,60 +106,90 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSav
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="name">Sensor Name</Label>
-          <Input
-            id="name"
-            name="name"
-            value={editedSensor.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="name">Sensor Name</Label>
+        <Input
+          id="name"
+          name="name"
+          value={editedSensor.name}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label>Sensor Values</Label>
+        {editedSensor.values.map((sensorValue, index) => (
+          <div key={index} className="border p-4 rounded-md mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor={`type-${index}`}>Type</Label>
+                <Select 
+                  value={sensorValue.type} 
+                  onValueChange={(value) => handleTypeChange(index, value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="temperature">Temperature</SelectItem>
+                    <SelectItem value="humidity">Humidity</SelectItem>
+                    <SelectItem value="battery">Battery</SelectItem>
+                    <SelectItem value="proximity">Proximity</SelectItem>
+                    <SelectItem value="signal">Signal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor={`value-${index}`}>Value</Label>
+                <Input
+                  id={`value-${index}`}
+                  type="number"
+                  value={sensorValue.value}
+                  onChange={(e) => handleValueChange(index, 'value', e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor={`unit-${index}`}>Unit</Label>
+                <Input
+                  id={`unit-${index}`}
+                  value={sensorValue.unit}
+                  onChange={(e) => handleValueChange(index, 'unit', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-2">
+              <Button 
+                type="button" 
+                variant="destructive" 
+                size="sm"
+                onClick={() => removeSensorValue(index)}
+                disabled={editedSensor.values.length <= 1}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Remove
+              </Button>
+            </div>
+          </div>
+        ))}
         
-        <div className="space-y-2">
-          <Label htmlFor="type">Sensor Type</Label>
-          <Select 
-            value={editedSensor.type} 
-            onValueChange={handleTypeChange}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="temperature">Temperature</SelectItem>
-              <SelectItem value="humidity">Humidity</SelectItem>
-              <SelectItem value="battery">Battery</SelectItem>
-              <SelectItem value="proximity">Proximity</SelectItem>
-              <SelectItem value="signal">Signal</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="value">Current Value</Label>
-          <Input
-            id="value"
-            name="value"
-            type="number"
-            value={editedSensor.value}
-            onChange={handleNumberChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="unit">Unit</Label>
-          <Input
-            id="unit"
-            name="unit"
-            value={editedSensor.unit}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={addSensorValue}
+          className="w-full mt-2"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Add Another Value
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
           <Select 
