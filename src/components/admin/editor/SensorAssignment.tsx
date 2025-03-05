@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -86,6 +87,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
       
       <Card>
         <CardContent className="pt-6">
+          {/* Sensor IMEI Input Section */}
           <div className="mb-4">
             <div className="flex gap-2 mb-2">
               <Input 
@@ -112,6 +114,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
             )}
           </div>
           
+          {/* Assigned Sensors List Section */}
           {assignedSensors.length > 0 && (
             <div className="mb-6">
               <div className="mb-2">
@@ -139,6 +142,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
             </div>
           )}
           
+          {/* Available Sensors List Section */}
           {availableSensors.length === 0 ? (
             <p className="text-muted-foreground text-sm">No sensors available for this company</p>
           ) : (
