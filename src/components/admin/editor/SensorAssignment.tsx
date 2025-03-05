@@ -1,25 +1,42 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link, Plus, Camera } from "lucide-react";
+import { Link, Plus, Camera, X, Tag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface SensorAssignmentProps {
   availableSensors: Array<{ id: string; name: string }>;
   assignedSensorIds: string[];
   onSensorToggle: (sensorId: string, checked: boolean) => void;
+  companyId: string;
 }
 
 const SensorAssignment: React.FC<SensorAssignmentProps> = ({
   availableSensors,
   assignedSensorIds,
-  onSensorToggle
+  onSensorToggle,
+  companyId
 }) => {
   const [imeiInput, setImeiInput] = useState("");
   const [showScanner, setShowScanner] = useState(false);
+  const [assignedSensors, setAssignedSensors] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Get names for assigned sensors from available sensors
+  useEffect(() => {
+    const sensorsWithDetails = assignedSensorIds.map(id => {
+      const sensorDetails = availableSensors.find(s => s.id === id);
+      return {
+        id,
+        name: sensorDetails?.name || `Sensor ${id.replace('sensor-', '')}`
+      };
+    });
+    setAssignedSensors(sensorsWithDetails);
+  }, [assignedSensorIds, availableSensors]);
 
   const handleImeiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImeiInput(e.target.value);
@@ -33,6 +50,22 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
     
     // Simulating a new sensor ID based on the IMEI
     const newSensorId = `sensor-${imeiInput.replace(/[^0-9]/g, '')}`;
+    
+    // Check if this IMEI matches a sensor belonging to the company
+    // For our mock implementation, assume validation passes if companyId exists
+    if (!companyId) {
+      toast.error("Please select a company before adding sensors");
+      return;
+    }
+    
+    // Simulate IMEI validation against company ownership
+    // In a real app, this would check against a database
+    const validForCompany = Math.random() > 0.3; // 70% chance of success for demo
+    
+    if (!validForCompany) {
+      toast.error("This sensor IMEI does not belong to the selected company");
+      return;
+    }
     
     // Add the sensor to assigned sensors
     onSensorToggle(newSensorId, true);
@@ -53,6 +86,10 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
         setShowScanner(false);
       }, 2000);
     }
+  };
+
+  const handleRemoveSensor = (sensorId: string) => {
+    onSensorToggle(sensorId, false);
   };
 
   return (
@@ -77,7 +114,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
                 <Camera className="h-4 w-4" />
               </Button>
               <Button onClick={handleAddSensor} disabled={!imeiInput.trim()}>
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-1" /> Add
               </Button>
             </div>
             
@@ -91,6 +128,34 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
             )}
           </div>
           
+          {/* Assigned Sensors List */}
+          {assignedSensors.length > 0 && (
+            <div className="mb-6">
+              <div className="mb-2">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  <span>Current Assignments</span>
+                  <Badge variant="secondary">{assignedSensors.length}</Badge>
+                </Label>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {assignedSensors.map(sensor => (
+                  <div key={`assigned-${sensor.id}`} className="flex items-center justify-between p-2 rounded-md bg-muted/30 border">
+                    <span className="text-sm">{sensor.name}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleRemoveSensor(sensor.id)}
+                    >
+                      <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {/* Available Sensors List */}
           <div className="mb-2">
             <Label className="text-sm font-medium">Available Sensors</Label>
@@ -100,23 +165,30 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
             <p className="text-muted-foreground text-sm">No sensors available for this company</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {availableSensors.map(sensor => (
-                <div key={sensor.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`sensor-${sensor.id}`}
-                    checked={(assignedSensorIds || []).includes(sensor.id)}
-                    onCheckedChange={(checked) => 
-                      onSensorToggle(sensor.id, checked === true)
-                    }
-                  />
-                  <Label 
-                    htmlFor={`sensor-${sensor.id}`}
-                    className="text-sm font-normal"
-                  >
-                    {sensor.name}
-                  </Label>
-                </div>
-              ))}
+              {availableSensors.map(sensor => {
+                const isAssigned = assignedSensorIds.includes(sensor.id);
+                
+                return (
+                  <div key={sensor.id} className={`flex items-center space-x-2 p-2 rounded-md ${isAssigned ? 'bg-muted/50' : ''}`}>
+                    <Checkbox 
+                      id={`sensor-${sensor.id}`}
+                      checked={isAssigned}
+                      onCheckedChange={(checked) => 
+                        onSensorToggle(sensor.id, checked === true)
+                      }
+                    />
+                    <Label 
+                      htmlFor={`sensor-${sensor.id}`}
+                      className={`text-sm font-normal flex-1 ${isAssigned ? 'font-medium' : ''}`}
+                    >
+                      {sensor.name}
+                    </Label>
+                    {isAssigned && (
+                      <Badge variant="outline" className="ml-auto text-xs">Assigned</Badge>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>

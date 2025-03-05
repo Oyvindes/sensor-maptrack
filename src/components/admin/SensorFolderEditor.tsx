@@ -125,6 +125,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
             availableSensors={availableSensors}
             assignedSensorIds={formData.assignedSensorIds || []}
             onSensorToggle={handleSensorToggle}
+            companyId={formData.companyId}
           />
         </div>
 
