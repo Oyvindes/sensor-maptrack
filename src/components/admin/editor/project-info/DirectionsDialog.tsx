@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Navigation, Mail } from "lucide-react";
+import { Navigation, Mail, ExternalLink } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -28,6 +28,35 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
   const [emailAddress, setEmailAddress] = useState("");
   const [isSendingDirections, setIsSendingDirections] = useState(false);
 
+  const getGoogleMapsUrl = () => {
+    let googleMapsUrl = "";
+    
+    if (location) {
+      try {
+        let locationData: {lat: number, lng: number};
+        if (typeof location === 'string') {
+          locationData = JSON.parse(location);
+        } else {
+          locationData = location as {lat: number, lng: number};
+        }
+        
+        if (locationData.lat && locationData.lng) {
+          googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${locationData.lat},${locationData.lng}`;
+          return googleMapsUrl;
+        }
+      } catch (e) {
+        console.error("Error parsing location data:", e);
+      }
+    }
+    
+    // Fallback to address if location coordinates aren't available
+    if (address) {
+      googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+    }
+    
+    return googleMapsUrl;
+  };
+
   const sendDirectionsEmail = async () => {
     if (!emailAddress || !address) {
       toast.error("Email address and project address are required");
@@ -37,29 +66,33 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
     try {
       setIsSendingDirections(true);
       
+      // Simulate API call with a delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      let googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+      const googleMapsUrl = getGoogleMapsUrl();
       
-      if (location) {
-        try {
-          let locationData: {lat: number, lng: number};
-          if (typeof location === 'string') {
-            locationData = JSON.parse(location);
-          } else {
-            locationData = location as {lat: number, lng: number};
-          }
-          
-          if (locationData.lat && locationData.lng) {
-            googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${locationData.lat},${locationData.lng}`;
-          }
-        } catch (e) {
-          console.error("Error parsing location data:", e);
-        }
-      }
-      
+      // In a real implementation, this would call an API endpoint to send the email
       console.log(`Sending directions for project to ${emailAddress}`);
       console.log(`Directions URL: ${googleMapsUrl}`);
+      
+      // Email content that would be sent
+      const emailSubject = "Directions to Project Location";
+      const emailBody = `
+        Hello,
+        
+        Here are the directions to the project location:
+        
+        Project Address: ${address}
+        
+        Google Maps Link: ${googleMapsUrl}
+        
+        You can click on the link above or copy and paste it into your browser to get directions.
+        
+        Thank you!
+      `;
+      
+      console.log("Email Subject:", emailSubject);
+      console.log("Email Body:", emailBody);
       
       toast.success(`Directions sent to ${emailAddress}`);
       setDialogOpen(false);
@@ -75,6 +108,16 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
     const ownerEmail = "project.owner@example.com";
     setEmailAddress(ownerEmail);
     sendDirectionsEmail();
+  };
+  
+  const openDirectionsInNewTab = () => {
+    const url = getGoogleMapsUrl();
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      toast.success("Directions opened in new tab");
+    } else {
+      toast.error("Could not generate directions URL");
+    }
   };
 
   if (!address) return null;
@@ -131,6 +174,16 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({
                 onChange={(e) => setEmailAddress(e.target.value)} 
               />
             </div>
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={openDirectionsInNewTab}
+              className="w-full gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>Open Directions in New Tab</span>
+            </Button>
           </div>
           
           <DialogFooter className="flex sm:justify-between">
