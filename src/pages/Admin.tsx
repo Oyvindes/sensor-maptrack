@@ -48,10 +48,11 @@ const Admin = () => {
 
   useEffect(() => {
     // If the tab was set to folders, change it to companies
-    if (activeTab === 'folders') {
+    // Using as AdminTab to ensure type safety
+    if (activeTab === "folders" as any) {
       handleTabChange('companies');
     }
-  }, []);
+  }, [activeTab, handleTabChange]);
 
   if (!currentUser) {
     return <div>Not authenticated</div>;

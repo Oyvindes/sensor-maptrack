@@ -15,7 +15,7 @@ export const useFolderHandlers = (
 
   const handleFolderSelect = (folder: SensorFolder) => {
     setSelectedFolder(folder);
-    setMode("editFolder");
+    setMode("editFolder" as AdminMode);
   };
 
   const handleFolderSelectById = (folderId: string) => {
@@ -23,7 +23,7 @@ export const useFolderHandlers = (
     const folder = sensorFolders.find(f => f.id === folderId);
     if (folder) {
       setSelectedFolder(folder);
-      setMode("editFolder");
+      setMode("editFolder" as AdminMode);
     } else {
       console.warn(`Folder with ID ${folderId} not found`);
     }
@@ -56,7 +56,7 @@ export const useFolderHandlers = (
         toast.success('Project created successfully');
       }
 
-      setMode("listFolders");
+      setMode("listFolders" as AdminMode);
       setSelectedFolder(null);
     } catch (error) {
       console.error('Error saving folder:', error);
@@ -68,7 +68,7 @@ export const useFolderHandlers = (
 
   const handleFolderCancel = () => {
     setSelectedFolder(null);
-    setMode("listFolders");
+    setMode("listFolders" as AdminMode);
   };
 
   return {
