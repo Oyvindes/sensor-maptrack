@@ -26,7 +26,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
     id: project.id,
     name: project.name,
     type: "project",
-    status: "online",
+    status: "online" as const, // Fix: Explicitly specify as "online" | "offline" | "maintenance"
     location: project.location,
     companyId: project.companyId
   }));
