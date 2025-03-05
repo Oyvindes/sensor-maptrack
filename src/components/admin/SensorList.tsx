@@ -17,6 +17,17 @@ const SensorList: React.FC<SensorListProps> = ({
   onSensorSelect, 
   onAddNew 
 }) => {
+  // Get folder/project names
+  const getFolderName = (folderId?: string) => {
+    // This could be improved to fetch actual folder names from a service
+    // For now, we'll extract a name from the ID for demonstration
+    if (!folderId) return "";
+    
+    // Extract a readable name from the folder ID (e.g., "folder-001" -> "Project 001")
+    const folderNumber = folderId.replace("folder-", "");
+    return `Project ${folderNumber}`;
+  };
+
   return (
     <SectionContainer>
       <div className="flex justify-between items-center mb-4">
@@ -36,6 +47,7 @@ const SensorList: React.FC<SensorListProps> = ({
           const primaryValue = sensor.values && sensor.values.length > 0 ? sensor.values[0] : null;
           const primaryType = primaryValue ? primaryValue.type : "temperature";
           const IconComponent = getSensorIconComponent(primaryType);
+          const projectName = getFolderName(sensor.folderId);
           
           return (
             <div 
@@ -67,7 +79,7 @@ const SensorList: React.FC<SensorListProps> = ({
                 {sensor.folderId && (
                   <div className="text-xs flex items-center gap-1">
                     <Folder className="h-3 w-3" />
-                    <span>Assigned to folder</span>
+                    <span>{projectName}</span>
                   </div>
                 )}
               </div>
