@@ -1,10 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { getMockCompanies } from "@/services/company/companyService";
 import { getMockUsers } from "@/services/user/userService";
-import { getMockSensorFolders } from "@/services/folder/folderService";
 import { getMockDevices, getMockSensors, getMockTrackingObjects } from "@/services/sensorService";
 import { mapDeviceToTrackingObject } from "@/services/device/mockDeviceData";
-import { Company, User, SensorFolder } from "@/types/users";
+import { Company, User } from "@/types/users";
 import { Device, Sensor, TrackingObject } from "@/types/sensors";
 import { SensorData } from "@/components/SensorCard";
 
@@ -16,11 +16,9 @@ export type AdminMode =
   "listSensors" |
   "editSensor" |
   "listDevices" |
-  "editDevice" |
-  "listFolders" |
-  "editFolder";
+  "editDevice";
 
-export type AdminTab = "companies" | "users" | "sensors" | "devices" | "folders";
+export type AdminTab = "companies" | "users" | "sensors" | "devices";
 
 export function useAdminState() {
   const [mode, setMode] = useState<AdminMode>("listCompanies");
@@ -30,14 +28,12 @@ export function useAdminState() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedSensor, setSelectedSensor] = useState<SensorData & { folderId?: string; companyId?: string } | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [selectedFolder, setSelectedFolder] = useState<SensorFolder | null>(null);
   
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [sensors, setSensors] = useState<(SensorData & { folderId?: string; companyId?: string })[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
-  const [sensorFolders, setSensorFolders] = useState<SensorFolder[]>([]);
 
   useEffect(() => {
     setCompanies(getMockCompanies());
@@ -63,7 +59,6 @@ export function useAdminState() {
     const deviceData = getMockDevices();
     setDevices(deviceData);
     setTrackingObjects(deviceData.map(mapDeviceToTrackingObject));
-    setSensorFolders(getMockSensorFolders());
   }, []);
 
   const handleTabChange = (value: string) => {
@@ -82,9 +77,6 @@ export function useAdminState() {
       case "devices":
         setMode("listDevices");
         break;
-      case "folders":
-        setMode("listFolders");
-        break;
     }
   };
 
@@ -101,8 +93,6 @@ export function useAdminState() {
     setSelectedSensor,
     selectedDevice,
     setSelectedDevice,
-    selectedFolder,
-    setSelectedFolder,
     companies,
     setCompanies,
     users,
@@ -113,8 +103,6 @@ export function useAdminState() {
     setDevices,
     trackingObjects,
     setTrackingObjects,
-    sensorFolders,
-    setSensorFolders,
     handleTabChange
   };
 }

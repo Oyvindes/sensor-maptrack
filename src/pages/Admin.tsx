@@ -9,7 +9,6 @@ import { useCompanyHandlers } from "@/components/admin/handlers/CompanyHandlers"
 import { useUserHandlers } from "@/components/admin/handlers/UserHandlers";
 import { useSensorHandlers } from "@/components/admin/handlers/SensorHandlers";
 import { useDeviceHandlers } from "@/components/admin/handlers/DeviceHandlers";
-import { useFolderHandlers } from "@/components/admin/handlers/FolderHandlers";
 import { Toaster } from "sonner";
 
 // Tab components
@@ -17,15 +16,14 @@ import CompaniesTab from "@/components/admin/tabs/CompaniesTab";
 import UsersTab from "@/components/admin/tabs/UsersTab";
 import SensorsTab from "@/components/admin/tabs/SensorsTab";
 import DevicesTab from "@/components/admin/tabs/DevicesTab";
-import FoldersTab from "@/components/admin/tabs/FoldersTab";
 
 const Admin = () => {
   const adminState = useAdminState();
   const {
-    mode, activeTab, companies, users, sensors, devices, trackingObjects, sensorFolders,
-    selectedCompany, selectedUser, selectedSensor, selectedDevice, selectedFolder,
-    setMode, setSelectedCompany, setSelectedUser, setSelectedSensor, setSelectedDevice, setSelectedFolder,
-    setCompanies, setUsers, setSensors, setDevices, setTrackingObjects, setSensorFolders,
+    mode, activeTab, companies, users, sensors, devices, trackingObjects,
+    selectedCompany, selectedUser, selectedSensor, selectedDevice,
+    setMode, setSelectedCompany, setSelectedUser, setSelectedSensor, setSelectedDevice,
+    setCompanies, setUsers, setSensors, setDevices, setTrackingObjects,
     handleTabChange
   } = adminState;
 
@@ -45,35 +43,15 @@ const Admin = () => {
     devices, trackingObjects, setDevices, setTrackingObjects, 
     setSelectedDevice, setMode, companies
   );
-
-  const folderHandlers = useFolderHandlers(
-    sensorFolders, setSensorFolders, setSelectedFolder, setMode, companies
-  );
   
   const currentUser = getCurrentUser();
 
-  // Check for selected project from dashboard navigation
   useEffect(() => {
-    const selectedProjectId = sessionStorage.getItem('selectedProjectId');
-    const storedActiveTab = sessionStorage.getItem('adminActiveTab');
-    
-    if (selectedProjectId && sensorFolders.length > 0) {
-      // Clear the session storage items
-      sessionStorage.removeItem('selectedProjectId');
-      sessionStorage.removeItem('adminActiveTab');
-      
-      // Find the folder with the matching ID
-      const folder = sensorFolders.find(f => f.id === selectedProjectId);
-      
-      if (folder) {
-        console.log("Found folder to select:", folder.id);
-        // Switch to folders tab
-        handleTabChange(storedActiveTab || 'folders');
-        // Select the folder and switch to edit mode
-        folderHandlers.handleFolderSelectById(folder.id);
-      }
+    // If the tab was set to folders, change it to companies
+    if (activeTab === 'folders') {
+      handleTabChange('companies');
     }
-  }, [sensorFolders]);
+  }, []);
 
   if (!currentUser) {
     return <div>Not authenticated</div>;
@@ -96,7 +74,6 @@ const Admin = () => {
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="sensors">Sensors</TabsTrigger>
             <TabsTrigger value="devices">Devices</TabsTrigger>
-            <TabsTrigger value="folders">Projects</TabsTrigger>
           </TabsList>
           
           <TabsContent value="companies">
@@ -148,18 +125,6 @@ const Admin = () => {
               onDeviceSave={deviceHandlers.handleDeviceSave}
               onDeviceCancel={deviceHandlers.handleDeviceCancel}
               onAddNewDevice={deviceHandlers.handleAddNewDevice}
-            />
-          </TabsContent>
-
-          <TabsContent value="folders">
-            <FoldersTab
-              mode={mode}
-              sensorFolders={sensorFolders}
-              companies={companies}
-              selectedFolder={selectedFolder}
-              onFolderSelect={folderHandlers.handleFolderSelectById}
-              onFolderSave={folderHandlers.handleFolderSave}
-              onFolderCancel={folderHandlers.handleFolderCancel}
             />
           </TabsContent>
         </Tabs>

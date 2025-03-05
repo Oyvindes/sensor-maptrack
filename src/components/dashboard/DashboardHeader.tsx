@@ -1,56 +1,49 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Settings } from "lucide-react";
-import { PageHeader, PageTitle, PageSubtitle } from "@/components/Layout";
+import { RefreshCcw, Plus } from "lucide-react";
 import { getCurrentUser } from "@/services/authService";
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
+  onAddNewProject?: () => void;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
+  onRefresh,
+  onAddNewProject
+}) => {
   const currentUser = getCurrentUser();
-
+  
   return (
-    <PageHeader>
-      <div className="flex items-center justify-between">
+    <div className="sticky top-0 z-10 w-full backdrop-blur-md bg-background/80">
+      <div className="container py-3 flex justify-between items-center">
         <div>
-          <PageTitle>Sensor Monitoring & Tracking</PageTitle>
-          <PageSubtitle>
-            Real-time dashboard for sensor data and object tracking
-          </PageSubtitle>
-          {currentUser && (
-            <div className="flex items-center gap-2 mt-2 text-sm">
-              <span>Logged in as: {currentUser.name} ({currentUser.role})</span>
-            </div>
-          )}
+          <h1 className="text-xl font-semibold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Welcome back, {currentUser?.name || 'User'}
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {onAddNewProject && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={onAddNewProject}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Add Project
+            </Button>
+          )}
           <Button 
             variant="outline" 
-            size="sm" 
-            className="gap-2"
+            size="icon"
             onClick={onRefresh}
           >
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="gap-2"
-            asChild
-          >
-            <Link to="/admin">
-              <Settings className="h-4 w-4" />
-              <span>Admin</span>
-            </Link>
+            <RefreshCcw className="w-4 h-4" />
           </Button>
         </div>
       </div>
-    </PageHeader>
+    </div>
   );
 };
 

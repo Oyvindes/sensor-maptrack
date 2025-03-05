@@ -19,6 +19,9 @@ export function useDashboardData() {
   const [projects, setProjects] = useState<SensorFolder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
+  const [selectedProject, setSelectedProject] = useState<SensorFolder | null>(null);
+  const [editingProject, setEditingProject] = useState(false);
+  const [isUpdatingProject, setIsUpdatingProject] = useState(false);
   const currentUser = getCurrentUser();
   const navigate = useNavigate();
 
@@ -100,17 +103,69 @@ export function useDashboardData() {
   };
 
   const handleProjectSelect = (project: SensorFolder) => {
-    console.log("Navigating to admin for project:", project.id);
-    // Navigate to admin page and set the folder tab and selected folder
-    navigate('/admin');
+    console.log("Project selected:", project.id);
+    setSelectedProject(project);
+    setEditingProject(true);
+  };
+
+  const handleProjectSave = async (updatedProject: SensorFolder) => {
+    setIsUpdatingProject(true);
+
+    try {
+      // Simulate an API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Check if we're editing an existing project or creating a new one
+      if (projects.some(p => p.id === updatedProject.id)) {
+        setProjects(
+          projects.map(project => 
+            project.id === updatedProject.id ? updatedProject : project
+          )
+        );
+        toast.success('Project updated successfully');
+      } else {
+        // Create new project with a real ID
+        const newProject = {
+          ...updatedProject,
+          id: `folder-${Date.now()}`,
+          createdAt: new Date().toISOString().split('T')[0]
+        };
+        
+        setProjects([...projects, newProject]);
+        toast.success('Project created successfully');
+      }
+
+      setEditingProject(false);
+      setSelectedProject(null);
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast.error('Failed to save project');
+    } finally {
+      setIsUpdatingProject(false);
+    }
+  };
+
+  const handleProjectCancel = () => {
+    setSelectedProject(null);
+    setEditingProject(false);
+  };
+
+  const handleAddNewProject = () => {
+    const newProject: SensorFolder = {
+      id: `temp-${Date.now()}`,
+      name: "",
+      description: "",
+      companyId: currentUser?.companyId || "",
+      createdAt: new Date().toISOString().split('T')[0],
+      createdBy: currentUser?.id,
+      creatorName: currentUser?.name,
+      projectNumber: `PRJ-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      address: "",
+      assignedSensorIds: []
+    };
     
-    // Store the selected project ID in sessionStorage so we can select it after navigation
-    sessionStorage.setItem('selectedProjectId', project.id);
-    sessionStorage.setItem('adminActiveTab', 'folders');
-    
-    toast.info(`Opening project: ${project.name}`, {
-      description: 'Redirecting to project details'
-    });
+    setSelectedProject(newProject);
+    setEditingProject(true);
   };
 
   const handleObjectSelect = (object: TrackingObject) => {
@@ -144,9 +199,15 @@ export function useDashboardData() {
     projects,
     isLoading,
     selectedSensor,
+    selectedProject,
+    editingProject,
+    isUpdatingProject,
     handleSensorClick,
     handleObjectSelect,
     handleProjectSelect,
+    handleProjectSave,
+    handleProjectCancel,
+    handleAddNewProject,
     handleRefresh
   };
 }
