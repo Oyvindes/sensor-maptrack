@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -122,7 +123,8 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
               eventHandlers={{
                 click: (e) => {
                   // Only trigger device click if not clicking on popup content
-                  if (!e.originalEvent.target.closest('.leaflet-popup-content-wrapper')) {
+                  // Fix TypeScript error by properly typing the event target
+                  if (!(e.originalEvent.target as Element).closest?.('.leaflet-popup-content-wrapper')) {
                     onDeviceClick && onDeviceClick(device.id);
                   }
                 },
