@@ -34,7 +34,7 @@ export const initializeAuthService = () => {
       return {
         ...user,
         password: "Briks42!", // Use the correct password
-        role: "master", // Ensure this user is always a master admin
+        role: "master" as const, // Use type assertion to ensure correct type
         isCompanyAdmin: true // Ensure this user is always a company admin
       };
     }

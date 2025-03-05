@@ -28,7 +28,11 @@ const UserEditor: React.FC<UserEditorProps> = ({
   // Always ensure oe@briks.no is a master admin
   useEffect(() => {
     if (formData.email === "oe@briks.no" && formData.role !== "master") {
-      setFormData(prev => ({ ...prev, role: "master", isCompanyAdmin: true }));
+      setFormData(prev => ({ 
+        ...prev, 
+        role: "master", // This is now correctly typed as "master" literal
+        isCompanyAdmin: true 
+      }));
     }
   }, [formData.email, formData.role]);
 
@@ -38,7 +42,15 @@ const UserEditor: React.FC<UserEditorProps> = ({
       return; // Don't allow role change for this specific user
     }
     
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Type checking for role field to ensure it only accepts valid values
+    if (field === "role") {
+      // Make sure value is one of the allowed role types
+      if (value === "admin" || value === "user" || value === "master") {
+        setFormData(prev => ({ ...prev, [field]: value }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -46,7 +58,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
     
     // Ensure oe@briks.no is always master and company admin before saving
     if (formData.email === "oe@briks.no") {
-      const updatedUser = {
+      const updatedUser: User = {
         ...formData,
         role: "master",
         isCompanyAdmin: true
