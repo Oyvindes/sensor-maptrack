@@ -6,15 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X } from "lucide-react";
+import { SensorFolder } from "@/types/users";
 
 interface SensorEditorProps {
-  sensor: SensorData;
-  onSave: (updatedSensor: SensorData) => void;
+  sensor: SensorData & { folderId?: string };
+  folders?: SensorFolder[];
+  onSave: (updatedSensor: SensorData & { folderId?: string }) => void;
   onCancel: () => void;
 }
 
-const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, onSave, onCancel }) => {
-  const [editedSensor, setEditedSensor] = useState<SensorData>({ ...sensor });
+const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, folders = [], onSave, onCancel }) => {
+  const [editedSensor, setEditedSensor] = useState<SensorData & { folderId?: string }>({ ...sensor });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,6 +46,13 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, onSave, onCancel })
     setEditedSensor(prev => ({
       ...prev,
       status: value as "online" | "offline" | "warning"
+    }));
+  };
+
+  const handleFolderChange = (value: string) => {
+    setEditedSensor(prev => ({
+      ...prev,
+      folderId: value
     }));
   };
   
@@ -130,6 +139,26 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, onSave, onCancel })
               <SelectItem value="online">Online</SelectItem>
               <SelectItem value="offline">Offline</SelectItem>
               <SelectItem value="warning">Warning</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="folderId">Folder</Label>
+          <Select 
+            value={editedSensor.folderId || ""} 
+            onValueChange={handleFolderChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select folder" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {folders.map(folder => (
+                <SelectItem key={folder.id} value={folder.id}>
+                  {folder.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

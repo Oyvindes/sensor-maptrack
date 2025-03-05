@@ -1,35 +1,51 @@
 
-import React from "react";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { PageHeader, PageTitle, PageSubtitle } from "@/components/Layout";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { LogOut, User } from "lucide-react";
+import { logout, getCurrentUser } from '@/services/authService';
+import { toast } from 'sonner';
 
 const AdminHeader: React.FC = () => {
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser();
+
+  const handleLogout = async () => {
+    try {
+      const result = await logout();
+      if (result.success) {
+        toast.success(result.message);
+        navigate('/login');
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('An error occurred during logout');
+      console.error(error);
+    }
+  };
+
   return (
-    <PageHeader>
-      <div className="flex items-center justify-between">
-        <div>
-          <PageTitle>Admin Panel</PageTitle>
-          <PageSubtitle>
-            Manage sensors and tracking devices
-          </PageSubtitle>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2"
-            asChild
-          >
-            <Link to="/">
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Dashboard</span>
-            </Link>
-          </Button>
-        </div>
+    <header className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+      <div className="flex items-center space-x-4">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        {currentUser && (
+          <div className="flex items-center gap-2 ml-8 text-sm">
+            <User className="h-4 w-4" />
+            <span>
+              {currentUser.name} 
+              <span className="text-xs ml-1 text-muted-foreground">
+                ({currentUser.role})
+              </span>
+            </span>
+          </div>
+        )}
       </div>
-    </PageHeader>
+      <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
+        <LogOut className="h-4 w-4" />
+        Logout
+      </Button>
+    </header>
   );
 };
 

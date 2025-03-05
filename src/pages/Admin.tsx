@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { PageContainer, ContentContainer } from "@/components/Layout";
@@ -10,12 +11,16 @@ import {
 import {
   getMockCompanies,
   getMockUsers,
+  getMockSensorFolders,
   updateCompany,
-  updateUser
+  updateUser,
+  createSensorFolder,
+  updateSensorFolder
 } from "@/services/userService";
+import { getCurrentUser } from "@/services/authService";
 import { SensorData } from "@/components/SensorCard";
 import { TrackingObject } from "@/components/TrackingMap";
-import { Company, User } from "@/types/users";
+import { Company, User, SensorFolder } from "@/types/users";
 import { ArrowLeft } from "lucide-react";
 import SensorEditor from "@/components/SensorEditor";
 import DeviceEditor from "@/components/DeviceEditor";
@@ -27,20 +32,28 @@ import CompanyList from "@/components/admin/CompanyList";
 import CompanyEditor from "@/components/admin/CompanyEditor";
 import UserList from "@/components/admin/UserList";
 import UserEditor from "@/components/admin/UserEditor";
+import SensorFolderList from "@/components/admin/SensorFolderList";
+import SensorFolderEditor from "@/components/admin/SensorFolderEditor";
 
 const Admin: React.FC = () => {
-  const [sensors, setSensors] = useState<SensorData[]>([]);
+  const [sensors, setSensors] = useState<(SensorData & { folderId?: string })[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [folders, setFolders] = useState<SensorFolder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
+  const [selectedSensor, setSelectedSensor] = useState<SensorData & { folderId?: string } | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<TrackingObject | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<SensorFolder | null>(null);
   const [currentCompanyId, setCurrentCompanyId] = useState<string | undefined>(undefined);
-  const [editMode, setEditMode] = useState<"sensors" | "devices" | "users">("sensors");
+  const [editMode, setEditMode] = useState<"sensors" | "devices" | "users" | "folders">("sensors");
   const [userManagementView, setUserManagementView] = useState<"companies" | "users">("companies");
+
+  const currentUser = getCurrentUser();
+  const userCompanyId = currentUser?.companyId;
+  const isMasterAdmin = currentUser?.role === "master";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,11 +63,43 @@ const Admin: React.FC = () => {
         const objectsData = getMockTrackingObjects();
         const companiesData = getMockCompanies();
         const usersData = getMockUsers();
+        const foldersData = getMockSensorFolders();
         
-        setSensors(sensorsData);
+        // If user is not master admin, filter data by company
+        if (currentUser && !isMasterAdmin && userCompanyId) {
+          const filteredCompanies = companiesData.filter(company => 
+            company.id === userCompanyId
+          );
+          
+          const filteredUsers = usersData.filter(user => 
+            user.companyId === userCompanyId
+          );
+          
+          const filteredFolders = foldersData.filter(folder => 
+            folder.companyId === userCompanyId
+          );
+          
+          const folderIds = filteredFolders.map(folder => folder.id);
+          const filteredSensors = sensorsData.filter(sensor => 
+            !sensor.folderId || folderIds.includes(sensor.folderId)
+          );
+          
+          setSensors(filteredSensors);
+          setCompanies(filteredCompanies);
+          setUsers(filteredUsers);
+          setFolders(filteredFolders);
+          
+          // For non-master admins, set their company as the current company
+          setCurrentCompanyId(userCompanyId);
+        } else {
+          // For master admin, show all data
+          setSensors(sensorsData);
+          setCompanies(companiesData);
+          setUsers(usersData);
+          setFolders(foldersData);
+        }
+        
         setTrackingObjects(objectsData);
-        setCompanies(companiesData);
-        setUsers(usersData);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data");
@@ -64,19 +109,25 @@ const Admin: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [currentUser, isMasterAdmin, userCompanyId]);
 
-  const handleModeChange = (mode: "sensors" | "devices" | "users") => {
+  const handleModeChange = (mode: "sensors" | "devices" | "users" | "folders") => {
     setEditMode(mode);
     setSelectedSensor(null);
     setSelectedDevice(null);
     setSelectedCompany(null);
     setSelectedUser(null);
-    setCurrentCompanyId(undefined);
+    setSelectedFolder(null);
+    
+    // Don't reset company ID for non-master users
+    if (isMasterAdmin) {
+      setCurrentCompanyId(undefined);
+    }
+    
     setUserManagementView("companies");
   };
 
-  const handleSensorUpdate = async (updatedSensor: SensorData) => {
+  const handleSensorUpdate = async (updatedSensor: SensorData & { folderId?: string }) => {
     try {
       await sendCommandToSensor(updatedSensor.id, "update", updatedSensor);
       
@@ -128,15 +179,41 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleFolderUpdate = async (updatedFolder: SensorFolder) => {
+    try {
+      if (updatedFolder.id.startsWith("folder-new")) {
+        const result = await createSensorFolder(updatedFolder);
+        if (result.success) {
+          setFolders(prev => [...prev, result.data]);
+          toast.success(result.message);
+        }
+      } else {
+        await updateSensorFolder(updatedFolder.id, updatedFolder);
+        setFolders(prev => 
+          prev.map(folder => 
+            folder.id === updatedFolder.id ? updatedFolder : folder
+          )
+        );
+        toast.success(`Folder ${updatedFolder.name} updated successfully`);
+      }
+      
+      setSelectedFolder(null);
+    } catch (error) {
+      toast.error("Failed to update folder");
+      console.error(error);
+    }
+  };
+
   const handleAddNewSensor = () => {
-    const newSensor: SensorData = {
+    const newSensor: SensorData & { folderId?: string } = {
       id: `sensor-${Date.now()}`,
       name: "New Sensor",
       type: "temperature",
       value: 0,
       unit: "°C",
       status: "offline",
-      lastUpdated: new Date().toLocaleTimeString()
+      lastUpdated: new Date().toLocaleTimeString(),
+      folderId: currentCompanyId ? folders.find(f => f.companyId === currentCompanyId)?.id : undefined
     };
     
     setSelectedSensor(newSensor);
@@ -156,11 +233,23 @@ const Admin: React.FC = () => {
     setSelectedDevice(newDevice);
   };
 
+  const handleAddNewFolder = () => {
+    const newFolder: SensorFolder = {
+      id: `folder-new-${Date.now()}`,
+      name: "New Folder",
+      description: "",
+      companyId: currentCompanyId || (companies.length > 0 ? companies[0].id : ""),
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    
+    setSelectedFolder(newFolder);
+  };
+
   const handleCompanyUpdate = async (updatedCompany: Company) => {
     try {
       await updateCompany(updatedCompany.id, updatedCompany);
       
-      if (updatedCompany.id.startsWith("company-")) {
+      if (updatedCompany.id.startsWith("company-") && updatedCompany.id.length > 15) {
         const newId = `company-${Date.now().toString().slice(-3)}`;
         const savedCompany = { ...updatedCompany, id: newId };
         
@@ -203,7 +292,7 @@ const Admin: React.FC = () => {
     try {
       await updateUser(updatedUser.id, updatedUser);
       
-      if (updatedUser.id.startsWith("user-")) {
+      if (updatedUser.id.startsWith("user-") && updatedUser.id.length > 12) {
         const newId = `user-${Date.now().toString().slice(-3)}`;
         const savedUser = { ...updatedUser, id: newId };
         
@@ -232,6 +321,7 @@ const Admin: React.FC = () => {
       id: `user-${Date.now()}`,
       name: "New User",
       email: "user@example.com",
+      password: "password123",
       role: "user",
       companyId: defaultCompanyId,
       lastLogin: new Date().toISOString(),
@@ -242,8 +332,10 @@ const Admin: React.FC = () => {
   };
 
   const handleBackToCompanies = () => {
-    setUserManagementView("companies");
-    setCurrentCompanyId(undefined);
+    if (isMasterAdmin) {
+      setUserManagementView("companies");
+      setCurrentCompanyId(undefined);
+    }
   };
 
   return (
@@ -260,6 +352,7 @@ const Admin: React.FC = () => {
           selectedSensor ? (
             <SensorEditor 
               sensor={selectedSensor} 
+              folders={folders}
               onSave={handleSensorUpdate}
               onCancel={() => setSelectedSensor(null)}
             />
@@ -282,6 +375,24 @@ const Admin: React.FC = () => {
               devices={trackingObjects}
               onDeviceSelect={setSelectedDevice}
               onAddNew={handleAddNewDevice}
+            />
+          )
+        ) : editMode === "folders" ? (
+          selectedFolder ? (
+            <SensorFolderEditor
+              folder={selectedFolder}
+              companies={companies}
+              onSave={handleFolderUpdate}
+              onCancel={() => setSelectedFolder(null)}
+            />
+          ) : (
+            <SensorFolderList
+              folders={folders}
+              sensors={sensors}
+              companyId={currentCompanyId}
+              onFolderSelect={setSelectedFolder}
+              onAddNew={handleAddNewFolder}
+              onSensorSelect={setSelectedSensor}
             />
           )
         ) : (

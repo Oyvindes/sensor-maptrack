@@ -1,5 +1,5 @@
 
-import { Company, User } from "@/types/users";
+import { Company, User, SensorFolder } from "@/types/users";
 
 // Mock data service for companies and users
 export const getMockCompanies = (): Company[] => {
@@ -34,6 +34,7 @@ export const getMockUsers = (): User[] => {
       id: "user-001",
       name: "John Doe",
       email: "john.doe@acme.com",
+      password: "password123", // In a real app, this would be hashed
       role: "admin",
       companyId: "company-001",
       lastLogin: "2023-08-15T09:30:00",
@@ -43,6 +44,7 @@ export const getMockUsers = (): User[] => {
       id: "user-002",
       name: "Jane Smith",
       email: "jane.smith@acme.com",
+      password: "password123", // In a real app, this would be hashed
       role: "user",
       companyId: "company-001",
       lastLogin: "2023-08-14T14:45:00",
@@ -52,6 +54,7 @@ export const getMockUsers = (): User[] => {
       id: "user-003",
       name: "Alice Johnson",
       email: "alice@technova.com",
+      password: "password123", // In a real app, this would be hashed
       role: "admin",
       companyId: "company-002",
       lastLogin: "2023-08-15T11:20:00",
@@ -61,6 +64,7 @@ export const getMockUsers = (): User[] => {
       id: "user-004",
       name: "Bob Williams",
       email: "bob@technova.com",
+      password: "password123", // In a real app, this would be hashed
       role: "user",
       companyId: "company-002",
       lastLogin: "2023-08-10T08:15:00",
@@ -70,10 +74,52 @@ export const getMockUsers = (): User[] => {
       id: "user-005",
       name: "Charlie Brown",
       email: "charlie@greenenergy.com",
+      password: "password123", // In a real app, this would be hashed
       role: "admin",
       companyId: "company-003",
       lastLogin: "2023-08-13T16:30:00",
       status: "active"
+    }
+  ];
+};
+
+// Mock sensor folders
+export const getMockSensorFolders = (): SensorFolder[] => {
+  return [
+    {
+      id: "folder-001",
+      name: "Main Building",
+      description: "Sensors for the main building",
+      companyId: "company-001",
+      createdAt: "2023-05-15"
+    },
+    {
+      id: "folder-002",
+      name: "Warehouse",
+      description: "Sensors for the warehouse",
+      companyId: "company-001",
+      createdAt: "2023-05-16"
+    },
+    {
+      id: "folder-003",
+      name: "Office Building",
+      description: "Sensors for the office building",
+      companyId: "company-002",
+      createdAt: "2023-05-17"
+    },
+    {
+      id: "folder-004",
+      name: "Data Center",
+      description: "Sensors for the data center",
+      companyId: "company-002",
+      createdAt: "2023-05-18"
+    },
+    {
+      id: "folder-005",
+      name: "Solar Farm",
+      description: "Sensors for the solar farm",
+      companyId: "company-003",
+      createdAt: "2023-05-19"
     }
   ];
 };
@@ -107,6 +153,47 @@ export const updateUser = async (
       resolve({
         success: true,
         message: `User ${userId} updated successfully`,
+      });
+    }, 800);
+  });
+};
+
+export const createSensorFolder = async (
+  folderData: Omit<SensorFolder, "id" | "createdAt">
+): Promise<{ success: boolean; data: SensorFolder; message: string }> => {
+  console.log("Creating new sensor folder:", folderData);
+  
+  // Simulate API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newId = `folder-${Date.now().toString().slice(-3)}`;
+      const createdFolder: SensorFolder = { 
+        ...folderData, 
+        id: newId, 
+        createdAt: new Date().toISOString().split('T')[0] 
+      };
+      
+      resolve({
+        success: true,
+        data: createdFolder,
+        message: `Folder ${createdFolder.name} created successfully`,
+      });
+    }, 800);
+  });
+};
+
+export const updateSensorFolder = async (
+  folderId: string,
+  data: Partial<SensorFolder>
+): Promise<{ success: boolean; message: string }> => {
+  console.log(`Updating sensor folder ${folderId}`, data);
+  
+  // Simulate API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        success: true,
+        message: `Folder ${folderId} updated successfully`,
       });
     }, 800);
   });

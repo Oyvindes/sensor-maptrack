@@ -1,3 +1,4 @@
+
 import { SensorData } from "@/components/SensorCard";
 import { TrackingObject } from "@/components/TrackingMap";
 
@@ -62,7 +63,7 @@ export const createSensor = async (
 };
 
 // Mock data generators
-export const getMockSensors = (): SensorData[] => {
+export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
   return [
     {
       id: "temp-001",
@@ -72,6 +73,7 @@ export const getMockSensors = (): SensorData[] => {
       unit: "°C",
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
+      folderId: "folder-001"
     },
     {
       id: "hum-001",
@@ -81,6 +83,7 @@ export const getMockSensors = (): SensorData[] => {
       unit: "%",
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
+      folderId: "folder-001"
     },
     {
       id: "bat-001",
@@ -90,6 +93,7 @@ export const getMockSensors = (): SensorData[] => {
       unit: "%",
       status: "warning",
       lastUpdated: new Date().toLocaleTimeString(),
+      folderId: "folder-002"
     },
     {
       id: "prox-001",
@@ -99,6 +103,7 @@ export const getMockSensors = (): SensorData[] => {
       unit: "cm",
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
+      folderId: "folder-003"
     },
     {
       id: "sig-001",
@@ -108,6 +113,7 @@ export const getMockSensors = (): SensorData[] => {
       unit: "dBm",
       status: "offline",
       lastUpdated: new Date().toLocaleTimeString(),
+      folderId: "folder-004"
     },
   ];
 };

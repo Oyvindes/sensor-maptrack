@@ -1,14 +1,14 @@
 
 import React from "react";
 import { SensorData } from "@/components/SensorCard";
-import { Plus } from "lucide-react";
+import { Plus, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
 
 interface SensorListProps {
-  sensors: SensorData[];
-  onSensorSelect: (sensor: SensorData) => void;
+  sensors: (SensorData & { folderId?: string })[];
+  onSensorSelect: (sensor: SensorData & { folderId?: string }) => void;
   onAddNew: () => void;
 }
 
@@ -49,8 +49,16 @@ const SensorList: React.FC<SensorListProps> = ({
               <div className="text-sm text-muted-foreground">
                 {sensor.type} - {sensor.value} {sensor.unit}
               </div>
-              <div className="text-xs mt-2 text-muted-foreground">
-                Status: {sensor.status}
+              <div className="flex justify-between mt-2">
+                <div className="text-xs text-muted-foreground">
+                  Status: {sensor.status}
+                </div>
+                {sensor.folderId && (
+                  <div className="text-xs flex items-center gap-1">
+                    <Folder className="h-3 w-3" />
+                    <span>Assigned to folder</span>
+                  </div>
+                )}
               </div>
             </div>
           );

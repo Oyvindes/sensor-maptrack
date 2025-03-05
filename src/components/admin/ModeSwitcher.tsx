@@ -1,10 +1,16 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { 
+  Gauge, 
+  Cpu, 
+  Users as UsersIcon,
+  FolderTree
+} from 'lucide-react';
 
 interface ModeSwitcherProps {
-  currentMode: "sensors" | "devices" | "users";
-  onModeChange: (mode: "sensors" | "devices" | "users") => void;
+  currentMode: "sensors" | "devices" | "users" | "folders";
+  onModeChange: (mode: "sensors" | "devices" | "users" | "folders") => void;
 }
 
 const ModeSwitcher: React.FC<ModeSwitcherProps> = ({ 
@@ -12,25 +18,48 @@ const ModeSwitcher: React.FC<ModeSwitcherProps> = ({
   onModeChange 
 }) => {
   return (
-    <div className="flex gap-4 mb-8">
-      <Button 
-        variant={currentMode === "sensors" ? "default" : "outline"} 
-        onClick={() => onModeChange("sensors")}
-      >
-        Sensors
-      </Button>
-      <Button 
-        variant={currentMode === "devices" ? "default" : "outline"} 
-        onClick={() => onModeChange("devices")}
-      >
-        Tracking Devices
-      </Button>
-      <Button 
-        variant={currentMode === "users" ? "default" : "outline"} 
-        onClick={() => onModeChange("users")}
-      >
-        User Management
-      </Button>
+    <div className="flex justify-center mb-8">
+      <div className="glass-card rounded-lg p-1 flex space-x-1">
+        <Button
+          variant={currentMode === "sensors" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => onModeChange("sensors")}
+          className="gap-2"
+        >
+          <Gauge className="h-4 w-4" />
+          <span>Sensors</span>
+        </Button>
+        
+        <Button
+          variant={currentMode === "devices" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => onModeChange("devices")}
+          className="gap-2"
+        >
+          <Cpu className="h-4 w-4" />
+          <span>Devices</span>
+        </Button>
+        
+        <Button
+          variant={currentMode === "folders" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => onModeChange("folders")}
+          className="gap-2"
+        >
+          <FolderTree className="h-4 w-4" />
+          <span>Folders</span>
+        </Button>
+        
+        <Button
+          variant={currentMode === "users" ? "default" : "ghost"}
+          size="sm"
+          onClick={() => onModeChange("users")}
+          className="gap-2"
+        >
+          <UsersIcon className="h-4 w-4" />
+          <span>Users</span>
+        </Button>
+      </div>
     </div>
   );
 };

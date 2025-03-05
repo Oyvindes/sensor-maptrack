@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 interface UserEditorProps {
   user: User;
@@ -22,6 +22,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
   onCancel
 }) => {
   const [formData, setFormData] = useState<User>(user);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (field: keyof User, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -30,6 +31,10 @@ const UserEditor: React.FC<UserEditorProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -68,10 +73,36 @@ const UserEditor: React.FC<UserEditorProps> = ({
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="role">Role</Label>
           <Select
             value={formData.role}
-            onValueChange={(value: "admin" | "user") => handleChange("role", value)}
+            onValueChange={(value: "admin" | "user" | "master") => handleChange("role", value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select role" />
@@ -79,6 +110,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
             <SelectContent>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="user">User</SelectItem>
+              {user.id === "master-001" && (
+                <SelectItem value="master">Master Admin</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -93,6 +127,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
               <SelectValue placeholder="Select company" />
             </SelectTrigger>
             <SelectContent>
+              {user.role === "master" && (
+                <SelectItem value="system">System</SelectItem>
+              )}
               {companies.map(company => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.name}
