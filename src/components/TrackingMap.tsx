@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Sensor, Device, TrackingObject } from "@/types/sensors";
@@ -23,11 +23,34 @@ const customIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+// Helper component to programmatically change map view
+interface FlyToProps {
+  position: [number, number];
+  zoom?: number;
+}
+
+const FlyToLocation: React.FC<FlyToProps> = ({ position, zoom = 15 }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (position[0] !== 0 && position[1] !== 0) {
+      map.flyTo(position, zoom, {
+        animate: true,
+        duration: 1.5
+      });
+    }
+  }, [map, position, zoom]);
+  
+  return null;
+};
+
 interface TrackingMapProps {
   devices?: Device[];
   sensors?: Sensor[];
   objects?: TrackingObject[];
   highlightId?: string;
+  focusLocation?: [number, number];
+  focusZoom?: number;
   onDeviceClick?: (deviceId: string) => void;
   onSensorClick?: (sensorId: string) => void;
   onObjectSelect?: (object: TrackingObject) => void;
@@ -39,6 +62,8 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   sensors = [],
   objects = [],
   highlightId,
+  focusLocation,
+  focusZoom = 15,
   onDeviceClick,
   onSensorClick,
   onObjectSelect,
@@ -46,6 +71,9 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 }) => {
   // Find map center based on first device, sensor, or tracking object, or default to Norway
   const getMapCenter = () => {
+    if (focusLocation) {
+      return focusLocation;
+    }
     if (devices.length > 0 && devices[0].location) {
       return [devices[0].location.lat, devices[0].location.lng];
     }
@@ -68,7 +96,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
         // Using JSX spread attributes to pass properties to avoid TypeScript errors
         {...{
           center: mapCenter,
-          zoom: 6,
+          zoom: focusLocation ? focusZoom : 6,
           style: { height: "100%", width: "100%" }
         } as any}
       >
@@ -79,6 +107,9 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           } as any}
         />
+        
+        {/* Add FlyToLocation component to handle dynamic location changes */}
+        {focusLocation && <FlyToLocation position={focusLocation} zoom={focusZoom} />}
         
         {/* Display devices */}
         {devices.map((device) => (

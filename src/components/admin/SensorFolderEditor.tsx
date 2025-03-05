@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { SensorFolder, Company } from "@/types/users";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   const currentUser = getCurrentUser();
   const isMasterAdmin = currentUser?.role === 'master';
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [mapFocusPosition, setMapFocusPosition] = useState<[number, number] | undefined>(undefined);
 
   useEffect(() => {
     const allSensors = getMockSensors();
@@ -47,21 +49,38 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
 
     if (formData.location) {
       try {
+        let locationData: {lat: number, lng: number};
+        
         if (typeof formData.location === 'string') {
-          const locationData = JSON.parse(formData.location as string);
-          setMapLocation(locationData);
+          locationData = JSON.parse(formData.location as string);
         } else {
-          setMapLocation(formData.location as {lat: number, lng: number});
+          locationData = formData.location as {lat: number, lng: number};
         }
+        
+        setMapLocation(locationData);
+        setMapFocusPosition([locationData.lat, locationData.lng]);
       } catch (e) {
         console.error("Error parsing location data:", e);
         setMapLocation(null);
+        setMapFocusPosition(undefined);
       }
     }
   }, [formData.companyId, formData.location]);
 
   const handleChange = (field: keyof SensorFolder, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // If location was updated, update the map focus
+    if (field === "location" && typeof value === 'string') {
+      try {
+        const locationData = JSON.parse(value);
+        if (locationData.lat && locationData.lng) {
+          setMapFocusPosition([locationData.lat, locationData.lng]);
+        }
+      } catch (e) {
+        console.error("Error parsing updated location data:", e);
+      }
+    }
   };
 
   const handleSensorToggle = (sensorId: string, checked: boolean) => {
@@ -130,6 +149,8 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
                 location: mapLocation,
                 companyId: formData.companyId
               }]}
+              focusLocation={mapFocusPosition}
+              focusZoom={15}
             />
           </div>
         )}

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +85,12 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
     
     // If the API provides coordinates, we can store them as well
     if (suggestion.lat && suggestion.lng) {
-      onChange("location" as keyof SensorFolder, JSON.stringify({ lat: suggestion.lat, lng: suggestion.lng }));
+      // Pass the location data to trigger the map update
+      const locationData = JSON.stringify({ lat: suggestion.lat, lng: suggestion.lng });
+      onChange("location" as keyof SensorFolder, locationData);
+      
+      // Toast notification could be added here
+      console.log(`Address set to ${fullAddress} with coordinates [${suggestion.lat}, ${suggestion.lng}]`);
     }
     
     setShowSuggestions(false);
