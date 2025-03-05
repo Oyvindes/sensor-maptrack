@@ -79,12 +79,6 @@ const Login = () => {
             {isLoading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
-        
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>Demo accounts:</p>
-          <p>Master Admin: admin@system.com / admin123</p>
-          <p>Company Admin: john.doe@acme.com / password123</p>
-        </div>
       </div>
     </div>
   );

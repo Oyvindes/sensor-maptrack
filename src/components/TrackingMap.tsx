@@ -57,7 +57,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
       center={getMapCenter() as [number, number]}
       zoom={6}
       className={className}
-      zoomControl={true}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -70,7 +69,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={device.id}
             position={[device.location.lat, device.location.lng] as [number, number]}
-            icon={customIcon}
             eventHandlers={{
               click: () => onDeviceClick && onDeviceClick(device.id),
             }}
@@ -92,7 +90,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={sensor.id}
             position={[sensor.location.lat, sensor.location.lng] as [number, number]}
-            icon={customIcon}
             eventHandlers={{
               click: () => onSensorClick && onSensorClick(sensor.id),
             }}
