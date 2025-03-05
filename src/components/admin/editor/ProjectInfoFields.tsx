@@ -48,22 +48,22 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
           address: query,
           postcode: "7083",
           city: "Leinstrand",
-          lat: 63.33005,  // More accurate coordinate for Klettvegen 57A
-          lng: 10.26690   // More accurate coordinate for Klettvegen 57A
+          lat: 63.3253392684221,  // Correct coordinate for Klettvegen 57A
+          lng: 10.312003580149943  // Correct coordinate for Klettvegen 57A
         },
         {
           address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') + 2}`,
           postcode: "7083",
           city: "Leinstrand",
-          lat: 63.33020,  // Nearby address
-          lng: 10.26710   // Nearby address
+          lat: 63.32550,  // Nearby address
+          lng: 10.31220   // Nearby address
         },
         {
           address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') - 2}`,
           postcode: "7083", 
           city: "Leinstrand",
-          lat: 63.32990,  // Nearby address
-          lng: 10.26670   // Nearby address
+          lat: 63.32520,  // Nearby address
+          lng: 10.31180   // Nearby address
         }
       ];
       
