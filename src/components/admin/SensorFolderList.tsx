@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SensorFolder, Company } from '@/types/users';
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ interface SensorFolderListProps {
   onFolderCreate: (folder: Omit<SensorFolder, "id" | "createdAt">) => Promise<void>;
   onFolderUpdate: (folderId: string, data: Partial<SensorFolder>) => Promise<void>;
   onFolderSelect?: (folderId: string) => void;
+  onAddNew?: () => void;
 }
 
 const SensorFolderList: React.FC<SensorFolderListProps> = ({
@@ -24,17 +24,22 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
   selectedCompanyId,
   onFolderCreate,
   onFolderUpdate,
-  onFolderSelect
+  onFolderSelect,
+  onAddNew
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<SensorFolder | null>(null);
   
-  // Filter folders by selected company if applicable
   const filteredFolders = selectedCompanyId
     ? folders.filter(folder => folder.companyId === selectedCompanyId)
     : folders;
 
   const handleAddNew = () => {
+    if (onAddNew) {
+      onAddNew();
+      return;
+    }
+    
     const newFolder: SensorFolder = {
       id: `temp-${Date.now()}`,
       name: "",
@@ -59,11 +64,9 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
   const handleSave = async (folder: SensorFolder) => {
     try {
       if (folder.id.startsWith('temp-')) {
-        // Creating new folder
         const { id, createdAt, ...folderData } = folder;
         await onFolderCreate(folderData);
       } else {
-        // Updating existing folder
         const { id, ...updates } = folder;
         await onFolderUpdate(id, updates);
       }

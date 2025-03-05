@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/services/authService";
@@ -310,7 +309,7 @@ const Admin = () => {
             {mode === "listUsers" && (
               <UserList
                 users={users}
-                companies={companies}
+                companies={companies} // Adding required prop
                 onUserSelect={handleUserSelect}
                 onAddNew={handleAddNewUser}
               />
@@ -328,8 +327,8 @@ const Admin = () => {
           <TabsContent value="sensors">
             {mode === "listSensors" && (
               <SensorList
-                sensors={sensors}
-                onSensorSelect={handleSensorSelect}
+                sensors={sensors as any}
+                onSensorSelect={handleSensorSelect as any}
                 onAddNew={handleAddNewSensor}
               />
             )}
@@ -363,8 +362,10 @@ const Admin = () => {
             {mode === "listFolders" && (
               <SensorFolderList
                 folders={sensorFolders}
+                companies={companies} // Adding required prop
                 onFolderSelect={handleFolderSelectById}
-                onAddNew={handleAddNewFolder}
+                onFolderCreate={async () => {}} // Adding required prop
+                onFolderUpdate={async () => {}} // Adding required prop
               />
             )}
             {mode === "editFolder" && selectedFolder && (
