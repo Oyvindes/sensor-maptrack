@@ -5,16 +5,9 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Sensor, Device, TrackingObject } from "@/types/sensors";
 
-// Fix Leaflet icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "/marker-icon-2x.png",
-  iconUrl: "/marker-icon.png",
-  shadowUrl: "/marker-shadow.png",
-});
-
-// Create a custom icon for markers
-const markerIcon = new L.Icon({
+// Fix Leaflet icon issue by providing absolute URL paths to the icon assets
+// This is a common issue with Leaflet in React applications
+const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -23,6 +16,9 @@ const markerIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+// Set the default icon for all markers
+L.Marker.prototype.options.icon = defaultIcon;
 
 // Helper component to programmatically change map view
 interface FlyToProps {
@@ -111,7 +107,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={device.id}
               position={[device.location.lat, device.location.lng] as [number, number]}
-              icon={markerIcon}
               eventHandlers={{
                 click: () => onDeviceClick && onDeviceClick(device.id),
               }}
@@ -133,7 +128,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={sensor.id}
               position={[sensor.location.lat, sensor.location.lng] as [number, number]}
-              icon={markerIcon}
               eventHandlers={{
                 click: () => onSensorClick && onSensorClick(sensor.id),
               }}
@@ -155,7 +149,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={object.id}
             position={[object.position.lat, object.position.lng] as [number, number]}
-            icon={markerIcon}
             eventHandlers={{
               click: () => onObjectSelect && onObjectSelect(object),
             }}
@@ -177,4 +170,3 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 
 export type { TrackingMapProps };
 export default TrackingMap;
-
