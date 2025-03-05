@@ -13,14 +13,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "/marker-shadow.png",
 });
 
-// Custom marker icon
-const customIcon = new L.Icon({
-  iconUrl: "/marker-icon.png",
+// Create a custom icon for markers
+const markerIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowUrl: "/marker-shadow.png",
-  shadowSize: [41, 41],
+  shadowSize: [41, 41]
 });
 
 // Helper component to programmatically change map view
@@ -92,20 +93,13 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   return (
     <div className={className}>
       <MapContainer
-        // TypeScript doesn't recognize 'center' as a valid prop for MapContainer
-        // Using JSX spread attributes to pass properties to avoid TypeScript errors
-        {...{
-          center: mapCenter,
-          zoom: focusLocation ? focusZoom : 6,
-          style: { height: "100%", width: "100%" }
-        } as any}
+        center={mapCenter}
+        zoom={focusLocation ? focusZoom : 6}
+        style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          // Using JSX spread attributes to pass properties to avoid TypeScript errors
-          {...{
-            url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          } as any}
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
@@ -117,6 +111,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={device.id}
               position={[device.location.lat, device.location.lng] as [number, number]}
+              icon={markerIcon}
               eventHandlers={{
                 click: () => onDeviceClick && onDeviceClick(device.id),
               }}
@@ -138,6 +133,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={sensor.id}
               position={[sensor.location.lat, sensor.location.lng] as [number, number]}
+              icon={markerIcon}
               eventHandlers={{
                 click: () => onSensorClick && onSensorClick(sensor.id),
               }}
@@ -159,6 +155,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={object.id}
             position={[object.position.lat, object.position.lng] as [number, number]}
+            icon={markerIcon}
             eventHandlers={{
               click: () => onObjectSelect && onObjectSelect(object),
             }}
@@ -180,3 +177,4 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 
 export type { TrackingMapProps };
 export default TrackingMap;
+
