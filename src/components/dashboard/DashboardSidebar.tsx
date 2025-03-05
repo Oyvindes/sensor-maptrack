@@ -11,9 +11,15 @@ import {
 
 interface DashboardSidebarProps {
   className?: string;
+  activeView: 'dashboard' | 'projects';
+  onViewChange: (view: 'dashboard' | 'projects') => void;
 }
 
-const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className }) => {
+const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
+  className, 
+  activeView, 
+  onViewChange 
+}) => {
   const [collapsed, setCollapsed] = React.useState(false);
 
   return (
@@ -36,22 +42,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ className }) => {
       
       <div className="flex flex-col gap-1 px-2">
         <Button 
-          variant="ghost" 
+          variant={activeView === 'dashboard' ? "default" : "ghost"}
           className={cn(
             "justify-start",
             collapsed ? "px-2" : "px-3"
           )}
+          onClick={() => onViewChange('dashboard')}
         >
           <LayoutDashboard className="h-4 w-4 mr-2" />
           {!collapsed && <span>Dashboard</span>}
         </Button>
         
         <Button 
-          variant="ghost" 
+          variant={activeView === 'projects' ? "default" : "ghost"}
           className={cn(
             "justify-start",
             collapsed ? "px-2" : "px-3"
           )}
+          onClick={() => onViewChange('projects')}
         >
           <Folder className="h-4 w-4 mr-2" />
           {!collapsed && <span>Projects</span>}
