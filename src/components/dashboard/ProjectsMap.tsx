@@ -1,9 +1,9 @@
-
 import React from "react";
 import { SensorFolder } from "@/types/users";
 import { MapPin } from "lucide-react";
 import TrackingMap from "@/components/TrackingMap";
 import { cn } from "@/lib/utils";
+import { Location } from "@/types/sensors";
 
 interface ProjectsMapProps {
   projects: SensorFolder[];
@@ -18,18 +18,55 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
   onProjectSelect,
   className 
 }) => {
-  // Filter projects that have location data
-  const projectsWithLocation = projects.filter(project => project.location);
+  // Parse location data and filter projects that have valid location data
+  const projectsWithLocation = projects.filter(project => {
+    if (!project.location) return false;
+    
+    // If it's already the correct shape, keep it
+    if (typeof project.location === 'object' && 'lat' in project.location && 'lng' in project.location) {
+      return true;
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof project.location === 'string') {
+      try {
+        JSON.parse(project.location);
+        return true;
+      } catch (e) {
+        console.error(`Failed to parse location for project ${project.id}:`, e);
+        return false;
+      }
+    }
+    
+    return false;
+  });
   
-  // Convert projects to devices for TrackingMap
-  const devices = projectsWithLocation.map(project => ({
-    id: project.id,
-    name: project.name,
-    type: "project",
-    status: "online" as const, // Fix: Explicitly specify as "online" | "offline" | "maintenance"
-    location: project.location,
-    companyId: project.companyId
-  }));
+  // Convert projects to devices for TrackingMap with proper location typing
+  const devices = projectsWithLocation.map(project => {
+    // Parse the location if it's a string
+    let locationData: Location;
+    
+    if (typeof project.location === 'string') {
+      try {
+        locationData = JSON.parse(project.location);
+      } catch (e) {
+        // Fallback to Trondheim center if parsing fails
+        console.error(`Using fallback location for project ${project.id}`);
+        locationData = { lat: 63.4305, lng: 10.3951 }; // Trondheim center
+      }
+    } else {
+      locationData = project.location as Location;
+    }
+    
+    return {
+      id: project.id,
+      name: project.name,
+      type: "project",
+      status: "online" as const,
+      location: locationData,
+      companyId: project.companyId
+    };
+  });
 
   if (isLoading) {
     return (
