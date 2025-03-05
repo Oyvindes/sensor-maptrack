@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { ArrowLeft, UserRound, Clock } from "lucide-react";
+import { getCurrentUser } from "@/services/authService";
 
 interface SensorFolderEditorProps {
   folder: SensorFolder;
@@ -23,6 +24,8 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   onCancel
 }) => {
   const [formData, setFormData] = useState<SensorFolder>(folder);
+  const currentUser = getCurrentUser();
+  const isMasterAdmin = currentUser?.role === 'master';
 
   const handleChange = (field: keyof SensorFolder, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -67,24 +70,36 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="company">Company</Label>
-          <Select
-            value={formData.companyId}
-            onValueChange={(value) => handleChange("companyId", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select company" />
-            </SelectTrigger>
-            <SelectContent>
-              {companies.map(company => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {isMasterAdmin ? (
+          <div className="space-y-2">
+            <Label htmlFor="company">Company</Label>
+            <Select
+              value={formData.companyId}
+              onValueChange={(value) => handleChange("companyId", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select company" />
+              </SelectTrigger>
+              <SelectContent>
+                {companies.map(company => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="company">Company</Label>
+            <Input
+              id="company"
+              value={companies.find(c => c.id === formData.companyId)?.name || ""}
+              disabled
+              className="bg-muted"
+            />
+          </div>
+        )}
 
         {(formData.creatorName || formData.createdAt) && (
           <div className="pt-2 border-t border-gray-200 dark:border-gray-700">

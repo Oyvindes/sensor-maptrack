@@ -31,6 +31,14 @@ const FoldersTab: React.FC<FoldersTabProps> = ({
   // Note: Folders are now for organization only, not ownership
   const handleFolderCreate = async (folderData: Omit<SensorFolder, "id" | "createdAt">) => {
     try {
+      // For non-master users, ensure company is locked to their own company
+      if (currentUser?.role !== 'master') {
+        folderData = {
+          ...folderData,
+          companyId: currentUser?.companyId || ""
+        };
+      }
+      
       // Add creator information to the folder data
       const folderWithCreator = {
         ...folderData,
@@ -54,6 +62,12 @@ const FoldersTab: React.FC<FoldersTabProps> = ({
   
   const handleFolderUpdate = async (folderId: string, data: Partial<SensorFolder>) => {
     try {
+      // For non-master users, prevent company reassignment
+      if (currentUser?.role !== 'master') {
+        const { companyId, ...otherData } = data;
+        data = otherData;
+      }
+      
       const response = await updateSensorFolder(folderId, data);
       if (response.success) {
         toast.success("Folder updated successfully");

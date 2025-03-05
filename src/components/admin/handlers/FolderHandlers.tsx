@@ -45,6 +45,15 @@ export function useFolderHandlers(
       return;
     }
     
+    // For non-master users, ensure company ID doesn't change
+    if (currentUser?.role !== 'master') {
+      const originalFolder = sensorFolders.find(f => f.id === updatedFolder.id);
+      if (originalFolder && originalFolder.companyId !== updatedFolder.companyId) {
+        toast.error("You don't have permission to change the company assignment");
+        return;
+      }
+    }
+    
     setSensorFolders(sensorFolders.map(f => f.id === updatedFolder.id ? updatedFolder : f));
     setMode("listFolders");
     setSelectedFolder(null);
@@ -62,7 +71,6 @@ export function useFolderHandlers(
     }
     
     // For new folders, set the company ID to the user's company
-    // Folders are now just for organization within a company
     const companyId = currentUser.role === 'master' 
       ? (companies[0]?.id || "system") 
       : currentUser.companyId;
