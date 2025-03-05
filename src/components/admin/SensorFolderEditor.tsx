@@ -32,13 +32,17 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   const isMasterAdmin = currentUser?.role === 'master';
 
   useEffect(() => {
-    // Fetch all sensors for the assignment section
-    const sensors = getMockSensors().map(sensor => ({
-      id: sensor.id,
-      name: sensor.name
-    }));
-    setAvailableSensors(sensors);
-  }, []);
+    // Filter sensors by company ID
+    const allSensors = getMockSensors();
+    const filteredSensors = allSensors
+      .filter(sensor => sensor.companyId === formData.companyId)
+      .map(sensor => ({
+        id: sensor.id,
+        name: sensor.name
+      }));
+    
+    setAvailableSensors(filteredSensors);
+  }, [formData.companyId]);
 
   const handleChange = (field: keyof SensorFolder, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -64,6 +68,17 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
+  };
+
+  const handleCompanyChange = (companyId: string) => {
+    // When company changes, we need to:
+    // 1. Update the form data with the new company ID
+    // 2. Clear the assigned sensors as they might not belong to the new company
+    setFormData(prev => ({
+      ...prev,
+      companyId,
+      assignedSensorIds: [] // Reset assigned sensors
+    }));
   };
 
   return (
@@ -137,7 +152,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
             <Label htmlFor="company">Company</Label>
             <Select
               value={formData.companyId}
-              onValueChange={(value) => handleChange("companyId", value)}
+              onValueChange={handleCompanyChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select company" />
@@ -171,7 +186,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
           <Card>
             <CardContent className="pt-6">
               {availableSensors.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No sensors available</p>
+                <p className="text-muted-foreground text-sm">No sensors available for this company</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {availableSensors.map(sensor => (
