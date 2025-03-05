@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { SensorFolder, Company } from "@/types/users";
 import { Button } from "@/components/ui/button";
@@ -70,7 +69,6 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   const handleChange = (field: keyof SensorFolder, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // If location was updated, update the map focus
     if (field === "location" && typeof value === 'string') {
       try {
         const locationData = JSON.parse(value);

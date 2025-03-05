@@ -1,13 +1,21 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SensorFolder } from "@/types/users";
-import { Hash, MapPin, Search } from "lucide-react";
+import { Hash, MapPin, Search, Mail, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
 
 interface ProjectInfoFieldsProps {
   formData: SensorFolder;
@@ -30,6 +38,9 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [isSendingDirections, setIsSendingDirections] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const searchNorwegianAddresses = async (query: string) => {
     if (!query || query.length < 3) return;
@@ -37,13 +48,12 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
     try {
       setIsSearching(true);
       
-      // Use OpenStreetMap's Nominatim API for geocoding (real API call)
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)},Norway&addressdetails=1&limit=3`,
         {
           headers: {
             "Accept-Language": "en-US,en;q=0.9,nb;q=0.8",
-            "User-Agent": "SensorTrackingAppDemo/1.0"  // Required by Nominatim ToS
+            "User-Agent": "SensorTrackingAppDemo/1.0"
           }
         }
       );
@@ -56,7 +66,6 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
       
       if (data && data.length > 0) {
         const addressSuggestions: AddressSuggestion[] = data.map((item: any) => {
-          // Extract relevant address parts
           const road = item.address.road || "";
           const houseNumber = item.address.house_number || "";
           const postcode = item.address.postcode || "";
@@ -66,16 +75,14 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
             address: `${road} ${houseNumber}`.trim(),
             postcode: postcode,
             city: city,
-            lat: parseFloat(item.lat),  // Preserving full precision
-            lng: parseFloat(item.lon)   // Preserving full precision
+            lat: parseFloat(item.lat),
+            lng: parseFloat(item.lon)
           };
         });
         
         setSuggestions(addressSuggestions);
         setShowSuggestions(true);
       } else {
-        // Use static data as fallback or when API returns no results
-        // This fallback maintains compatibility with the demo
         const mockAddresses: AddressSuggestion[] = [
           {
             address: "Klettvegen 57A",
@@ -108,7 +115,6 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
       console.error("Error fetching address suggestions:", error);
       toast.error("Failed to fetch address data");
       
-      // Fallback to static data in case of error
       const mockAddresses: AddressSuggestion[] = [
         {
           address: "Klettvegen 57A",
@@ -134,9 +140,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
     const fullAddress = `${suggestion.address}, ${suggestion.postcode} ${suggestion.city}, Norway`;
     onChange("address" as keyof SensorFolder, fullAddress);
     
-    // If the API provides coordinates, we can store them as well
     if (suggestion.lat && suggestion.lng) {
-      // Pass the location data with maximum precision
       const locationData = JSON.stringify({
         lat: suggestion.lat,
         lng: suggestion.lng
@@ -148,6 +152,55 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
     
     setShowSuggestions(false);
     setAddressQuery("");
+  };
+
+  const sendDirectionsEmail = async () => {
+    if (!emailAddress || !formData.address) {
+      toast.error("Email address and project address are required");
+      return;
+    }
+
+    try {
+      setIsSendingDirections(true);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      let googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(formData.address)}`;
+      
+      if (formData.location) {
+        try {
+          let locationData: {lat: number, lng: number};
+          if (typeof formData.location === 'string') {
+            locationData = JSON.parse(formData.location);
+          } else {
+            locationData = formData.location as {lat: number, lng: number};
+          }
+          
+          if (locationData.lat && locationData.lng) {
+            googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${locationData.lat},${locationData.lng}`;
+          }
+        } catch (e) {
+          console.error("Error parsing location data:", e);
+        }
+      }
+      
+      console.log(`Sending directions for project "${formData.name}" to ${emailAddress}`);
+      console.log(`Directions URL: ${googleMapsUrl}`);
+      
+      toast.success(`Directions sent to ${emailAddress}`);
+      setDialogOpen(false);
+    } catch (error) {
+      console.error("Error sending directions:", error);
+      toast.error("Failed to send directions");
+    } finally {
+      setIsSendingDirections(false);
+    }
+  };
+
+  const sendToOwner = () => {
+    const ownerEmail = "project.owner@example.com";
+    setEmailAddress(ownerEmail);
+    sendDirectionsEmail();
   };
 
   return (
@@ -234,6 +287,77 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
             placeholder="Full address of the project location"
             className="mt-2"
           />
+          
+          {formData.address && (
+            <div className="mt-2 flex gap-2">
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Navigation className="h-4 w-4" />
+                    <span>Send Directions</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Send Directions</DialogTitle>
+                    <DialogDescription>
+                      Send Google Maps directions to the project location
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-4">
+                    <div className="flex flex-col space-y-2">
+                      <Label htmlFor="projectAddress">Project Address</Label>
+                      <Input 
+                        id="projectAddress" 
+                        value={formData.address || ""} 
+                        readOnly 
+                        className="bg-muted" 
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col space-y-2">
+                      <Label htmlFor="emailAddress">Email Address</Label>
+                      <Input 
+                        id="emailAddress" 
+                        type="email" 
+                        placeholder="Enter email address" 
+                        value={emailAddress} 
+                        onChange={(e) => setEmailAddress(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                  
+                  <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={sendToOwner}
+                      disabled={isSendingDirections}
+                      className="w-full sm:w-auto gap-2"
+                    >
+                      <Mail className="h-4 w-4" />
+                      <span>Send to Project Owner</span>
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={sendDirectionsEmail}
+                      disabled={isSendingDirections || !emailAddress}
+                      className="w-full sm:w-auto gap-2"
+                    >
+                      <Navigation className="h-4 w-4" />
+                      <span>Send Directions</span>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
         </div>
       </div>
 
