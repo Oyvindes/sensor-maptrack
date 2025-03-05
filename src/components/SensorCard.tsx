@@ -1,15 +1,21 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export type SensorType = "temperature" | "humidity" | "battery" | "proximity" | "signal";
+
+export type SensorValue = {
+  type: SensorType;
+  value: number;
+  unit: string;
+};
 
 export type SensorData = {
   id: string;
   name: string;
-  type: SensorType;
-  value: number;
-  unit: string;
+  values: SensorValue[];
   status: "online" | "offline" | "warning";
   lastUpdated: string;
   companyId?: string;
@@ -43,34 +49,34 @@ const getStatusIndicatorColor = (status: "online" | "offline" | "warning"): stri
 };
 
 const SensorCard: React.FC<SensorCardProps> = ({ sensor, onClick, className }) => {
-  const { type, value, unit, status, name, lastUpdated, companyId } = sensor;
-  const sensorColor = getSensorColor(type);
-  const formattedValue = typeof value === "number" ? value.toFixed(1) : value;
-  const IconComponent = getSensorIconComponent(type);
+  const [expanded, setExpanded] = useState(false);
+  const { values, status, name, lastUpdated } = sensor;
   
-  const range = ranges[type];
-  const percentage = Math.min(
-    100,
-    Math.max(
-      0,
-      ((value - range.min) / (range.max - range.min)) * 100
-    )
-  );
+  const handleToggle = () => {
+    setExpanded(!expanded);
+    if (onClick) onClick();
+  };
+
+  // Get the primary sensor value (first in the array) for the card header
+  const primaryValue = values && values.length > 0 ? values[0] : null;
+  const primaryType = primaryValue ? primaryValue.type : "temperature";
+  const sensorColor = getSensorColor(primaryType);
+  const IconComponent = getSensorIconComponent(primaryType);
 
   return (
     <div
       className={cn(
-        "glass-card rounded-xl p-6 cursor-pointer transition-all-ease hover:shadow-xl group",
+        "glass-card rounded-xl p-6 cursor-pointer transition-all-ease hover:shadow-xl",
         className
       )}
-      onClick={onClick}
+      onClick={handleToggle}
     >
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-start">
         <div className="flex items-center gap-2">
           <div className={cn("sensor-pulse", sensorColor)}>
             <IconComponent className="h-6 w-6" />
           </div>
-          <span className="font-medium text-sm">{name}</span>
+          <span className="font-medium">{name}</span>
         </div>
         <div className="flex items-center gap-2">
           <div 
@@ -82,34 +88,60 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, onClick, className }) =
           <span className="text-xs text-muted-foreground">
             {status === "online" ? "Live" : status === "warning" ? "Warning" : "Offline"}
           </span>
+          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </div>
       </div>
       
-      <div className="mt-4 mb-3">
-        <div className="flex items-baseline">
-          <span className={cn("text-3xl font-bold", sensorColor)}>{formattedValue}</span>
-          <span className="ml-1 text-sm text-muted-foreground">{unit}</span>
+      {expanded && values && values.length > 0 && (
+        <div className="mt-4 space-y-4 animate-fade-in">
+          {values.map((sensorValue, index) => {
+            const valueColor = getSensorColor(sensorValue.type);
+            const ValueIcon = getSensorIconComponent(sensorValue.type);
+            const range = ranges[sensorValue.type];
+            const formattedValue = typeof sensorValue.value === "number" ? sensorValue.value.toFixed(1) : sensorValue.value;
+            
+            const percentage = Math.min(
+              100,
+              Math.max(
+                0,
+                ((sensorValue.value - range.min) / (range.max - range.min)) * 100
+              )
+            );
+            
+            return (
+              <div key={index} className="border-t pt-3 first:border-t-0 first:pt-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <ValueIcon className={cn("h-4 w-4", valueColor)} />
+                  <span className="text-sm">{sensorValue.type}</span>
+                </div>
+                
+                <div className="flex items-baseline mb-2">
+                  <span className={cn("text-2xl font-bold", valueColor)}>
+                    {formattedValue}
+                  </span>
+                  <span className="ml-1 text-sm text-muted-foreground">
+                    {sensorValue.unit}
+                  </span>
+                </div>
+                
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full transition-all ease-out duration-700", valueColor)}
+                    style={{ width: `${percentage}%`, opacity: 0.7 }}
+                  />
+                </div>
+                
+                <div className="text-xs text-muted-foreground mt-1">
+                  Range: {range.min} - {range.max} {sensorValue.unit}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
-      
-      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-all ease-out duration-700", sensorColor)}
-          style={{ width: `${percentage}%`, opacity: 0.7 }}
-        />
-      </div>
+      )}
       
       <div className="mt-4 text-xs text-muted-foreground">
         Last updated: {lastUpdated}
-      </div>
-
-      <div className="mt-4 h-0 overflow-hidden opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all-ease">
-        <div className="text-sm pt-2 border-t border-border">
-          <div className="flex justify-between">
-            <span>Range</span>
-            <span>{range.min} - {range.max} {unit}</span>
-          </div>
-        </div>
       </div>
     </div>
   );

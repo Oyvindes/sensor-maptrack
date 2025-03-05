@@ -33,7 +33,10 @@ const SensorList: React.FC<SensorListProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sensors.map(sensor => {
-          const IconComponent = getSensorIconComponent(sensor.type);
+          const primaryValue = sensor.values && sensor.values.length > 0 ? sensor.values[0] : null;
+          const primaryType = primaryValue ? primaryValue.type : "temperature";
+          const IconComponent = getSensorIconComponent(primaryType);
+          
           return (
             <div 
               key={sensor.id}
@@ -41,7 +44,7 @@ const SensorList: React.FC<SensorListProps> = ({
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className={`sensor-pulse ${getSensorColor(sensor.type)}`}>
+                  <div className={`sensor-pulse ${getSensorColor(primaryType)}`}>
                     <IconComponent className="h-5 w-5" />
                   </div>
                   <h3 className="font-medium">{sensor.name}</h3>
@@ -55,7 +58,7 @@ const SensorList: React.FC<SensorListProps> = ({
                 </Button>
               </div>
               <div className="text-sm text-muted-foreground">
-                {sensor.type} - {sensor.value} {sensor.unit}
+                {sensor.values.length} sensor value{sensor.values.length !== 1 ? 's' : ''}
               </div>
               <div className="flex justify-between mt-2">
                 <div className="text-xs text-muted-foreground">

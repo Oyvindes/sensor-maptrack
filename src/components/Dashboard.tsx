@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import SensorCard, { SensorData } from "./SensorCard";
+import SensorCard, { SensorData, SensorValue } from "./SensorCard";
 import TrackingMap from "./TrackingMap";
 import { TrackingObject } from "@/types/sensors";
 import { 
@@ -56,13 +56,16 @@ const Dashboard: React.FC = () => {
       setSensors(prev => 
         prev.map(sensor => ({
           ...sensor,
-          value: sensor.type === "temperature" 
-            ? parseFloat((sensor.value + (Math.random() * 0.4 - 0.2)).toFixed(1))
-            : sensor.type === "humidity"
-            ? parseFloat((sensor.value + (Math.random() * 2 - 1)).toFixed(1))
-            : sensor.type === "battery"
-            ? Math.max(0, Math.min(100, sensor.value - Math.random() * 0.5))
-            : parseFloat((sensor.value + (Math.random() * 2 - 1)).toFixed(1)),
+          values: sensor.values.map(value => ({
+            ...value,
+            value: value.type === "temperature" 
+              ? parseFloat((value.value + (Math.random() * 0.4 - 0.2)).toFixed(1))
+              : value.type === "humidity"
+              ? parseFloat((value.value + (Math.random() * 2 - 1)).toFixed(1))
+              : value.type === "battery"
+              ? Math.max(0, Math.min(100, value.value - Math.random() * 0.5))
+              : parseFloat((value.value + (Math.random() * 2 - 1)).toFixed(1)),
+          })),
           lastUpdated: new Date().toLocaleTimeString()
         }))
       );

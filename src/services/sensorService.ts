@@ -1,5 +1,5 @@
 
-import { SensorData } from "@/components/SensorCard";
+import { SensorData, SensorValue } from "@/components/SensorCard";
 import { TrackingObject, Device } from "@/types/sensors";
 
 // This is a mock service for demo purposes
@@ -50,7 +50,7 @@ export const createSensor = async (
   return new Promise((resolve) => {
     setTimeout(() => {
       // Generate a more realistic ID based on the sensor type
-      const newId = `${sensorData.type}-${Date.now().toString().slice(-3)}`;
+      const newId = `sensor-${Date.now().toString().slice(-3)}`;
       const createdSensor = { ...sensorData, id: newId };
       
       resolve({
@@ -66,52 +66,83 @@ export const createSensor = async (
 export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
   return [
     {
-      id: "temp-001",
-      name: "Temperature Sensor 1",
-      type: "temperature",
-      value: 23.5,
-      unit: "°C",
+      id: "sensor-001",
+      name: "Environmental Sensor 1",
+      values: [
+        {
+          type: "temperature",
+          value: 23.5,
+          unit: "°C",
+        },
+        {
+          type: "humidity",
+          value: 45.2,
+          unit: "%",
+        }
+      ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
       folderId: "folder-001"
     },
     {
-      id: "hum-001",
-      name: "Humidity Sensor 1",
-      type: "humidity",
-      value: 45.2,
-      unit: "%",
-      status: "online",
-      lastUpdated: new Date().toLocaleTimeString(),
-      folderId: "folder-001"
-    },
-    {
-      id: "bat-001",
-      name: "Battery Level 1",
-      type: "battery",
-      value: 87,
-      unit: "%",
+      id: "sensor-002",
+      name: "Power Sensor 1",
+      values: [
+        {
+          type: "battery",
+          value: 87,
+          unit: "%",
+        },
+        {
+          type: "signal",
+          value: 68,
+          unit: "dBm",
+        }
+      ],
       status: "warning",
       lastUpdated: new Date().toLocaleTimeString(),
       folderId: "folder-002"
     },
     {
-      id: "prox-001",
+      id: "sensor-003",
       name: "Proximity Sensor 1",
-      type: "proximity",
-      value: 15.3,
-      unit: "cm",
+      values: [
+        {
+          type: "proximity",
+          value: 15.3,
+          unit: "cm",
+        }
+      ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
       folderId: "folder-003"
     },
     {
-      id: "sig-001",
-      name: "Signal Strength 1",
-      type: "signal",
-      value: 68,
-      unit: "dBm",
-      status: "offline",
+      id: "sensor-004",
+      name: "Multi Sensor 1",
+      values: [
+        {
+          type: "temperature",
+          value: 26.7,
+          unit: "°C",
+        },
+        {
+          type: "humidity",
+          value: 52.8,
+          unit: "%",
+        },
+        {
+          type: "battery",
+          value: 92,
+          unit: "%",
+        },
+        {
+          type: "signal",
+          value: 74,
+          unit: "dBm",
+        }
+      ],
+      status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
       folderId: "folder-004"
     },

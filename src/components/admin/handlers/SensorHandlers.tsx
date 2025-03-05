@@ -19,8 +19,11 @@ export function useSensorHandlers(
   const handleSensorSelect = (sensor: SensorData & { folderId?: string }) => {
     const enhancedSensor = {
       ...sensor,
-      type: sensor.type || "temperature",
-      unit: sensor.unit || "°C",
+      values: sensor.values || [{
+        type: "temperature",
+        value: 0,
+        unit: "°C"
+      }],
       companyId: sensor.companyId || "company-001"
     };
     
@@ -43,9 +46,11 @@ export function useSensorHandlers(
     setSelectedSensor({
       id: `sensor-${Date.now().toString().slice(-3)}`,
       name: "",
-      type: "temperature",
-      value: 0,
-      unit: "°C",
+      values: [{
+        type: "temperature",
+        value: 0,
+        unit: "°C"
+      }],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
       companyId: companies[0]?.id || "system"
