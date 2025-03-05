@@ -126,7 +126,8 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={device.id}
               position={[device.location.lat, device.location.lng] as [number, number]}
-              icon={customIcon}
+              // Using the same JSX spread syntax to fix TypeScript icon error
+              {...{ icon: customIcon } as any}
               eventHandlers={{
                 click: () => onDeviceClick && onDeviceClick(device.id),
               }}
@@ -148,7 +149,8 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={sensor.id}
               position={[sensor.location.lat, sensor.location.lng] as [number, number]}
-              icon={customIcon}
+              // Using the same JSX spread syntax to fix TypeScript icon error
+              {...{ icon: customIcon } as any}
               eventHandlers={{
                 click: () => onSensorClick && onSensorClick(sensor.id),
               }}
@@ -170,7 +172,8 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={object.id}
             position={[object.position.lat, object.position.lng] as [number, number]}
-            icon={customIcon}
+            // Using the same JSX spread syntax to fix TypeScript icon error
+            {...{ icon: customIcon } as any}
             eventHandlers={{
               click: () => onObjectSelect && onObjectSelect(object),
             }}
