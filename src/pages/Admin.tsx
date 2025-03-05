@@ -64,10 +64,14 @@ const Admin = () => {
   useEffect(() => {
     setCompanies(getMockCompanies());
     setUsers(getMockUsers());
+    
     setSensors(getMockSensors().map(sensor => ({
       ...sensor,
-      companyId: "company-001"
+      companyId: sensor.companyId || "company-001",
+      type: sensor.type || "temperature",
+      unit: sensor.unit || "°C"
     })));
+    
     const deviceData = getMockDevices();
     setDevices(deviceData);
     setTrackingObjects(deviceData.map(mapDeviceToTrackingObject));
@@ -132,7 +136,14 @@ const Admin = () => {
   };
 
   const handleSensorSelect = (sensor: SensorData & { folderId?: string; companyId?: string }) => {
-    setSelectedSensor(sensor);
+    const enhancedSensor = {
+      ...sensor,
+      type: sensor.type || "temperature",
+      unit: sensor.unit || "°C",
+      companyId: sensor.companyId || "company-001"
+    };
+    
+    setSelectedSensor(enhancedSensor);
     setMode("editSensor");
   };
 
