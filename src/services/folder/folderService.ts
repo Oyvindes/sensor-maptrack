@@ -7,56 +7,58 @@ export const getMockSensorFolders = (): SensorFolder[] => {
   return [
     {
       id: "folder-001",
-      name: "Main Building",
-      description: "Sensors for the main building",
+      name: "NTNU Gløshaugen",
+      description: "Sensors for the NTNU main campus",
       companyId: "company-001",
       createdAt: "2023-05-15",
       projectNumber: "PRJ-2023-001",
-      address: "123 Main St, Anytown, US 12345",
+      address: "Høgskoleringen 5, 7034 Trondheim, Norway",
       assignedSensorIds: ["sensor-001", "sensor-002"],
-      location: { lat: 59.9139, lng: 10.7522 }
+      location: { lat: 63.4173, lng: 10.4035 }
     },
     {
       id: "folder-002",
-      name: "Warehouse",
-      description: "Sensors for the warehouse",
+      name: "Nidaros Cathedral",
+      description: "Sensors for Nidaros Cathedral",
       companyId: "company-001",
       createdAt: "2023-05-16",
       projectNumber: "PRJ-2023-002",
-      address: "456 Storage Ave, Anytown, US 12345",
+      address: "Kongsgårdsgata 2, 7013 Trondheim, Norway",
       assignedSensorIds: ["sensor-003"],
-      location: { lat: 60.3913, lng: 5.3221 }
+      location: { lat: 63.4268, lng: 10.3969 }
     },
     {
       id: "folder-003",
-      name: "Office Building",
-      description: "Sensors for the office building",
+      name: "Solsiden Shopping Center",
+      description: "Sensors for Solsiden shopping center",
       companyId: "company-002",
       createdAt: "2023-05-17",
       projectNumber: "PRJ-2023-003",
-      address: "789 Office Blvd, Business Park, US 23456",
+      address: "Beddingen 10, 7014 Trondheim, Norway",
       assignedSensorIds: ["sensor-004", "sensor-005"],
-      location: { lat: 63.4305, lng: 10.3951 }
+      location: { lat: 63.4352, lng: 10.4111 }
     },
     {
       id: "folder-004",
-      name: "Data Center",
-      description: "Sensors for the data center",
+      name: "Pirbadet",
+      description: "Sensors for Pirbadet swimming pool",
       companyId: "company-002",
       createdAt: "2023-05-18",
       projectNumber: "PRJ-2023-004",
-      address: "101 Server Ln, Tech City, US 34567",
-      assignedSensorIds: []
+      address: "Havnegata 12, 7010 Trondheim, Norway",
+      assignedSensorIds: [],
+      location: { lat: 63.4393, lng: 10.4001 }
     },
     {
       id: "folder-005",
-      name: "Solar Farm",
-      description: "Sensors for the solar farm",
+      name: "Trondheim Spektrum",
+      description: "Sensors for Trondheim Spektrum arena",
       companyId: "company-003",
       createdAt: "2023-05-19",
       projectNumber: "PRJ-2023-005",
-      address: "202 Energy Way, Green Valley, US 45678",
-      assignedSensorIds: ["sensor-006"]
+      address: "Klostergata 90, 7030 Trondheim, Norway",
+      assignedSensorIds: ["sensor-006"],
+      location: { lat: 63.4280, lng: 10.3797 }
     }
   ];
 };

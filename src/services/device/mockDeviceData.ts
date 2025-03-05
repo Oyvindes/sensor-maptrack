@@ -5,26 +5,26 @@ export const getMockDevices = (): Device[] => {
   return [
     {
       id: "device-001",
-      name: "Gateway 1",
+      name: "Gateway NTNU",
       type: "gateway",
       status: "online",
-      location: { lat: 59.9139, lng: 10.7522 },
+      location: { lat: 63.4173, lng: 10.4035 },
       companyId: "company-001"
     },
     {
       id: "device-002",
-      name: "Router 1",
+      name: "Router Nidaros",
       type: "router",
       status: "online",
-      location: { lat: 59.9239, lng: 10.7422 },
+      location: { lat: 63.4268, lng: 10.3969 },
       companyId: "company-001"
     },
     {
       id: "device-003",
-      name: "Tracker 1",
+      name: "Tracker Solsiden",
       type: "tracker",
       status: "offline",
-      location: { lat: 59.9339, lng: 10.7622 },
+      location: { lat: 63.4352, lng: 10.4111 },
       companyId: "company-002"
     }
   ];

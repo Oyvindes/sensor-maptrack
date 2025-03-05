@@ -66,7 +66,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   onObjectSelect,
   className = "h-[500px] w-full rounded-md border",
 }) => {
-  // Find map center based on first device, sensor, or tracking object, or default to Norway
+  // Find map center based on first device, sensor, or tracking object, or default to Trondheim
   const getMapCenter = () => {
     if (focusLocation) {
       return focusLocation;
@@ -80,8 +80,8 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
     if (objects.length > 0) {
       return [objects[0].position.lat, objects[0].position.lng];
     }
-    // Default to Norway
-    return [60.472, 8.468];
+    // Default to Trondheim center (Torvet)
+    return [63.4305, 10.3951];
   };
 
   const mapCenter = getMapCenter() as [number, number];
@@ -90,7 +90,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
     <div className={className}>
       <MapContainer
         center={mapCenter}
-        zoom={focusLocation ? focusZoom : 6}
+        zoom={focusLocation ? focusZoom : 13}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer

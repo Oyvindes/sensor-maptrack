@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,7 +50,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
       setIsSearching(true);
       
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)},Norway&addressdetails=1&limit=3`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)},Trondheim,Norway&addressdetails=1&limit=3`,
         {
           headers: {
             "Accept-Language": "en-US,en;q=0.9,nb;q=0.8",
@@ -69,7 +70,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
           const road = item.address.road || "";
           const houseNumber = item.address.house_number || "";
           const postcode = item.address.postcode || "";
-          const city = item.address.city || item.address.town || item.address.village || "";
+          const city = item.address.city || item.address.town || item.address.village || "Trondheim";
           
           return {
             address: `${road} ${houseNumber}`.trim(),
@@ -83,45 +84,47 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
         setSuggestions(addressSuggestions);
         setShowSuggestions(true);
       } else {
+        // Trondheim mock addresses with real coordinates
         const mockAddresses: AddressSuggestion[] = [
           {
-            address: "Klettvegen 57A",
-            postcode: "7083",
-            city: "Leinstrand",
-            lat: 63.3253392684221,
-            lng: 10.312003580149943
+            address: "Munkegata 1",
+            postcode: "7013",
+            city: "Trondheim",
+            lat: 63.4305,
+            lng: 10.3951
           },
           {
-            address: "Klettvegen 59",
-            postcode: "7083",
-            city: "Leinstrand",
-            lat: 63.32550,
-            lng: 10.31220
+            address: "Olav Tryggvasons gate 1",
+            postcode: "7011",
+            city: "Trondheim",
+            lat: 63.4336,
+            lng: 10.4027
           },
           {
-            address: "Klettvegen 55",
-            postcode: "7083", 
-            city: "Leinstrand",
-            lat: 63.32520,
-            lng: 10.31180
+            address: "Kongens gate 14",
+            postcode: "7011", 
+            city: "Trondheim",
+            lat: 63.4298,
+            lng: 10.3940
           }
         ];
         
         setSuggestions(mockAddresses);
         setShowSuggestions(true);
-        toast.warning("Using demo addresses - no exact match found");
+        toast.warning("Using sample Trondheim addresses - no exact match found");
       }
     } catch (error) {
       console.error("Error fetching address suggestions:", error);
       toast.error("Failed to fetch address data");
       
+      // Backup Trondheim address if API fails
       const mockAddresses: AddressSuggestion[] = [
         {
-          address: "Klettvegen 57A",
-          postcode: "7083",
-          city: "Leinstrand",
-          lat: 63.3253392684221,
-          lng: 10.312003580149943
+          address: "Prinsens gate 22",
+          postcode: "7012",
+          city: "Trondheim",
+          lat: 63.4292,
+          lng: 10.3942
         }
       ];
       

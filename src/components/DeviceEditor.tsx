@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Device, TrackingObject } from "@/types/sensors";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,12 @@ interface DeviceEditorProps {
 }
 
 const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onSave, onCancel }) => {
-  const [editedDevice, setEditedDevice] = useState<Device>({ ...device });
+  const initialDevice = {
+    ...device,
+    location: device.location || { lat: 63.4305, lng: 10.3951 } // Trondheim center
+  };
+  
+  const [editedDevice, setEditedDevice] = useState<Device>(initialDevice);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -84,26 +88,26 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onS
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="lat">Latitude</Label>
+          <Label htmlFor="lat">Latitude (Trondheim area)</Label>
           <Input
             id="lat"
             name="lat"
             type="number"
             step="0.0001"
-            value={editedDevice.location?.lat || 0}
+            value={editedDevice.location?.lat || 63.4305}
             onChange={handleLocationChange}
             required
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="lng">Longitude</Label>
+          <Label htmlFor="lng">Longitude (Trondheim area)</Label>
           <Input
             id="lng"
             name="lng"
             type="number"
             step="0.0001"
-            value={editedDevice.location?.lng || 0}
+            value={editedDevice.location?.lng || 10.3951}
             onChange={handleLocationChange}
             required
           />
