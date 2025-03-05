@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -18,15 +17,17 @@ import {
   getMockSensors, 
   getMockTrackingObjects, 
   sendCommandToSensor 
-} from "@/services/sensorService";
+} from '@/services/sensorService';
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Settings } from "lucide-react";
+import { getCurrentUser } from "@/services/authService";
 
 const Dashboard: React.FC = () => {
   const [sensors, setSensors] = useState<SensorData[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,6 +118,11 @@ const Dashboard: React.FC = () => {
             <PageSubtitle>
               Real-time dashboard for sensor data and object tracking
             </PageSubtitle>
+            {currentUser && (
+              <div className="flex items-center gap-2 mt-2 text-sm">
+                <span>Logged in as: {currentUser.name} ({currentUser.role})</span>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <Button 
