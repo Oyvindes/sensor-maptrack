@@ -71,7 +71,9 @@ export function useFolderHandlers(
       id: `folder-${Date.now().toString().slice(-3)}`,
       name: "",
       companyId: companyId,
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString().split('T')[0],
+      createdBy: currentUser.id,
+      creatorName: currentUser.name
     });
     setMode("editFolder");
   };
@@ -86,8 +88,10 @@ export function useFolderHandlers(
     // Company admins can edit folders in their company
     if (currentUser.role === 'admin' && folder.companyId === currentUser.companyId) return true;
     
-    // Regular users can edit only folders they've created (for now just company match)
-    return folder.companyId === currentUser.companyId;
+    // Regular users can edit only folders they've created
+    if (folder.createdBy === currentUser.id) return true;
+    
+    return false;
   };
 
   return {

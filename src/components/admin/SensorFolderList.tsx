@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { SensorFolder, Company } from '@/types/users';
 import { Button } from "@/components/ui/button";
-import { Plus, Folder, Edit, Trash } from "lucide-react";
+import { Plus, Folder, Edit, UserRound, Clock } from "lucide-react";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { Badge } from "@/components/ui/badge";
 import SensorFolderEditor from './SensorFolderEditor';
@@ -45,8 +45,7 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
       return folder.companyId === currentUser.companyId;
     }
     
-    // Regular users can only see folders they've created (for now we don't track creator,
-    // so we'll just check company until that's implemented)
+    // Regular users can only see folders from their company
     return folder.companyId === currentUser?.companyId;
   });
 
@@ -66,7 +65,9 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
       name: "",
       description: "",
       companyId: selectedCompanyId || currentUser?.companyId || "",
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString().split('T')[0],
+      createdBy: currentUser?.id,
+      creatorName: currentUser?.name
     };
     setCurrentFolder(newFolder);
     setIsEditing(true);
@@ -114,8 +115,10 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
     // Company admins can edit folders in their company
     if (currentUser.role === 'admin' && folder.companyId === currentUser.companyId) return true;
     
-    // Regular users can edit only folders they've created (for now just company match)
-    return folder.companyId === currentUser.companyId;
+    // Regular users can edit only folders they've created
+    if (folder.createdBy === currentUser.id) return true;
+    
+    return false;
   };
 
   if (isEditing && currentFolder) {
@@ -162,6 +165,18 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
                 <div className="font-medium">{folder.name}</div>
                 <div className="text-sm text-muted-foreground">
                   {folder.description || "No description"}
+                </div>
+                <div className="flex items-center mt-1 text-xs text-muted-foreground gap-2">
+                  {folder.creatorName && (
+                    <div className="flex items-center gap-1">
+                      <UserRound className="h-3 w-3" />
+                      <span>{folder.creatorName}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span>{folder.createdAt}</span>
+                  </div>
                 </div>
               </div>
             </div>

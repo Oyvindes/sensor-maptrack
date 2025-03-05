@@ -26,6 +26,8 @@ export interface SensorFolder {
   companyId: string;
   parentId?: string; // For nested folders
   createdAt: string;
+  createdBy?: string; // ID of the user who created the folder
+  creatorName?: string; // Name of the user who created the folder
 }
 
 export interface LoginCredentials {

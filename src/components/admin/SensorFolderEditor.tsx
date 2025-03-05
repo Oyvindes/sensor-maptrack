@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, UserRound, Clock } from "lucide-react";
 
 interface SensorFolderEditorProps {
   folder: SensorFolder;
@@ -85,6 +85,25 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
             </SelectContent>
           </Select>
         </div>
+
+        {(formData.creatorName || formData.createdAt) && (
+          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              {formData.creatorName && (
+                <div className="flex items-center gap-2">
+                  <UserRound className="h-4 w-4" />
+                  <span>Created by: {formData.creatorName}</span>
+                </div>
+              )}
+              {formData.createdAt && (
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>Created on: {formData.createdAt}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>

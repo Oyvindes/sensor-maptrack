@@ -31,7 +31,14 @@ const FoldersTab: React.FC<FoldersTabProps> = ({
   // Note: Folders are now for organization only, not ownership
   const handleFolderCreate = async (folderData: Omit<SensorFolder, "id" | "createdAt">) => {
     try {
-      const response = await createSensorFolder(folderData);
+      // Add creator information to the folder data
+      const folderWithCreator = {
+        ...folderData,
+        createdBy: currentUser?.id,
+        creatorName: currentUser?.name
+      };
+      
+      const response = await createSensorFolder(folderWithCreator);
       if (response.success) {
         toast.success("Folder created successfully");
         return Promise.resolve();
