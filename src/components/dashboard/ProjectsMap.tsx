@@ -1,3 +1,4 @@
+
 import React from "react";
 import { SensorFolder } from "@/types/users";
 import { MapPin, ArrowRight } from "lucide-react";
@@ -77,6 +78,8 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
     // Find the corresponding project
     const project = projects.find(p => p.id === device.id);
     
+    if (!project) return null;
+    
     return (
       <div className="flex flex-col gap-0.5 p-0.5">
         <h3 className="font-bold text-sm">{device.name}</h3>
@@ -90,6 +93,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
           onClick={(e) => {
             e.stopPropagation(); // Prevent event bubbling
             if (project) {
+              console.log("Project select button clicked:", project.id);
               onProjectSelect(project);
             }
           }}
@@ -127,6 +131,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
         devices={devices}
         className="h-full w-full"
         onDeviceClick={(deviceId) => {
+          console.log("Device clicked:", deviceId);
           const project = projects.find(p => p.id === deviceId);
           if (project) {
             onProjectSelect(project);

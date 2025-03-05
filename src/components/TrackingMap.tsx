@@ -91,7 +91,17 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   useEffect(() => {
     // Disable auto-close for popups when clicking inside them (for buttons)
     const style = document.createElement('style');
-    style.innerHTML = `.leaflet-popup-content-wrapper { pointer-events: auto; }`;
+    style.innerHTML = `
+      .leaflet-popup-content-wrapper { 
+        pointer-events: auto !important; 
+      }
+      .leaflet-popup-content {
+        pointer-events: auto !important;
+      }
+      .leaflet-popup button {
+        pointer-events: auto !important;
+      }
+    `;
     document.head.appendChild(style);
     
     return () => {
@@ -125,6 +135,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
                   // Only trigger device click if not clicking on popup content
                   // Fix TypeScript error by properly typing the event target
                   if (!(e.originalEvent.target as Element).closest?.('.leaflet-popup-content-wrapper')) {
+                    console.log("Marker clicked (not popup content):", device.id);
                     onDeviceClick && onDeviceClick(device.id);
                   }
                 },
