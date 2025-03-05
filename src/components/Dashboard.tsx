@@ -6,6 +6,7 @@ import DashboardHeader from "./dashboard/DashboardHeader";
 import ProjectsSection from "./dashboard/ProjectsSection";
 import SensorFolderEditor from "./admin/SensorFolderEditor";
 import { getMockCompanies } from "@/services/company/companyService";
+import DashboardSidebar from "./dashboard/DashboardSidebar";
 
 const Dashboard: React.FC = () => {
   const {
@@ -24,26 +25,31 @@ const Dashboard: React.FC = () => {
   const companies = getMockCompanies();
 
   return (
-    <PageContainer>
-      <DashboardHeader onRefresh={handleRefresh} onAddNewProject={handleAddNewProject} />
+    <div className="flex h-screen">
+      <DashboardSidebar />
+      <div className="flex-1 overflow-auto">
+        <PageContainer>
+          <DashboardHeader onRefresh={handleRefresh} onAddNewProject={handleAddNewProject} />
 
-      <ContentContainer>
-        {editingProject && selectedProject ? (
-          <SensorFolderEditor
-            folder={selectedProject}
-            companies={companies}
-            onSave={handleProjectSave}
-            onCancel={handleProjectCancel}
-          />
-        ) : (
-          <ProjectsSection 
-            projects={projects} 
-            isLoading={isLoading}
-            onProjectSelect={handleProjectSelect} 
-          />
-        )}
-      </ContentContainer>
-    </PageContainer>
+          <ContentContainer>
+            {editingProject && selectedProject ? (
+              <SensorFolderEditor
+                folder={selectedProject}
+                companies={companies}
+                onSave={handleProjectSave}
+                onCancel={handleProjectCancel}
+              />
+            ) : (
+              <ProjectsSection 
+                projects={projects} 
+                isLoading={isLoading}
+                onProjectSelect={handleProjectSelect} 
+              />
+            )}
+          </ContentContainer>
+        </PageContainer>
+      </div>
+    </div>
   );
 };
 
