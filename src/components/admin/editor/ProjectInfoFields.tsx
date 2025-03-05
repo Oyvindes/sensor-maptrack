@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SensorFolder } from "@/types/users";
-import { Hash, MapPin, Search, Mail, Navigation } from "lucide-react";
+import { Hash, MapPin, Search, Mail, Navigation, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -15,7 +15,8 @@ import {
   DialogFooter, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger 
+  DialogTrigger,
+  DialogClose
 } from "@/components/ui/dialog";
 
 interface ProjectInfoFieldsProps {
@@ -305,7 +306,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
                     <span>Send Directions</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Send Directions</DialogTitle>
                     <DialogDescription>
@@ -336,13 +337,13 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
                     </div>
                   </div>
                   
-                  <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                  <DialogFooter className="flex sm:justify-between">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={sendToOwner}
                       disabled={isSendingDirections}
-                      className="w-full sm:w-auto gap-2"
+                      className="gap-2 hidden sm:flex"
                     >
                       <Mail className="h-4 w-4" />
                       <span>Send to Project Owner</span>
@@ -351,7 +352,7 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
                       type="button" 
                       onClick={sendDirectionsEmail}
                       disabled={isSendingDirections || !emailAddress}
-                      className="w-full sm:w-auto gap-2"
+                      className="gap-2"
                     >
                       <Navigation className="h-4 w-4" />
                       <span>Send Directions</span>
