@@ -1,5 +1,4 @@
 
-import React from "react";
 import { ThermometerSnowflake, Gauge, Battery, Wifi, Zap } from "lucide-react";
 
 // Helper functions for sensor icons and colors
@@ -20,19 +19,20 @@ export const getSensorColor = (type: "temperature" | "humidity" | "battery" | "p
   }
 };
 
-export const getSensorIcon = (type: "temperature" | "humidity" | "battery" | "proximity" | "signal", className: string) => {
+// Return the icon component class rather than JSX
+export const getSensorIconComponent = (type: "temperature" | "humidity" | "battery" | "proximity" | "signal") => {
   switch (type) {
     case "temperature":
-      return <ThermometerSnowflake className={className} />;
+      return ThermometerSnowflake;
     case "humidity":
-      return <Gauge className={className} />;
+      return Gauge;
     case "battery":
-      return <Battery className={className} />;
+      return Battery;
     case "proximity":
-      return <Zap className={className} />;
+      return Zap;
     case "signal":
-      return <Wifi className={className} />;
+      return Wifi;
     default:
-      return <Gauge className={className} />;
+      return Gauge;
   }
 };

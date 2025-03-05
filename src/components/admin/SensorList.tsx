@@ -4,7 +4,7 @@ import { SensorData } from "@/components/SensorCard";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
-import { getSensorColor, getSensorIcon } from "@/utils/sensorUtils";
+import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
 
 interface SensorListProps {
   sensors: SensorData[];
@@ -32,26 +32,29 @@ const SensorList: React.FC<SensorListProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sensors.map(sensor => (
-          <div 
-            key={sensor.id}
-            className="glass-card p-4 rounded-lg cursor-pointer hover:shadow-md transition-all-ease"
-            onClick={() => onSensorSelect(sensor)}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`sensor-pulse ${getSensorColor(sensor.type)}`}>
-                {getSensorIcon(sensor.type, "h-5 w-5")}
+        {sensors.map(sensor => {
+          const IconComponent = getSensorIconComponent(sensor.type);
+          return (
+            <div 
+              key={sensor.id}
+              className="glass-card p-4 rounded-lg cursor-pointer hover:shadow-md transition-all-ease"
+              onClick={() => onSensorSelect(sensor)}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`sensor-pulse ${getSensorColor(sensor.type)}`}>
+                  <IconComponent className="h-5 w-5" />
+                </div>
+                <h3 className="font-medium">{sensor.name}</h3>
               </div>
-              <h3 className="font-medium">{sensor.name}</h3>
+              <div className="text-sm text-muted-foreground">
+                {sensor.type} - {sensor.value} {sensor.unit}
+              </div>
+              <div className="text-xs mt-2 text-muted-foreground">
+                Status: {sensor.status}
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {sensor.type} - {sensor.value} {sensor.unit}
-            </div>
-            <div className="text-xs mt-2 text-muted-foreground">
-              Status: {sensor.status}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </SectionContainer>
   );

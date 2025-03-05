@@ -1,7 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Battery, Gauge, ThermometerSnowflake, Wifi, Zap } from "lucide-react";
+import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
 
 export type SensorType = "temperature" | "humidity" | "battery" | "proximity" | "signal";
 
@@ -30,40 +30,6 @@ type SensorCardProps = {
   className?: string;
 };
 
-const getSensorColor = (type: SensorType): string => {
-  switch (type) {
-    case "temperature":
-      return "text-sensor-temp";
-    case "humidity":
-      return "text-sensor-humidity";
-    case "battery":
-      return "text-sensor-battery";
-    case "proximity":
-      return "text-sensor-proximity";
-    case "signal":
-      return "text-sensor-signal";
-    default:
-      return "text-primary";
-  }
-};
-
-const getSensorIcon = (type: SensorType, className: string) => {
-  switch (type) {
-    case "temperature":
-      return <ThermometerSnowflake className={className} />;
-    case "humidity":
-      return <Gauge className={className} />;
-    case "battery":
-      return <Battery className={className} />;
-    case "proximity":
-      return <Zap className={className} />;
-    case "signal":
-      return <Wifi className={className} />;
-    default:
-      return <Gauge className={className} />;
-  }
-};
-
 const getStatusIndicatorColor = (status: "online" | "offline" | "warning"): string => {
   switch (status) {
     case "online":
@@ -81,6 +47,7 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, onClick, className }) =
   const { type, value, unit, status, name, lastUpdated } = sensor;
   const sensorColor = getSensorColor(type);
   const formattedValue = typeof value === "number" ? value.toFixed(1) : value;
+  const IconComponent = getSensorIconComponent(type);
   
   // Calculate a percentage for the progress bar
   const range = ranges[type];
@@ -103,7 +70,7 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, onClick, className }) =
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
           <div className={cn("sensor-pulse", sensorColor)}>
-            {getSensorIcon(type, "h-6 w-6")}
+            <IconComponent className="h-6 w-6" />
           </div>
           <span className="font-medium text-sm">{name}</span>
         </div>
