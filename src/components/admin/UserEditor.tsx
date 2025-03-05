@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface UserEditorProps {
   user: User;
@@ -24,7 +25,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
   const [formData, setFormData] = useState<User>(user);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (field: keyof User, value: string) => {
+  const handleChange = (field: keyof User, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -138,6 +139,17 @@ const UserEditor: React.FC<UserEditorProps> = ({
             </SelectContent>
           </Select>
         </div>
+
+        {formData.role === "admin" && (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="company-admin"
+              checked={formData.isCompanyAdmin === true}
+              onCheckedChange={(checked) => handleChange("isCompanyAdmin", checked)}
+            />
+            <Label htmlFor="company-admin">Company Administrator</Label>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>

@@ -11,11 +11,12 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password: string; // Added for authentication
-  role: "admin" | "user" | "master"; // Added "master" role
+  password: string;
+  role: "admin" | "user" | "master";
   companyId: string;
   lastLogin: string;
   status: "active" | "inactive";
+  isCompanyAdmin?: boolean; // New field to mark users as company admins
 }
 
 export interface SensorFolder {

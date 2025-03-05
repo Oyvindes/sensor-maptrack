@@ -1,5 +1,6 @@
 
 import { User, Company } from "@/types/users";
+import { getCurrentUser } from "@/services/authService";
 
 export interface UserHandlers {
   handleUserSelect: (user: User) => void;
@@ -33,13 +34,16 @@ export function useUserHandlers(
   };
 
   const handleAddNewUser = () => {
+    const currentUser = getCurrentUser();
+    const defaultCompanyId = currentUser?.isCompanyAdmin ? currentUser.companyId : companies[0]?.id || "system";
+    
     setSelectedUser({
       id: `user-${Date.now().toString().slice(-3)}`,
       name: "",
       email: "",
       password: "",
       role: "user",
-      companyId: companies[0]?.id || "system",
+      companyId: defaultCompanyId,
       lastLogin: new Date().toISOString(),
       status: "active"
     });

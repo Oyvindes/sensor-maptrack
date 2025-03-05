@@ -3,6 +3,7 @@ import React from "react";
 import { User, Company } from "@/types/users";
 import UserList from "@/components/admin/UserList";
 import UserEditor from "@/components/admin/UserEditor";
+import { getCurrentUser } from "@/services/authService";
 
 interface UsersTabProps {
   mode: string;
@@ -25,14 +26,24 @@ const UsersTab: React.FC<UsersTabProps> = ({
   onUserCancel,
   onAddNewUser
 }) => {
+  const currentUser = getCurrentUser();
+  const companyId = currentUser?.isCompanyAdmin ? currentUser.companyId : undefined;
+
+  // Company admin can only add users to their own company
+  const handleAddUser = () => {
+    const defaultCompanyId = currentUser?.isCompanyAdmin ? currentUser.companyId : companies[0]?.id;
+    onAddNewUser();
+  };
+  
   return (
     <>
       {mode === "listUsers" && (
         <UserList
           users={users}
           companies={companies}
+          currentCompanyId={companyId} // Pass company ID if user is company admin
           onUserSelect={onUserSelect}
-          onAddNew={onAddNewUser}
+          onAddNew={handleAddUser}
         />
       )}
       {mode === "editUser" && selectedUser && (

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Plus, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { User as UserType, Company } from "@/types/users";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { getCurrentUser } from "@/services/authService";
 
 interface UserListProps {
   users: UserType[];
@@ -23,10 +25,19 @@ const UserList: React.FC<UserListProps> = ({
   onAddNew,
   onBack
 }) => {
-  // Filter users by company if a company ID is provided
-  const filteredUsers = currentCompanyId 
-    ? users.filter(user => user.companyId === currentCompanyId)
-    : users;
+  const currentUser = getCurrentUser();
+  
+  // Filter users based on permission
+  let filteredUsers = users;
+  
+  // If logged in user is a company admin, only show users from their company
+  if (currentUser?.isCompanyAdmin && currentUser.role === "admin") {
+    filteredUsers = users.filter(user => user.companyId === currentUser.companyId);
+  }
+  // Apply additional filter if currentCompanyId is provided
+  else if (currentCompanyId) {
+    filteredUsers = filteredUsers.filter(user => user.companyId === currentCompanyId);
+  }
   
   // Find company name for the current company ID
   const currentCompany = currentCompanyId 
@@ -77,8 +88,11 @@ const UserList: React.FC<UserListProps> = ({
                 </Badge>
               </div>
               <div className="text-sm">{user.email}</div>
-              <div className="text-sm text-muted-foreground mt-1">
-                Role: {user.role}
+              <div className="flex gap-2 text-sm text-muted-foreground mt-1">
+                <span>Role: {user.role}</span>
+                {user.isCompanyAdmin && (
+                  <Badge variant="outline" className="text-xs">Company Admin</Badge>
+                )}
               </div>
               {!currentCompanyId && (
                 <div className="text-sm text-muted-foreground">

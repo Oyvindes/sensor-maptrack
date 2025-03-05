@@ -1,4 +1,3 @@
-
 import { Company, User, SensorFolder } from "@/types/users";
 
 // Mock data service for companies and users
@@ -45,7 +44,8 @@ export const getMockUsers = (): User[] => {
       role: "admin",
       companyId: "company-001",
       lastLogin: "2023-08-15T09:30:00",
-      status: "active"
+      status: "active",
+      isCompanyAdmin: true // Set as company admin
     },
     {
       id: "user-002",
@@ -65,7 +65,8 @@ export const getMockUsers = (): User[] => {
       role: "admin",
       companyId: "company-002",
       lastLogin: "2023-08-15T11:20:00",
-      status: "active"
+      status: "active",
+      isCompanyAdmin: true // Set as company admin
     },
     {
       id: "user-004",
@@ -85,7 +86,8 @@ export const getMockUsers = (): User[] => {
       role: "admin",
       companyId: "company-003",
       lastLogin: "2023-08-13T16:30:00",
-      status: "active"
+      status: "active",
+      isCompanyAdmin: true // Set as company admin
     },
     {
       id: "user-006",
@@ -95,7 +97,8 @@ export const getMockUsers = (): User[] => {
       role: "admin",
       companyId: "company-004",
       lastLogin: new Date().toISOString(),
-      status: "active"
+      status: "active",
+      isCompanyAdmin: true // Set as company admin
     }
   ];
 };
