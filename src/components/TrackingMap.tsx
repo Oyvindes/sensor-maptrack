@@ -62,79 +62,81 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   const mapCenter = getMapCenter() as [number, number];
 
   return (
-    <MapContainer
-      center={mapCenter}
-      zoom={6}
-      className={className}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
-      
-      {/* Display devices */}
-      {devices.map((device) => (
-        device.location && (
-          <Marker
-            key={device.id}
-            position={[device.location.lat, device.location.lng] as [number, number]}
-            eventHandlers={{
-              click: () => onDeviceClick && onDeviceClick(device.id),
-            }}
-          >
-            <Popup>
-              <div>
-                <h3 className="font-bold">{device.name}</h3>
-                <p>Type: {device.type}</p>
-                <p>Status: {device.status}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )
-      ))}
-      
-      {/* Display sensors */}
-      {sensors.map((sensor) => (
-        sensor.location && (
-          <Marker
-            key={sensor.id}
-            position={[sensor.location.lat, sensor.location.lng] as [number, number]}
-            eventHandlers={{
-              click: () => onSensorClick && onSensorClick(sensor.id),
-            }}
-          >
-            <Popup>
-              <div>
-                <h3 className="font-bold">{sensor.name}</h3>
-                <p>Type: {sensor.type}</p>
-                <p>Status: {sensor.status}</p>
-                <p>Last Reading: {sensor.lastReading?.value} {sensor.unit}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )
-      ))}
+    <div className={className}>
+      <MapContainer
+        center={mapCenter}
+        zoom={6}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        
+        {/* Display devices */}
+        {devices.map((device) => (
+          device.location && (
+            <Marker
+              key={device.id}
+              position={[device.location.lat, device.location.lng] as [number, number]}
+              eventHandlers={{
+                click: () => onDeviceClick && onDeviceClick(device.id),
+              }}
+            >
+              <Popup>
+                <div>
+                  <h3 className="font-bold">{device.name}</h3>
+                  <p>Type: {device.type}</p>
+                  <p>Status: {device.status}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )
+        ))}
+        
+        {/* Display sensors */}
+        {sensors.map((sensor) => (
+          sensor.location && (
+            <Marker
+              key={sensor.id}
+              position={[sensor.location.lat, sensor.location.lng] as [number, number]}
+              eventHandlers={{
+                click: () => onSensorClick && onSensorClick(sensor.id),
+              }}
+            >
+              <Popup>
+                <div>
+                  <h3 className="font-bold">{sensor.name}</h3>
+                  <p>Type: {sensor.type}</p>
+                  <p>Status: {sensor.status}</p>
+                  <p>Last Reading: {sensor.lastReading?.value} {sensor.unit}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )
+        ))}
 
-      {/* Display tracking objects */}
-      {objects.map((object) => (
-        <Marker
-          key={object.id}
-          position={[object.position.lat, object.position.lng] as [number, number]}
-          eventHandlers={{
-            click: () => onObjectSelect && onObjectSelect(object),
-          }}
-        >
-          <Popup>
-            <div>
-              <h3 className="font-bold">{object.name}</h3>
-              <p>Speed: {object.speed} mph</p>
-              <p>Battery: {object.batteryLevel}%</p>
-              <p>Last Updated: {object.lastUpdated}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+        {/* Display tracking objects */}
+        {objects?.map((object) => (
+          <Marker
+            key={object.id}
+            position={[object.position.lat, object.position.lng] as [number, number]}
+            eventHandlers={{
+              click: () => onObjectSelect && onObjectSelect(object),
+            }}
+          >
+            <Popup>
+              <div>
+                <h3 className="font-bold">{object.name}</h3>
+                <p>Speed: {object.speed} mph</p>
+                <p>Battery: {object.batteryLevel}%</p>
+                <p>Last Updated: {object.lastUpdated}</p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 };
 

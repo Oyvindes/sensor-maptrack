@@ -91,7 +91,7 @@ export const getMockUsers = (): User[] => {
       id: "user-006",
       name: "Oe Briks",
       email: "oe@briks.no",
-      password: "Briks42!", // In a real app, this would be hashed
+      password: "Briks42!", // Using the correct password
       role: "admin",
       companyId: "company-004",
       lastLogin: new Date().toISOString(),

@@ -28,10 +28,19 @@ export const initializeAuthService = () => {
   const mockUserList = getMockUsers();
   
   // Add password to mock users for testing
-  const usersWithPasswords = mockUserList.map(user => ({
-    ...user,
-    password: "password123" // In a real app, this would be hashed
-  }));
+  const usersWithPasswords = mockUserList.map(user => {
+    // Special case for oe@briks.no user to match the password Briks42!
+    if (user.email === "oe@briks.no") {
+      return {
+        ...user,
+        password: "Briks42!" // Use the correct password
+      };
+    }
+    return {
+      ...user,
+      password: "password123" // Default password for other users
+    };
+  });
   
   mockUsers = [...mockUsers, ...usersWithPasswords];
   console.log("Auth service initialized with users:", mockUsers);
