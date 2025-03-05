@@ -10,6 +10,7 @@ import { useUserHandlers } from "@/components/admin/handlers/UserHandlers";
 import { useSensorHandlers } from "@/components/admin/handlers/SensorHandlers";
 import { useDeviceHandlers } from "@/components/admin/handlers/DeviceHandlers";
 import { useFolderHandlers } from "@/components/admin/handlers/FolderHandlers";
+import { Toaster } from "sonner";
 
 // Tab components
 import CompaniesTab from "@/components/admin/tabs/CompaniesTab";
@@ -58,6 +59,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <AdminHeader />
+      <Toaster position="top-right" />
 
       <div className="container mx-auto p-4 pb-20">
         <SectionContainer>

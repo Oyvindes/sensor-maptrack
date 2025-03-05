@@ -1,12 +1,12 @@
 
-import { SensorFolder } from "@/types/users";
-import { getCurrentUser } from "@/services/authService";
+import { SensorFolder, Company } from "@/types/users";
+import { createSensorFolder, updateSensorFolder } from "@/services/folder/folderService";
 import { toast } from "sonner";
 
 export interface FolderHandlers {
   handleFolderSelect: (folder: SensorFolder) => void;
   handleFolderSelectById: (folderId: string) => void;
-  handleFolderSave: (updatedFolder: SensorFolder) => void;
+  handleFolderSave: (updatedFolder: SensorFolder) => Promise<void>;
   handleFolderCancel: () => void;
   handleAddNewFolder: () => void;
 }
@@ -16,17 +16,9 @@ export function useFolderHandlers(
   setSensorFolders: React.Dispatch<React.SetStateAction<SensorFolder[]>>,
   setSelectedFolder: React.Dispatch<React.SetStateAction<SensorFolder | null>>,
   setMode: React.Dispatch<React.SetStateAction<string>>,
-  companies: { id: string }[]
+  companies: Company[]
 ): FolderHandlers {
-  const currentUser = getCurrentUser();
-  
   const handleFolderSelect = (folder: SensorFolder) => {
-    // Check if user has permission to edit this folder
-    if (!canEditFolder(folder)) {
-      toast.error("You don't have permission to edit this folder");
-      return;
-    }
-    
     setSelectedFolder(folder);
     setMode("editFolder");
   };
@@ -38,25 +30,41 @@ export function useFolderHandlers(
     }
   };
 
-  const handleFolderSave = (updatedFolder: SensorFolder) => {
-    // Check permission again before saving
-    if (!canEditFolder(updatedFolder)) {
-      toast.error("You don't have permission to modify this folder");
-      return;
-    }
-    
-    // For non-master users, ensure company ID doesn't change
-    if (currentUser?.role !== 'master') {
-      const originalFolder = sensorFolders.find(f => f.id === updatedFolder.id);
-      if (originalFolder && originalFolder.companyId !== updatedFolder.companyId) {
-        toast.error("You don't have permission to change the company assignment");
-        return;
+  const handleFolderSave = async (updatedFolder: SensorFolder) => {
+    try {
+      // Handle existing folder update
+      if (sensorFolders.some(f => f.id === updatedFolder.id)) {
+        await updateSensorFolder(updatedFolder.id, updatedFolder);
+        
+        // Update local state
+        setSensorFolders(prev => 
+          prev.map(folder => folder.id === updatedFolder.id ? updatedFolder : folder)
+        );
+      } else {
+        // Handle new folder creation
+        const { companyId, name, description } = updatedFolder;
+        if (!companyId) {
+          toast.error("A company must be selected");
+          return;
+        }
+        
+        const { data: newFolder } = await createSensorFolder({
+          companyId,
+          name,
+          description
+        });
+        
+        // Add the new folder to the state
+        setSensorFolders(prev => [...prev, newFolder]);
       }
+      
+      // Reset the form
+      setMode("listFolders");
+      setSelectedFolder(null);
+    } catch (error) {
+      console.error("Error saving folder:", error);
+      toast.error("Failed to save project");
     }
-    
-    setSensorFolders(sensorFolders.map(f => f.id === updatedFolder.id ? updatedFolder : f));
-    setMode("listFolders");
-    setSelectedFolder(null);
   };
 
   const handleFolderCancel = () => {
@@ -65,41 +73,17 @@ export function useFolderHandlers(
   };
 
   const handleAddNewFolder = () => {
-    if (!currentUser) {
-      toast.error("You must be logged in to create folders");
-      return;
-    }
-    
-    // For new folders, set the company ID to the user's company
-    const companyId = currentUser.role === 'master' 
-      ? (companies[0]?.id || "system") 
-      : currentUser.companyId;
+    // Default to first company if available
+    const defaultCompanyId = companies.length > 0 ? companies[0].id : "";
     
     setSelectedFolder({
       id: `folder-${Date.now().toString().slice(-3)}`,
       name: "",
-      companyId: companyId,
-      createdAt: new Date().toISOString().split('T')[0],
-      createdBy: currentUser.id,
-      creatorName: currentUser.name
+      description: "",
+      companyId: defaultCompanyId,
+      createdAt: new Date().toISOString().split('T')[0]
     });
     setMode("editFolder");
-  };
-  
-  // Helper function to check if user can edit a specific folder
-  const canEditFolder = (folder: SensorFolder): boolean => {
-    if (!currentUser) return false;
-    
-    // Site-wide admins can edit any folder
-    if (currentUser.role === 'master') return true;
-    
-    // Company admins can edit folders in their company
-    if (currentUser.role === 'admin' && folder.companyId === currentUser.companyId) return true;
-    
-    // Regular users can edit only folders they've created
-    if (folder.createdBy === currentUser.id) return true;
-    
-    return false;
   };
 
   return {

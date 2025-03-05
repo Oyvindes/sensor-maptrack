@@ -1,5 +1,6 @@
 
 import { SensorFolder } from "@/types/users";
+import { toast } from "sonner";
 
 // Mock sensor folders
 export const getMockSensorFolders = (): SensorFolder[] => {
@@ -57,11 +58,14 @@ export const createSensorFolder = async (
         createdAt: new Date().toISOString().split('T')[0] 
       };
       
-      resolve({
+      const result = {
         success: true,
         data: createdFolder,
-        message: `Folder ${createdFolder.name} created successfully`,
-      });
+        message: `Project ${createdFolder.name} created successfully`,
+      };
+      
+      toast.success(result.message);
+      resolve(result);
     }, 800);
   });
 };
@@ -75,10 +79,13 @@ export const updateSensorFolder = async (
   // Simulate API call
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({
+      const result = {
         success: true,
-        message: `Folder ${folderId} updated successfully`,
-      });
+        message: `Project ${folderId} updated successfully`,
+      };
+      
+      toast.success(result.message);
+      resolve(result);
     }, 800);
   });
 };

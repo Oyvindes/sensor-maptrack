@@ -1,5 +1,6 @@
 
 import { Company } from "@/types/users";
+import { toast } from "sonner";
 
 // Mock data service for companies
 export const getMockCompanies = (): Company[] => {
@@ -44,10 +45,13 @@ export const updateCompany = async (
   // Simulate API call
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({
+      const result = {
         success: true,
         message: `Company ${companyId} updated successfully`,
-      });
+      };
+      
+      toast.success(result.message);
+      resolve(result);
     }, 800);
   });
 };
