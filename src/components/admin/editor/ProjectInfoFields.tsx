@@ -7,6 +7,7 @@ import { SensorFolder } from "@/types/users";
 import { Hash, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface ProjectInfoFieldsProps {
   formData: SensorFolder;
@@ -35,42 +36,91 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
     
     try {
       setIsSearching(true);
-      // This would typically be an API call to a Norwegian address lookup service
-      // For demonstration, we're using a mock response
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Use OpenStreetMap's Nominatim API for geocoding (real API call)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)},Norway&addressdetails=1&limit=3`,
+        {
+          headers: {
+            "Accept-Language": "en-US,en;q=0.9,nb;q=0.8",
+            "User-Agent": "SensorTrackingAppDemo/1.0"  // Required by Nominatim ToS
+          }
+        }
+      );
       
-      // Accurate coordinates for Klettvegen 57A, Leinstrand
-      // Based on actual GPS coordinates for this location
+      if (!response.ok) {
+        throw new Error("Failed to fetch address data");
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const addressSuggestions: AddressSuggestion[] = data.map((item: any) => {
+          // Extract relevant address parts
+          const road = item.address.road || "";
+          const houseNumber = item.address.house_number || "";
+          const postcode = item.address.postcode || "";
+          const city = item.address.city || item.address.town || item.address.village || "";
+          
+          return {
+            address: `${road} ${houseNumber}`.trim(),
+            postcode: postcode,
+            city: city,
+            lat: parseFloat(item.lat),  // Preserving full precision
+            lng: parseFloat(item.lon)   // Preserving full precision
+          };
+        });
+        
+        setSuggestions(addressSuggestions);
+        setShowSuggestions(true);
+      } else {
+        // Use static data as fallback or when API returns no results
+        // This fallback maintains compatibility with the demo
+        const mockAddresses: AddressSuggestion[] = [
+          {
+            address: "Klettvegen 57A",
+            postcode: "7083",
+            city: "Leinstrand",
+            lat: 63.3253392684221,
+            lng: 10.312003580149943
+          },
+          {
+            address: "Klettvegen 59",
+            postcode: "7083",
+            city: "Leinstrand",
+            lat: 63.32550,
+            lng: 10.31220
+          },
+          {
+            address: "Klettvegen 55",
+            postcode: "7083", 
+            city: "Leinstrand",
+            lat: 63.32520,
+            lng: 10.31180
+          }
+        ];
+        
+        setSuggestions(mockAddresses);
+        setShowSuggestions(true);
+        toast.warning("Using demo addresses - no exact match found");
+      }
+    } catch (error) {
+      console.error("Error fetching address suggestions:", error);
+      toast.error("Failed to fetch address data");
+      
+      // Fallback to static data in case of error
       const mockAddresses: AddressSuggestion[] = [
         {
-          address: query,
+          address: "Klettvegen 57A",
           postcode: "7083",
           city: "Leinstrand",
-          lat: 63.3253392684221,  // Correct coordinate for Klettvegen 57A
-          lng: 10.312003580149943  // Correct coordinate for Klettvegen 57A
-        },
-        {
-          address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') + 2}`,
-          postcode: "7083",
-          city: "Leinstrand",
-          lat: 63.32550,  // Nearby address
-          lng: 10.31220   // Nearby address
-        },
-        {
-          address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') - 2}`,
-          postcode: "7083", 
-          city: "Leinstrand",
-          lat: 63.32520,  // Nearby address
-          lng: 10.31180   // Nearby address
+          lat: 63.3253392684221,
+          lng: 10.312003580149943
         }
       ];
       
       setSuggestions(mockAddresses);
       setShowSuggestions(true);
-    } catch (error) {
-      console.error("Error fetching address suggestions:", error);
     } finally {
       setIsSearching(false);
     }
@@ -86,12 +136,14 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
     
     // If the API provides coordinates, we can store them as well
     if (suggestion.lat && suggestion.lng) {
-      // Pass the location data to trigger the map update
-      const locationData = JSON.stringify({ lat: suggestion.lat, lng: suggestion.lng });
+      // Pass the location data with maximum precision
+      const locationData = JSON.stringify({
+        lat: suggestion.lat,
+        lng: suggestion.lng
+      });
       onChange("location" as keyof SensorFolder, locationData);
       
-      // Toast notification could be added here
-      console.log(`Address set to ${fullAddress} with coordinates [${suggestion.lat}, ${suggestion.lng}]`);
+      toast.success(`Address set with precise coordinates [${suggestion.lat}, ${suggestion.lng}]`);
     }
     
     setShowSuggestions(false);
@@ -165,6 +217,9 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
                     <div className="font-medium">{suggestion.address}</div>
                     <div className="text-sm text-muted-foreground">
                       {suggestion.postcode} {suggestion.city}, Norway
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Coordinates: [{suggestion.lat}, {suggestion.lng}]
                     </div>
                   </div>
                 ))}
