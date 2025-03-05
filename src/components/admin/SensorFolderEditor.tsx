@@ -30,10 +30,16 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   const isMasterAdmin = currentUser?.role === 'master';
 
   useEffect(() => {
-    // Filter sensors by company ID
+    // Get all mock sensors
     const allSensors = getMockSensors();
+    
+    // Filter sensors by company ID
     const filteredSensors = allSensors
-      .filter(sensor => sensor.companyId === formData.companyId)
+      .filter(sensor => {
+        // This is the fix: use sensor.companyId instead of looking for a companyId that
+        // might not be directly on the sensor object
+        return sensor.companyId === formData.companyId;
+      })
       .map(sensor => ({
         id: sensor.id,
         name: sensor.name

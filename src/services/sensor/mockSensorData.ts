@@ -1,7 +1,7 @@
 
 import { SensorData } from "@/components/SensorCard";
 
-export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
+export const getMockSensors = (): (SensorData & { folderId?: string, companyId: string })[] => {
   return [
     {
       id: "sensor-001",
@@ -20,7 +20,8 @@ export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
       ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
-      folderId: "folder-001"
+      folderId: "folder-001",
+      companyId: "company-001" // Added company ID
     },
     {
       id: "sensor-002",
@@ -39,7 +40,8 @@ export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
       ],
       status: "warning",
       lastUpdated: new Date().toLocaleTimeString(),
-      folderId: "folder-002"
+      folderId: "folder-002",
+      companyId: "company-001" // Added company ID
     },
     {
       id: "sensor-003",
@@ -53,7 +55,8 @@ export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
       ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
-      folderId: "folder-003"
+      folderId: "folder-003",
+      companyId: "company-002" // Added company ID
     },
     {
       id: "sensor-004",
@@ -82,7 +85,8 @@ export const getMockSensors = (): (SensorData & { folderId?: string })[] => {
       ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
-      folderId: "folder-004"
+      folderId: "folder-004",
+      companyId: "company-003" // Added company ID
     },
   ];
 };
