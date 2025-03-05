@@ -2,7 +2,7 @@
 import React from "react";
 import { SensorData } from "@/components/SensorCard";
 import SensorList from "@/components/admin/SensorList";
-import SensorEditor from "@/components/SensorEditor";
+import SensorEditor from "@/components/sensor-editor/SensorEditor";
 import { Company } from "@/types/users";
 
 interface SensorsTabProps {
