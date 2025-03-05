@@ -84,30 +84,31 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
       return focusLocation;
     }
     if (devices.length > 0 && devices[0].location) {
-      return [devices[0].location.lat, devices[0].location.lng];
+      return [devices[0].location.lat, devices[0].location.lng] as [number, number];
     }
     if (sensors.length > 0 && sensors[0].location) {
-      return [sensors[0].location.lat, sensors[0].location.lng];
+      return [sensors[0].location.lat, sensors[0].location.lng] as [number, number];
     }
     if (objects.length > 0) {
-      return [objects[0].position.lat, objects[0].position.lng];
+      return [objects[0].position.lat, objects[0].position.lng] as [number, number];
     }
     // Default to Norway
-    return [60.472, 8.468];
+    return [60.472, 8.468] as [number, number];
   };
 
-  const mapCenter = getMapCenter() as [number, number];
+  const mapCenter = getMapCenter();
 
   return (
     <div className={className}>
       <MapContainer 
-        center={mapCenter} 
+        center={mapCenter as any} 
         zoom={focusLocation ? focusZoom : 6} 
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          key="base-tile-layer"
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
@@ -118,11 +119,11 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           device.location && (
             <Marker
               key={device.id}
-              position={[device.location.lat, device.location.lng]}
-              icon={customIcon}
+              position={[device.location.lat, device.location.lng] as any}
+              icon={customIcon as any}
               eventHandlers={{
                 click: () => onDeviceClick && onDeviceClick(device.id),
-              }}
+              } as any}
             >
               <Popup>
                 <div>
@@ -140,11 +141,11 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           sensor.location && (
             <Marker
               key={sensor.id}
-              position={[sensor.location.lat, sensor.location.lng]}
-              icon={customIcon}
+              position={[sensor.location.lat, sensor.location.lng] as any}
+              icon={customIcon as any}
               eventHandlers={{
                 click: () => onSensorClick && onSensorClick(sensor.id),
-              }}
+              } as any}
             >
               <Popup>
                 <div>
@@ -162,11 +163,11 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
         {objects?.map((object) => (
           <Marker
             key={object.id}
-            position={[object.position.lat, object.position.lng]}
-            icon={customIcon}
+            position={[object.position.lat, object.position.lng] as any}
+            icon={customIcon as any}
             eventHandlers={{
               click: () => onObjectSelect && onObjectSelect(object),
-            }}
+            } as any}
           >
             <Popup>
               <div>
