@@ -1,3 +1,4 @@
+
 import React from "react";
 import { SensorFolder } from "@/types/users";
 import { MapPin, ArrowRight } from "lucide-react";
@@ -75,15 +76,17 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
   // Function to render custom popups
   const renderCustomPopup = (device: any) => {
     return (
-      <div className="flex flex-col gap-1 p-1">
-        <h3 className="font-bold text-sm">{device.name}</h3>
-        <div className="grid gap-0.5 text-xs">
+      <div className="flex flex-col gap-2 p-1">
+        <h3 className="font-bold text-base">{device.name}</h3>
+        <div className="grid gap-1 text-sm">
+          <p>Type: {device.type}</p>
+          <p>Status: {device.status}</p>
           {device.projectNumber && <p>Project #: {device.projectNumber}</p>}
           <p>Sensors: {device.sensorCount}</p>
         </div>
         <Button 
           size="sm" 
-          className="mt-0.5 w-full h-7 text-xs"
+          className="mt-1 w-full"
           onClick={() => {
             const project = projects.find(p => p.id === device.id);
             if (project) {
@@ -91,7 +94,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
             }
           }}
         >
-          More <ArrowRight className="ml-1 w-3 h-3" />
+          More <ArrowRight className="ml-1 w-4 h-4" />
         </Button>
       </div>
     );
