@@ -41,29 +41,29 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // More accurate coordinates for Klettvegen 57A, Leinstrand
-      // These are more precise coordinates for Klettvegen area in Leinstrand
+      // Accurate coordinates for Klettvegen 57A, Leinstrand
+      // Based on actual GPS coordinates for this location
       const mockAddresses: AddressSuggestion[] = [
         {
           address: query,
           postcode: "7083",
           city: "Leinstrand",
-          lat: 63.32097,  // More accurate coordinate
-          lng: 10.27664   // More accurate coordinate
+          lat: 63.33005,  // More accurate coordinate for Klettvegen 57A
+          lng: 10.26690   // More accurate coordinate for Klettvegen 57A
         },
         {
           address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') + 2}`,
           postcode: "7083",
           city: "Leinstrand",
-          lat: 63.32106,  // More accurate coordinate
-          lng: 10.27680   // More accurate coordinate
+          lat: 63.33020,  // Nearby address
+          lng: 10.26710   // Nearby address
         },
         {
           address: `${query.split(' ')[0]} ${parseInt(query.split(' ')[1] || '1') - 2}`,
           postcode: "7083", 
           city: "Leinstrand",
-          lat: 63.32088,  // More accurate coordinate
-          lng: 10.27650   // More accurate coordinate
+          lat: 63.32990,  // Nearby address
+          lng: 10.26670   // Nearby address
         }
       ];
       

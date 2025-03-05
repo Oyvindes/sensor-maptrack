@@ -29,7 +29,7 @@ interface FlyToProps {
   zoom?: number;
 }
 
-const FlyToLocation: React.FC<FlyToProps> = ({ position, zoom = 18 }) => {
+const FlyToLocation: React.FC<FlyToProps> = ({ position, zoom = 16 }) => {
   const map = useMap();
   
   useEffect(() => {
@@ -63,7 +63,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   objects = [],
   highlightId,
   focusLocation,
-  focusZoom = 18,
+  focusZoom = 16,
   onDeviceClick,
   onSensorClick,
   onObjectSelect,

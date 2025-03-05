@@ -150,7 +150,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
                 companyId: formData.companyId
               }]}
               focusLocation={mapFocusPosition}
-              focusZoom={18}
+              focusZoom={16}
             />
           </div>
         )}
