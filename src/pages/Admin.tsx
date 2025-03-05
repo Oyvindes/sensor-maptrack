@@ -80,13 +80,21 @@ const Admin: React.FC = () => {
     try {
       await sendCommandToSensor(updatedSensor.id, "update", updatedSensor);
       
-      setSensors(prev => 
-        prev.map(sensor => 
-          sensor.id === updatedSensor.id ? updatedSensor : sensor
-        )
-      );
+      if (updatedSensor.id.startsWith("sensor-")) {
+        const newId = `${updatedSensor.type}-${Date.now().toString().slice(-3)}`;
+        const savedSensor = { ...updatedSensor, id: newId };
+        
+        setSensors(prev => [...prev, savedSensor]);
+        toast.success(`Sensor ${savedSensor.name} created successfully`);
+      } else {
+        setSensors(prev => 
+          prev.map(sensor => 
+            sensor.id === updatedSensor.id ? updatedSensor : sensor
+          )
+        );
+        toast.success(`Sensor ${updatedSensor.name} updated successfully`);
+      }
       
-      toast.success(`Sensor ${updatedSensor.name} updated successfully`);
       setSelectedSensor(null);
     } catch (error) {
       toast.error("Failed to update sensor");
@@ -98,13 +106,21 @@ const Admin: React.FC = () => {
     try {
       await updateTrackingObject(updatedDevice.id, updatedDevice);
       
-      setTrackingObjects(prev => 
-        prev.map(device => 
-          device.id === updatedDevice.id ? updatedDevice : device
-        )
-      );
+      if (updatedDevice.id.startsWith("device-")) {
+        const newId = `vehicle-${Date.now().toString().slice(-3)}`;
+        const savedDevice = { ...updatedDevice, id: newId };
+        
+        setTrackingObjects(prev => [...prev, savedDevice]);
+        toast.success(`Device ${savedDevice.name} created successfully`);
+      } else {
+        setTrackingObjects(prev => 
+          prev.map(device => 
+            device.id === updatedDevice.id ? updatedDevice : device
+          )
+        );
+        toast.success(`Device ${updatedDevice.name} updated successfully`);
+      }
       
-      toast.success(`Device ${updatedDevice.name} updated successfully`);
       setSelectedDevice(null);
     } catch (error) {
       toast.error("Failed to update device");
@@ -144,13 +160,21 @@ const Admin: React.FC = () => {
     try {
       await updateCompany(updatedCompany.id, updatedCompany);
       
-      setCompanies(prev => 
-        prev.map(company => 
-          company.id === updatedCompany.id ? updatedCompany : company
-        )
-      );
+      if (updatedCompany.id.startsWith("company-")) {
+        const newId = `company-${Date.now().toString().slice(-3)}`;
+        const savedCompany = { ...updatedCompany, id: newId };
+        
+        setCompanies(prev => [...prev, savedCompany]);
+        toast.success(`Company ${savedCompany.name} created successfully`);
+      } else {
+        setCompanies(prev => 
+          prev.map(company => 
+            company.id === updatedCompany.id ? updatedCompany : company
+          )
+        );
+        toast.success(`Company ${updatedCompany.name} updated successfully`);
+      }
       
-      toast.success(`Company ${updatedCompany.name} updated successfully`);
       setSelectedCompany(null);
     } catch (error) {
       toast.error("Failed to update company");
@@ -179,13 +203,21 @@ const Admin: React.FC = () => {
     try {
       await updateUser(updatedUser.id, updatedUser);
       
-      setUsers(prev => 
-        prev.map(user => 
-          user.id === updatedUser.id ? updatedUser : user
-        )
-      );
+      if (updatedUser.id.startsWith("user-")) {
+        const newId = `user-${Date.now().toString().slice(-3)}`;
+        const savedUser = { ...updatedUser, id: newId };
+        
+        setUsers(prev => [...prev, savedUser]);
+        toast.success(`User ${savedUser.name} created successfully`);
+      } else {
+        setUsers(prev => 
+          prev.map(user => 
+            user.id === updatedUser.id ? updatedUser : user
+          )
+        );
+        toast.success(`User ${updatedUser.name} updated successfully`);
+      }
       
-      toast.success(`User ${updatedUser.name} updated successfully`);
       setSelectedUser(null);
     } catch (error) {
       toast.error("Failed to update user");
