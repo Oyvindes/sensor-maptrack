@@ -22,6 +22,7 @@ type TrackingMapProps = {
   className?: string;
   centerPosition?: { lat: number; lng: number };
   onObjectSelect?: (object: TrackingObject) => void;
+  apiKey?: string; // New prop for API key
 };
 
 // Google Maps container styles
@@ -36,13 +37,14 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   className,
   centerPosition = { lat: 40.7128, lng: -74.006 }, // New York as default
   onObjectSelect,
+  apiKey = '', // Default to empty string
 }) => {
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   
   // Load the Google Maps JavaScript API
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: '' // You'll need to provide your Google Maps API key here
+    googleMapsApiKey: apiKey // Use the provided API key
   });
   
   // Find the currently selected object
@@ -65,7 +67,9 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Map className="h-12 w-12 mx-auto mb-4" />
           </div>
           <p className="text-destructive font-medium">Error loading Google Maps</p>
-          <p className="text-muted-foreground text-sm mt-2">Please check your API key and connection</p>
+          <p className="text-muted-foreground text-sm mt-2">
+            {apiKey ? "Please check your API key and connection" : "A Google Maps API key is required"}
+          </p>
         </div>
       </div>
     );

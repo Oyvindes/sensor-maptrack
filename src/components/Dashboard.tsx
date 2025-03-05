@@ -21,6 +21,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Settings } from "lucide-react";
 
+// For demo purposes only - in a real app, you would use environment variables
+// This is a placeholder and should be replaced with your actual API key
+const GOOGLE_MAPS_API_KEY = "";
+
 const Dashboard: React.FC = () => {
   const [sensors, setSensors] = useState<SensorData[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
@@ -156,6 +160,7 @@ const Dashboard: React.FC = () => {
             objects={trackingObjects} 
             className="w-full animate-fade-up [animation-delay:300ms]"
             onObjectSelect={handleObjectSelect}
+            apiKey={GOOGLE_MAPS_API_KEY}
           />
         </SectionContainer>
 
