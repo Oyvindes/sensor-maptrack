@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { SensorFolder, Company } from "@/types/users";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   const isMasterAdmin = currentUser?.role === 'master';
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
   const [mapFocusPosition, setMapFocusPosition] = useState<[number, number] | undefined>(undefined);
+  const [directionsDialogOpen, setDirectionsDialogOpen] = useState(false);
 
   useEffect(() => {
     const allSensors = getMockSensors();
@@ -64,6 +66,18 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
         setMapFocusPosition(undefined);
       }
     }
+
+    // Listen for dialog state changes from ProjectInfoFields
+    const handleDialogStateChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      setDirectionsDialogOpen(customEvent.detail.isOpen);
+    };
+
+    window.addEventListener('directionsDialogStateChange', handleDialogStateChange);
+
+    return () => {
+      window.removeEventListener('directionsDialogStateChange', handleDialogStateChange);
+    };
   }, [formData.companyId, formData.location]);
 
   const handleChange = (field: keyof SensorFolder, value: string | string[]) => {
@@ -135,7 +149,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
           onChange={handleChange}
         />
 
-        {mapLocation && (
+        {mapLocation && !directionsDialogOpen && (
           <div className="border rounded-md overflow-hidden h-64 mb-4">
             <TrackingMap
               className="h-full w-full"

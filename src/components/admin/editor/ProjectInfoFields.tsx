@@ -294,7 +294,16 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
           
           {formData.address && (
             <div className="mt-2 flex gap-2">
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                // Update SensorFolderEditor parent component about dialog state
+                if (window) {
+                  const event = new CustomEvent('directionsDialogStateChange', { 
+                    detail: { isOpen: open } 
+                  });
+                  window.dispatchEvent(event);
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button 
                     type="button" 
