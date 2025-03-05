@@ -4,33 +4,14 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Sensor, Device, TrackingObject } from "@/types/sensors";
-import { renderToString } from "react-dom/server";
-import { Zap } from "lucide-react";
 
 // Fix Leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "/marker-icon-2x.png",
-  iconUrl: "/marker-icon.png",
-  shadowUrl: "/marker-shadow.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
 });
-
-// Create a cool custom icon using Lucide's Zap icon
-const createCustomIcon = () => {
-  const iconHtml = renderToString(
-    <Zap size={24} color="#8B5CF6" strokeWidth={2.5} fill="#E5DEFF" />
-  );
-  
-  return L.divIcon({
-    html: iconHtml,
-    className: 'custom-marker-icon',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -12],
-  });
-};
-
-const customIcon = createCustomIcon();
 
 // Helper component to programmatically change map view
 interface FlyToProps {
@@ -120,7 +101,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={device.id}
               position={[device.location.lat, device.location.lng] as any}
-              icon={customIcon as any}
               eventHandlers={{
                 click: () => onDeviceClick && onDeviceClick(device.id),
               } as any}
@@ -142,7 +122,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={sensor.id}
               position={[sensor.location.lat, sensor.location.lng] as any}
-              icon={customIcon as any}
               eventHandlers={{
                 click: () => onSensorClick && onSensorClick(sensor.id),
               } as any}
@@ -164,7 +143,6 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={object.id}
             position={[object.position.lat, object.position.lng] as any}
-            icon={customIcon as any}
             eventHandlers={{
               click: () => onObjectSelect && onObjectSelect(object),
             } as any}
