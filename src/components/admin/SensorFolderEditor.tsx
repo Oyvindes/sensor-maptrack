@@ -2,16 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { SensorFolder, Company } from "@/types/users";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
-import { ArrowLeft, UserRound, Clock, MapPin, Hash, Link } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getCurrentUser } from "@/services/authService";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
 import { getMockSensors } from "@/services/sensorService";
+import ProjectInfoFields from "./editor/ProjectInfoFields";
+import CompanySelector from "./editor/CompanySelector";
+import SensorAssignment from "./editor/SensorAssignment";
+import ProjectMetadata from "./editor/ProjectMetadata";
 
 interface SensorFolderEditorProps {
   folder: SensorFolder;
@@ -95,141 +93,30 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Project Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              required
-            />
-          </div>
+        <ProjectInfoFields 
+          formData={formData}
+          onChange={handleChange}
+        />
 
-          <div className="space-y-2">
-            <Label htmlFor="projectNumber">
-              <div className="flex items-center gap-1">
-                <Hash className="h-4 w-4" />
-                <span>Project Number</span>
-              </div>
-            </Label>
-            <Input
-              id="projectNumber"
-              value={formData.projectNumber || ""}
-              onChange={(e) => handleChange("projectNumber", e.target.value)}
-              placeholder="e.g., PRJ-2023-001"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="address">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              <span>Project Address</span>
-            </div>
-          </Label>
-          <Input
-            id="address"
-            value={formData.address || ""}
-            onChange={(e) => handleChange("address", e.target.value)}
-            placeholder="Full address of the project location"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">Description (Optional)</Label>
-          <Textarea
-            id="description"
-            value={formData.description || ""}
-            onChange={(e) => handleChange("description", e.target.value)}
-            rows={3}
-          />
-        </div>
-
-        {isMasterAdmin ? (
-          <div className="space-y-2">
-            <Label htmlFor="company">Company</Label>
-            <Select
-              value={formData.companyId}
-              onValueChange={handleCompanyChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select company" />
-              </SelectTrigger>
-              <SelectContent>
-                {companies.map(company => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Label htmlFor="company">Company</Label>
-            <Input
-              id="company"
-              value={companies.find(c => c.id === formData.companyId)?.name || ""}
-              disabled
-              className="bg-muted"
-            />
-          </div>
-        )}
+        <CompanySelector
+          companyId={formData.companyId}
+          companies={companies}
+          isMasterAdmin={isMasterAdmin}
+          onCompanyChange={handleCompanyChange}
+        />
 
         <div className="space-y-2 pt-4 border-t">
-          <Label className="flex items-center gap-1">
-            <Link className="h-4 w-4" />
-            <span>Assigned Sensors</span>
-          </Label>
-          <Card>
-            <CardContent className="pt-6">
-              {availableSensors.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No sensors available for this company</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {availableSensors.map(sensor => (
-                    <div key={sensor.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`sensor-${sensor.id}`}
-                        checked={(formData.assignedSensorIds || []).includes(sensor.id)}
-                        onCheckedChange={(checked) => 
-                          handleSensorToggle(sensor.id, checked === true)
-                        }
-                      />
-                      <Label 
-                        htmlFor={`sensor-${sensor.id}`}
-                        className="text-sm font-normal"
-                      >
-                        {sensor.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <SensorAssignment
+            availableSensors={availableSensors}
+            assignedSensorIds={formData.assignedSensorIds || []}
+            onSensorToggle={handleSensorToggle}
+          />
         </div>
 
-        {(formData.creatorName || formData.createdAt) && (
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              {formData.creatorName && (
-                <div className="flex items-center gap-2">
-                  <UserRound className="h-4 w-4" />
-                  <span>Created by: {formData.creatorName}</span>
-                </div>
-              )}
-              {formData.createdAt && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Created on: {formData.createdAt}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <ProjectMetadata
+          creatorName={formData.creatorName}
+          createdAt={formData.createdAt}
+        />
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
