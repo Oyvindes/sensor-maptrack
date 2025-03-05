@@ -7,8 +7,8 @@ import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
 
 interface SensorListProps {
-  sensors: (SensorData & { folderId?: string; companyId?: string })[];
-  onSensorSelect: (sensor: SensorData & { folderId?: string; companyId?: string }) => void;
+  sensors: (SensorData & { folderId?: string })[];
+  onSensorSelect: (sensor: SensorData & { folderId?: string }) => void;
   onAddNew: () => void;
 }
 

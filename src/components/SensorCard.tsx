@@ -1,4 +1,3 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
@@ -13,9 +12,9 @@ export type SensorData = {
   unit: string;
   status: "online" | "offline" | "warning";
   lastUpdated: string;
+  companyId?: string;
 };
 
-// Define ranges for different sensor types
 const ranges = {
   temperature: { min: -20, max: 50 },
   humidity: { min: 0, max: 100 },
@@ -44,12 +43,11 @@ const getStatusIndicatorColor = (status: "online" | "offline" | "warning"): stri
 };
 
 const SensorCard: React.FC<SensorCardProps> = ({ sensor, onClick, className }) => {
-  const { type, value, unit, status, name, lastUpdated } = sensor;
+  const { type, value, unit, status, name, lastUpdated, companyId } = sensor;
   const sensorColor = getSensorColor(type);
   const formattedValue = typeof value === "number" ? value.toFixed(1) : value;
   const IconComponent = getSensorIconComponent(type);
   
-  // Calculate a percentage for the progress bar
   const range = ranges[type];
   const percentage = Math.min(
     100,

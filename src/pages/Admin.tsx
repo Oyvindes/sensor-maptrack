@@ -67,7 +67,6 @@ const Admin = () => {
     
     setSensors(getMockSensors().map(sensor => ({
       ...sensor,
-      companyId: sensor.companyId || "company-001",
       type: sensor.type || "temperature",
       unit: sensor.unit || "°C"
     })));
@@ -135,7 +134,7 @@ const Admin = () => {
     setMode("editUser");
   };
 
-  const handleSensorSelect = (sensor: SensorData & { folderId?: string; companyId?: string }) => {
+  const handleSensorSelect = (sensor: SensorData & { folderId?: string }) => {
     const enhancedSensor = {
       ...sensor,
       type: sensor.type || "temperature",
