@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Plus, User, ArrowLeft } from "lucide-react";
+import { Plus, User, ArrowLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { User as UserType, Company } from "@/types/users";
@@ -89,8 +89,17 @@ const UserList: React.FC<UserListProps> = ({
               </div>
               <div className="text-sm">{user.email}</div>
               <div className="flex gap-2 text-sm text-muted-foreground mt-1">
-                <span>Role: {user.role}</span>
-                {user.isCompanyAdmin && (
+                <span className="flex items-center gap-1">
+                  {user.role === "master" ? (
+                    <>
+                      <Shield className="h-3.5 w-3.5 text-amber-500" />
+                      <span>Master Admin</span>
+                    </>
+                  ) : (
+                    <>Role: {user.role}</>
+                  )}
+                </span>
+                {user.isCompanyAdmin && user.role !== "master" && (
                   <Badge variant="outline" className="text-xs">Company Admin</Badge>
                 )}
               </div>

@@ -27,11 +27,13 @@ const UsersTab: React.FC<UsersTabProps> = ({
   onAddNewUser
 }) => {
   const currentUser = getCurrentUser();
-  const companyId = currentUser?.isCompanyAdmin ? currentUser.companyId : undefined;
+  const companyId = currentUser?.isCompanyAdmin && currentUser.role !== "master" 
+    ? currentUser.companyId 
+    : undefined;
 
   // Company admin can only add users to their own company
+  // Master admin can add users to any company
   const handleAddUser = () => {
-    const defaultCompanyId = currentUser?.isCompanyAdmin ? currentUser.companyId : companies[0]?.id;
     onAddNewUser();
   };
   

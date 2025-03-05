@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { getCurrentUser } from "@/services/authService";
 
 interface UserEditorProps {
   user: User;
@@ -24,13 +25,14 @@ const UserEditor: React.FC<UserEditorProps> = ({
 }) => {
   const [formData, setFormData] = useState<User>(user);
   const [showPassword, setShowPassword] = useState(false);
+  const currentUser = getCurrentUser();
 
   // Always ensure oe@briks.no is a master admin
   useEffect(() => {
     if (formData.email === "oe@briks.no" && formData.role !== "master") {
       setFormData(prev => ({ 
         ...prev, 
-        role: "master", // This is now correctly typed as "master" literal
+        role: "master" as const, // This is now correctly typed as "master" literal
         isCompanyAdmin: true 
       }));
     }
@@ -75,6 +77,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
 
   // Check if user is the protected oe@briks.no account
   const isProtectedUser = formData.email === "oe@briks.no";
+  
+  // Check if current user is a site-wide admin (master role)
+  const isMasterAdmin = currentUser?.role === "master";
 
   return (
     <SectionContainer>
@@ -150,14 +155,25 @@ const UserEditor: React.FC<UserEditorProps> = ({
             <SelectContent>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="user">User</SelectItem>
-              {(user.id === "master-001" || isProtectedUser) && (
-                <SelectItem value="master">Master Admin</SelectItem>
+              {/* Only show Master Admin option if current user is a master admin or user being edited is already master */}
+              {(isMasterAdmin || formData.role === "master") && (
+                <SelectItem value="master">
+                  <div className="flex items-center gap-1">
+                    <Shield className="h-3.5 w-3.5 text-amber-500" />
+                    <span>Master Admin</span>
+                  </div>
+                </SelectItem>
               )}
             </SelectContent>
           </Select>
           {isProtectedUser && (
             <p className="text-sm text-amber-500 mt-1">
               This user is a permanent site-wide admin and cannot be changed.
+            </p>
+          )}
+          {formData.role === "master" && (
+            <p className="text-sm text-amber-500 mt-1">
+              Master admins have full access to all companies and features.
             </p>
           )}
         </div>
@@ -172,7 +188,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
               <SelectValue placeholder="Select company" />
             </SelectTrigger>
             <SelectContent>
-              {(user.role === "master" || isProtectedUser) && (
+              {(formData.role === "master" || isProtectedUser) && (
                 <SelectItem value="system">System</SelectItem>
               )}
               {companies.map(company => (
