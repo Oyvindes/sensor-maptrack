@@ -4,15 +4,18 @@ import { Device, TrackingObject } from "@/types/sensors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, X } from "lucide-react";
+import { SensorFolder } from "@/types/users";
 
 interface DeviceEditorProps {
   device: Device;
+  folders?: SensorFolder[];
   onSave: (updatedDevice: Device) => void;
   onCancel: () => void;
 }
 
-const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, onSave, onCancel }) => {
+const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, folders = [], onSave, onCancel }) => {
   const [editedDevice, setEditedDevice] = useState<Device>({ ...device });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,6 +34,13 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, onSave, onCancel })
         ...prev.location || { lat: 0, lng: 0 },
         [name]: parseFloat(value)
       }
+    }));
+  };
+
+  const handleFolderChange = (value: string) => {
+    setEditedDevice(prev => ({
+      ...prev,
+      folderId: value === "none" ? undefined : value
     }));
   };
   
@@ -108,6 +118,26 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, onSave, onCancel })
             onChange={handleChange}
             required
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="folderId">Folder</Label>
+          <Select 
+            value={editedDevice.folderId || "none"} 
+            onValueChange={handleFolderChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select folder" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {folders.map(folder => (
+                <SelectItem key={folder.id} value={folder.id}>
+                  {folder.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       

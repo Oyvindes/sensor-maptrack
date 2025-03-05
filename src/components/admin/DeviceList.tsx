@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TrackingObject } from "@/types/sensors";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 
@@ -49,8 +49,16 @@ const DeviceList: React.FC<DeviceListProps> = ({
             <div className="text-sm text-muted-foreground">
               Position: {device.position.lat.toFixed(4)}, {device.position.lng.toFixed(4)}
             </div>
-            <div className="text-xs mt-2 text-muted-foreground">
-              Speed: {device.speed} mph • Battery: {device.batteryLevel}%
+            <div className="flex justify-between mt-2">
+              <div className="text-xs text-muted-foreground">
+                Speed: {device.speed} mph • Battery: {device.batteryLevel}%
+              </div>
+              {(device as any).folderId && (
+                <div className="text-xs flex items-center gap-1">
+                  <Folder className="h-3 w-3" />
+                  <span>In folder</span>
+                </div>
+              )}
             </div>
           </div>
         ))}

@@ -28,6 +28,7 @@ export function useDeviceHandlers(
       speed: 0,
       direction: 0,
       batteryLevel: 100,
+      ...(device.folderId && { folderId: device.folderId }) // Add folderId if it exists
     };
   };
   
@@ -39,6 +40,10 @@ export function useDeviceHandlers(
   const handleTrackingObjectSelect = (object: TrackingObject) => {
     const device = devices.find(d => d.id === object.id);
     if (device) {
+      // If the tracking object has a folderId, make sure it's preserved
+      if ((object as any).folderId && !device.folderId) {
+        device.folderId = (object as any).folderId;
+      }
       setSelectedDevice(device);
       setMode("editDevice");
     }
@@ -46,9 +51,15 @@ export function useDeviceHandlers(
 
   const handleDeviceSave = (updatedDevice: Device) => {
     setDevices(devices.map(d => d.id === updatedDevice.id ? updatedDevice : d));
+    
+    // When updating tracking objects, preserve the folderId
     setTrackingObjects(trackingObjects.map(obj => 
-      obj.id === updatedDevice.id ? mapDeviceToTrackingObject(updatedDevice) : obj
+      obj.id === updatedDevice.id ? {
+        ...mapDeviceToTrackingObject(updatedDevice),
+        ...(updatedDevice.folderId && { folderId: updatedDevice.folderId })
+      } : obj
     ));
+    
     setMode("listDevices");
     setSelectedDevice(null);
   };

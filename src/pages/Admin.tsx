@@ -116,6 +116,7 @@ const Admin = () => {
               mode={mode}
               trackingObjects={trackingObjects}
               selectedDevice={selectedDevice}
+              folders={sensorFolders}
               onDeviceSelect={deviceHandlers.handleTrackingObjectSelect}
               onDeviceSave={deviceHandlers.handleDeviceSave}
               onDeviceCancel={deviceHandlers.handleDeviceCancel}
