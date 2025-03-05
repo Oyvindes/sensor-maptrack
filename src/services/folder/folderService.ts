@@ -12,9 +12,9 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       companyId: "company-001",
       createdAt: "2023-05-15",
       projectNumber: "PRJ-2023-001",
-      address: "Kongens gate 15, 7013 Trondheim, Norway",
+      address: "123 Main St, Anytown, US 12345",
       assignedSensorIds: ["sensor-001", "sensor-002"],
-      location: { lat: 63.430243, lng: 10.395014 }
+      location: { lat: 59.9139, lng: 10.7522 }
     },
     {
       id: "folder-002",
@@ -23,9 +23,9 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       companyId: "company-001",
       createdAt: "2023-05-16",
       projectNumber: "PRJ-2023-002",
-      address: "Brattørkaia 17A, 7010 Trondheim, Norway",
+      address: "456 Storage Ave, Anytown, US 12345",
       assignedSensorIds: ["sensor-003"],
-      location: { lat: 63.435450, lng: 10.398714 }
+      location: { lat: 60.3913, lng: 5.3221 }
     },
     {
       id: "folder-003",
@@ -34,9 +34,9 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       companyId: "company-002",
       createdAt: "2023-05-17",
       projectNumber: "PRJ-2023-003",
-      address: "Munkegata 26, 7011 Trondheim, Norway",
+      address: "789 Office Blvd, Business Park, US 23456",
       assignedSensorIds: ["sensor-004", "sensor-005"],
-      location: { lat: 63.430091, lng: 10.392861 }
+      location: { lat: 63.4305, lng: 10.3951 }
     },
     {
       id: "folder-004",
@@ -45,9 +45,8 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       companyId: "company-002",
       createdAt: "2023-05-18",
       projectNumber: "PRJ-2023-004",
-      address: "Olav Tryggvasons gate 40, 7011 Trondheim, Norway",
-      assignedSensorIds: [],
-      location: { lat: 63.433101, lng: 10.403635 }
+      address: "101 Server Ln, Tech City, US 34567",
+      assignedSensorIds: []
     },
     {
       id: "folder-005",
@@ -56,9 +55,8 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       companyId: "company-003",
       createdAt: "2023-05-19",
       projectNumber: "PRJ-2023-005",
-      address: "Innherredsveien 7, 7014 Trondheim, Norway",
-      assignedSensorIds: ["sensor-006"],
-      location: { lat: 63.432982, lng: 10.412361 }
+      address: "202 Energy Way, Green Valley, US 45678",
+      assignedSensorIds: ["sensor-006"]
     }
   ];
 };
