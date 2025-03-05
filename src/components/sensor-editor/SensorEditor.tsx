@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { SensorData, SensorType, SensorValue } from "@/components/SensorCard";
 import { Button } from "@/components/ui/button";
 import { Save, X, Plus } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { SensorEditorProps } from "./types";
 import SensorValueEditor from "./SensorValueEditor";
 import SensorBasicInfo from "./SensorBasicInfo";
