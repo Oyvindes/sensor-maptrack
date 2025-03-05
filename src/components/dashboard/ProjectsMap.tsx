@@ -1,9 +1,11 @@
+
 import React from "react";
 import { SensorFolder } from "@/types/users";
-import { MapPin } from "lucide-react";
+import { MapPin, ArrowRight } from "lucide-react";
 import TrackingMap from "@/components/TrackingMap";
 import { cn } from "@/lib/utils";
 import { Location } from "@/types/sensors";
+import { Button } from "@/components/ui/button";
 
 interface ProjectsMapProps {
   projects: SensorFolder[];
@@ -64,9 +66,39 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
       type: "project",
       status: "online" as const,
       location: locationData,
-      companyId: project.companyId
+      companyId: project.companyId,
+      // Add additional properties for use in popup
+      projectNumber: project.projectNumber,
+      sensorCount: project.assignedSensorIds?.length || 0
     };
   });
+
+  // Function to render custom popups
+  const renderCustomPopup = (device: any) => {
+    return (
+      <div className="flex flex-col gap-2 p-1">
+        <h3 className="font-bold text-base">{device.name}</h3>
+        <div className="grid gap-1 text-sm">
+          <p>Type: {device.type}</p>
+          <p>Status: {device.status}</p>
+          {device.projectNumber && <p>Project #: {device.projectNumber}</p>}
+          <p>Sensors: {device.sensorCount}</p>
+        </div>
+        <Button 
+          size="sm" 
+          className="mt-1 w-full"
+          onClick={() => {
+            const project = projects.find(p => p.id === device.id);
+            if (project) {
+              onProjectSelect(project);
+            }
+          }}
+        >
+          More <ArrowRight className="ml-1 w-4 h-4" />
+        </Button>
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -100,6 +132,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
             onProjectSelect(project);
           }
         }}
+        renderCustomPopup={renderCustomPopup}
       />
     </div>
   );

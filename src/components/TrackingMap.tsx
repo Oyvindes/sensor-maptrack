@@ -52,6 +52,7 @@ interface TrackingMapProps {
   onSensorClick?: (sensorId: string) => void;
   onObjectSelect?: (object: TrackingObject) => void;
   className?: string;
+  renderCustomPopup?: (item: Device | Sensor | TrackingObject) => React.ReactNode;
 }
 
 const TrackingMap: React.FC<TrackingMapProps> = ({
@@ -65,6 +66,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   onSensorClick,
   onObjectSelect,
   className = "h-[500px] w-full rounded-md border",
+  renderCustomPopup
 }) => {
   // Find map center based on first device, sensor, or tracking object, or default to Trondheim
   const getMapCenter = () => {
@@ -112,11 +114,13 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
               }}
             >
               <Popup>
-                <div>
-                  <h3 className="font-bold">{device.name}</h3>
-                  <p>Type: {device.type}</p>
-                  <p>Status: {device.status}</p>
-                </div>
+                {renderCustomPopup ? renderCustomPopup(device) : (
+                  <div>
+                    <h3 className="font-bold">{device.name}</h3>
+                    <p>Type: {device.type}</p>
+                    <p>Status: {device.status}</p>
+                  </div>
+                )}
               </Popup>
             </Marker>
           )
@@ -133,12 +137,14 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
               }}
             >
               <Popup>
-                <div>
-                  <h3 className="font-bold">{sensor.name}</h3>
-                  <p>Type: {sensor.type}</p>
-                  <p>Status: {sensor.status}</p>
-                  <p>Last Reading: {sensor.lastReading?.value} {sensor.unit}</p>
-                </div>
+                {renderCustomPopup ? renderCustomPopup(sensor) : (
+                  <div>
+                    <h3 className="font-bold">{sensor.name}</h3>
+                    <p>Type: {sensor.type}</p>
+                    <p>Status: {sensor.status}</p>
+                    <p>Last Reading: {sensor.lastReading?.value} {sensor.unit}</p>
+                  </div>
+                )}
               </Popup>
             </Marker>
           )
@@ -154,12 +160,14 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             }}
           >
             <Popup>
-              <div>
-                <h3 className="font-bold">{object.name}</h3>
-                <p>Speed: {object.speed} mph</p>
-                <p>Battery: {object.batteryLevel}%</p>
-                <p>Last Updated: {object.lastUpdated}</p>
-              </div>
+              {renderCustomPopup ? renderCustomPopup(object) : (
+                <div>
+                  <h3 className="font-bold">{object.name}</h3>
+                  <p>Speed: {object.speed} mph</p>
+                  <p>Battery: {object.batteryLevel}%</p>
+                  <p>Last Updated: {object.lastUpdated}</p>
+                </div>
+              )}
             </Popup>
           </Marker>
         ))}
