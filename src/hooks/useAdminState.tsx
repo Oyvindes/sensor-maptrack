@@ -1,22 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { getMockCompanies, getMockSensorFolders, getMockUsers } from "@/services/userService";
 import { getMockDevices, getMockSensors, getMockTrackingObjects } from "@/services/sensorService";
+import { mapDeviceToTrackingObject } from "@/services/device/mockDeviceData";
 import { Company, User, SensorFolder } from "@/types/users";
 import { Device, Sensor, TrackingObject } from "@/types/sensors";
 import { SensorData } from "@/components/SensorCard";
-
-const mapDeviceToTrackingObject = (device: Device): TrackingObject => {
-  return {
-    id: device.id,
-    name: device.name,
-    position: device.location || { lat: 0, lng: 0 },
-    lastUpdated: new Date().toLocaleTimeString(),
-    speed: 0,
-    direction: 0,
-    batteryLevel: 100,
-  };
-};
 
 export type AdminMode = 
   "listCompanies" |
