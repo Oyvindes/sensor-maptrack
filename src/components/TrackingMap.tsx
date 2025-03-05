@@ -101,13 +101,14 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   return (
     <div className={className}>
       <MapContainer
-        center={mapCenter}
+        center={mapCenter as any}
         zoom={focusLocation ? focusZoom : 6}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          {...{} as any}
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
@@ -119,7 +120,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={device.id}
               position={[device.location.lat, device.location.lng] as [number, number]}
-              icon={customIcon}
+              icon={customIcon as any}
               eventHandlers={{
                 click: () => onDeviceClick && onDeviceClick(device.id),
               }}
@@ -141,7 +142,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
             <Marker
               key={sensor.id}
               position={[sensor.location.lat, sensor.location.lng] as [number, number]}
-              icon={customIcon}
+              icon={customIcon as any}
               eventHandlers={{
                 click: () => onSensorClick && onSensorClick(sensor.id),
               }}
@@ -163,7 +164,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
           <Marker
             key={object.id}
             position={[object.position.lat, object.position.lng] as [number, number]}
-            icon={customIcon}
+            icon={customIcon as any}
             eventHandlers={{
               click: () => onObjectSelect && onObjectSelect(object),
             }}
