@@ -20,7 +20,6 @@ import { Device, Sensor, TrackingObject } from "@/types/sensors";
 import ModeSwitcher from "@/components/admin/ModeSwitcher";
 import { SensorData } from "@/components/SensorCard";
 
-// A mapping function to convert Device to TrackingObject for compatibility
 const mapDeviceToTrackingObject = (device: Device): TrackingObject => {
   return {
     id: device.id,
@@ -64,12 +63,11 @@ const Admin = () => {
   const currentUser = getCurrentUser();
 
   useEffect(() => {
-    // Fetch mock data on component mount
     setCompanies(getMockCompanies());
     setUsers(getMockUsers());
     setSensors(getMockSensors().map(sensor => ({
       ...sensor,
-      companyId: "company-001" // Adding the required companyId property
+      companyId: "company-001"
     })));
     const deviceData = getMockDevices();
     setDevices(deviceData);
@@ -77,7 +75,6 @@ const Admin = () => {
     setSensorFolders(getMockSensorFolders());
   }, []);
 
-  // Handlers for company operations
   const handleCompanySelect = (company: Company) => {
     setSelectedCompany(company);
     setMode("editCompany");
@@ -105,7 +102,6 @@ const Admin = () => {
     setMode("editCompany");
   };
 
-  // Handlers for user operations
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
     setMode("editUser");
@@ -136,7 +132,6 @@ const Admin = () => {
     setMode("editUser");
   };
 
-  // Handlers for sensor operations
   const handleSensorSelect = (sensor: SensorData & { folderId?: string; companyId?: string }) => {
     setSelectedSensor(sensor);
     setMode("editSensor");
@@ -167,7 +162,6 @@ const Admin = () => {
     setMode("editSensor");
   };
 
-  // Handlers for device operations
   const handleDeviceSelect = (device: Device) => {
     setSelectedDevice(device);
     setMode("editDevice");
@@ -175,7 +169,6 @@ const Admin = () => {
 
   const handleDeviceSave = (updatedDevice: Device) => {
     setDevices(devices.map(d => d.id === updatedDevice.id ? updatedDevice : d));
-    // Also update the corresponding tracking object
     setTrackingObjects(trackingObjects.map(obj => 
       obj.id === updatedDevice.id ? mapDeviceToTrackingObject(updatedDevice) : obj
     ));
@@ -200,9 +193,7 @@ const Admin = () => {
     setMode("editDevice");
   };
 
-  // Handlers for tracking object operations
   const handleTrackingObjectSelect = (object: TrackingObject) => {
-    // Find the corresponding device
     const device = devices.find(d => d.id === object.id);
     if (device) {
       setSelectedDevice(device);
@@ -210,13 +201,11 @@ const Admin = () => {
     }
   };
 
-  // Handlers for folder operations
   const handleFolderSelect = (folder: SensorFolder) => {
     setSelectedFolder(folder);
     setMode("editFolder");
   };
 
-  // Create a handler specifically for the folder list component that expects a string ID
   const handleFolderSelectById = (folderId: string) => {
     const folder = sensorFolders.find(f => f.id === folderId);
     if (folder) {
@@ -245,7 +234,6 @@ const Admin = () => {
     setMode("editFolder");
   };
 
-  // Handle mode change for the ModeSwitcher
   const handleModeChange = (newMode: "sensors" | "devices" | "users" | "folders") => {
     setCurrentAdminMode(newMode);
     switch (newMode) {
@@ -272,14 +260,14 @@ const Admin = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <AdminHeader />
 
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 pb-24">
         <SectionContainer>
           <SectionTitle>Admin Controls</SectionTitle>
           <p>Manage your system's data and settings.</p>
         </SectionContainer>
 
         <Tabs defaultValue="companies" className="w-full">
-          <TabsList>
+          <TabsList className="mb-4">
             <TabsTrigger value="companies">Companies</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="sensors">Sensors</TabsTrigger>
@@ -293,7 +281,7 @@ const Admin = () => {
                 companies={companies}
                 onCompanySelect={handleCompanySelect}
                 onAddNew={handleAddNewCompany}
-                onViewUsers={() => {}} // Adding required prop
+                onViewUsers={() => {}}
               />
             )}
             {mode === "editCompany" && selectedCompany && (
@@ -309,7 +297,7 @@ const Admin = () => {
             {mode === "listUsers" && (
               <UserList
                 users={users}
-                companies={companies} // Adding required prop
+                companies={companies}
                 onUserSelect={handleUserSelect}
                 onAddNew={handleAddNewUser}
               />
@@ -362,10 +350,10 @@ const Admin = () => {
             {mode === "listFolders" && (
               <SensorFolderList
                 folders={sensorFolders}
-                companies={companies} // Adding required prop
+                companies={companies}
                 onFolderSelect={handleFolderSelectById}
-                onFolderCreate={async () => {}} // Adding required prop
-                onFolderUpdate={async () => {}} // Adding required prop
+                onFolderCreate={async () => {}}
+                onFolderUpdate={async () => {}}
               />
             )}
             {mode === "editFolder" && selectedFolder && (
