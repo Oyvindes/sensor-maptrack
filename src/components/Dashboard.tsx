@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -27,12 +26,10 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
 
-  // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // In a real application, we would fetch from actual APIs
         const sensorsData = getMockSensors();
         const objectsData = getMockTrackingObjects();
         
@@ -48,9 +45,7 @@ const Dashboard: React.FC = () => {
 
     fetchData();
     
-    // Set up a polling interval for real-time updates
     const interval = setInterval(() => {
-      // Update with slightly different values to simulate real-time changes
       setSensors(prev => 
         prev.map(sensor => ({
           ...sensor,
@@ -65,7 +60,6 @@ const Dashboard: React.FC = () => {
         }))
       );
       
-      // Update object positions slightly to simulate movement
       setTrackingObjects(prev => 
         prev.map(obj => ({
           ...obj,
@@ -84,7 +78,6 @@ const Dashboard: React.FC = () => {
   const handleSensorClick = async (sensor: SensorData) => {
     setSelectedSensor(sensor);
     
-    // Example of sending a command to a sensor
     try {
       const result = await sendCommandToSensor(sensor.id, "get_status");
       if (result.success) {
@@ -106,7 +99,6 @@ const Dashboard: React.FC = () => {
   const handleRefresh = () => {
     toast.info("Refreshing data...");
     
-    // Simulate refreshing data
     setTimeout(() => {
       setSensors(getMockSensors());
       setTrackingObjects(getMockTrackingObjects());
