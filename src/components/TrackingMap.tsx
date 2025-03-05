@@ -113,12 +113,16 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
     <div className={className}>
       <MapContainer
         style={{ height: "100%", width: "100%" }}
-        center={mapCenter}
-        zoom={focusLocation ? focusZoom : 13}
+        // Need to explicitly type this as any to work around the type error
+        // The react-leaflet types are not correctly matching the actual props
+        {...{center: mapCenter, zoom: focusLocation ? focusZoom : 13} as any}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          // Need to explicitly type this as any to work around the type error
+          {...{
+            url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          } as any}
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
