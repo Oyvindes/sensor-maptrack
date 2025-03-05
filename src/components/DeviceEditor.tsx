@@ -1,19 +1,19 @@
 
 import React, { useState } from "react";
-import { TrackingObject } from "@/types/sensors";
+import { Device, TrackingObject } from "@/types/sensors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Save, X } from "lucide-react";
 
 interface DeviceEditorProps {
-  device: TrackingObject;
-  onSave: (updatedDevice: TrackingObject) => void;
+  device: Device;
+  onSave: (updatedDevice: Device) => void;
   onCancel: () => void;
 }
 
 const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, onSave, onCancel }) => {
-  const [editedDevice, setEditedDevice] = useState<TrackingObject>({ ...device });
+  const [editedDevice, setEditedDevice] = useState<Device>({ ...device });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -23,20 +23,12 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, onSave, onCancel })
     }));
   };
   
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditedDevice(prev => ({
       ...prev,
-      [name]: parseFloat(value)
-    }));
-  };
-  
-  const handlePositionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditedDevice(prev => ({
-      ...prev,
-      position: {
-        ...prev.position,
+      location: {
+        ...prev.location || { lat: 0, lng: 0 },
         [name]: parseFloat(value)
       }
     }));
@@ -71,14 +63,25 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, onSave, onCancel })
         </div>
         
         <div className="space-y-2">
+          <Label htmlFor="type">Device Type</Label>
+          <Input
+            id="type"
+            name="type"
+            value={editedDevice.type}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
           <Label htmlFor="lat">Latitude</Label>
           <Input
             id="lat"
             name="lat"
             type="number"
             step="0.0001"
-            value={editedDevice.position.lat}
-            onChange={handlePositionChange}
+            value={editedDevice.location?.lat || 0}
+            onChange={handleLocationChange}
             required
           />
         </div>
@@ -90,49 +93,19 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, onSave, onCancel })
             name="lng"
             type="number"
             step="0.0001"
-            value={editedDevice.position.lng}
-            onChange={handlePositionChange}
+            value={editedDevice.location?.lng || 0}
+            onChange={handleLocationChange}
             required
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="speed">Speed (mph)</Label>
+          <Label htmlFor="status">Status</Label>
           <Input
-            id="speed"
-            name="speed"
-            type="number"
-            min="0"
-            value={editedDevice.speed}
-            onChange={handleNumberChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="direction">Direction (degrees)</Label>
-          <Input
-            id="direction"
-            name="direction"
-            type="number"
-            min="0"
-            max="359"
-            value={editedDevice.direction}
-            onChange={handleNumberChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="batteryLevel">Battery Level (%)</Label>
-          <Input
-            id="batteryLevel"
-            name="batteryLevel"
-            type="number"
-            min="0"
-            max="100"
-            value={editedDevice.batteryLevel}
-            onChange={handleNumberChange}
+            id="status"
+            name="status"
+            value={editedDevice.status}
+            onChange={handleChange}
             required
           />
         </div>

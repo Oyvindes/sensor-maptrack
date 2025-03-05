@@ -34,8 +34,8 @@ const DevicesTab: React.FC<DevicesTabProps> = ({
       )}
       {mode === "editDevice" && selectedDevice && (
         <DeviceEditor
-          device={selectedDevice as any}
-          onSave={onDeviceSave as any}
+          device={selectedDevice}
+          onSave={onDeviceSave}
           onCancel={onDeviceCancel}
         />
       )}
