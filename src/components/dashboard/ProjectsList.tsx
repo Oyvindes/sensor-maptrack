@@ -1,10 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { SensorFolder } from "@/types/users";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Cpu } from "lucide-react";
+import { MapPin, Cpu, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { takePicture } from "@/utils/cameraUtils";
+import { toast } from "sonner";
 
 interface ProjectsListProps {
   projects: SensorFolder[];
@@ -19,6 +21,29 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
   onProjectSelect,
   className 
 }) => {
+  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
+
+  const handleCameraClick = async (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation(); // Prevent card click event
+    
+    try {
+      setLoadingProjectId(projectId);
+      const imagePath = await takePicture();
+      
+      if (imagePath) {
+        toast.success("Photo captured successfully");
+        // Here you would typically save the image path to the project
+        // This would require additional backend implementation
+        console.log(`Captured image for project ${projectId}:`, imagePath);
+      }
+    } catch (error) {
+      toast.error("Failed to capture photo");
+      console.error("Camera error:", error);
+    } finally {
+      setLoadingProjectId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={cn("space-y-2", className)}>
@@ -60,12 +85,27 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                   {project.address || project.description || project.projectNumber}
                 </p>
               </div>
-              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                {project.location && <MapPin className="h-3 w-3" />}
-                <span className="flex items-center gap-1">
-                  <Cpu className="h-3 w-3" />
-                  {project.assignedSensorIds?.length || 0}
-                </span>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                  {project.location && <MapPin className="h-3 w-3" />}
+                  <span className="flex items-center gap-1">
+                    <Cpu className="h-3 w-3" />
+                    {project.assignedSensorIds?.length || 0}
+                  </span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  onClick={(e) => handleCameraClick(e, project.id)}
+                  disabled={loadingProjectId === project.id}
+                >
+                  {loadingProjectId === project.id ? (
+                    <div className="h-3 w-3 rounded-full border-2 border-t-transparent animate-spin" />
+                  ) : (
+                    <Camera className="h-3 w-3" />
+                  )}
+                </Button>
               </div>
             </div>
           </CardContent>
