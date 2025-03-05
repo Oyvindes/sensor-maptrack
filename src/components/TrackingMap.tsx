@@ -117,8 +117,8 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
@@ -141,7 +141,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
                 },
               }}
             >
-              <Popup closeButton={false}>
+              <Popup>
                 {renderCustomPopup ? renderCustomPopup(device) : (
                   <div>
                     <h3 className="font-bold">{device.name}</h3>
