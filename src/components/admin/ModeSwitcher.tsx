@@ -3,8 +3,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 
 interface ModeSwitcherProps {
-  currentMode: "sensors" | "devices";
-  onModeChange: (mode: "sensors" | "devices") => void;
+  currentMode: "sensors" | "devices" | "users";
+  onModeChange: (mode: "sensors" | "devices" | "users") => void;
 }
 
 const ModeSwitcher: React.FC<ModeSwitcherProps> = ({ 
@@ -24,6 +24,12 @@ const ModeSwitcher: React.FC<ModeSwitcherProps> = ({
         onClick={() => onModeChange("devices")}
       >
         Tracking Devices
+      </Button>
+      <Button 
+        variant={currentMode === "users" ? "default" : "outline"} 
+        onClick={() => onModeChange("users")}
+      >
+        User Management
       </Button>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { PageContainer, ContentContainer } from "@/components/Layout";
@@ -8,22 +7,40 @@ import {
   sendCommandToSensor,
   updateTrackingObject
 } from "@/services/sensorService";
+import {
+  getMockCompanies,
+  getMockUsers,
+  updateCompany,
+  updateUser
+} from "@/services/userService";
 import { SensorData } from "@/components/SensorCard";
 import { TrackingObject } from "@/components/TrackingMap";
+import { Company, User } from "@/types/users";
+import { ArrowLeft } from "lucide-react";
 import SensorEditor from "@/components/SensorEditor";
 import DeviceEditor from "@/components/DeviceEditor";
 import AdminHeader from "@/components/admin/AdminHeader";
 import ModeSwitcher from "@/components/admin/ModeSwitcher";
 import SensorList from "@/components/admin/SensorList";
 import DeviceList from "@/components/admin/DeviceList";
+import CompanyList from "@/components/admin/CompanyList";
+import CompanyEditor from "@/components/admin/CompanyEditor";
+import UserList from "@/components/admin/UserList";
+import UserEditor from "@/components/admin/UserEditor";
 
 const Admin: React.FC = () => {
   const [sensors, setSensors] = useState<SensorData[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensor, setSelectedSensor] = useState<SensorData | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<TrackingObject | null>(null);
-  const [editMode, setEditMode] = useState<"sensors" | "devices">("sensors");
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [currentCompanyId, setCurrentCompanyId] = useState<string | undefined>(undefined);
+  const [editMode, setEditMode] = useState<"sensors" | "devices" | "users">("sensors");
+  const [userManagementView, setUserManagementView] = useState<"companies" | "users">("companies");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,9 +48,13 @@ const Admin: React.FC = () => {
       try {
         const sensorsData = getMockSensors();
         const objectsData = getMockTrackingObjects();
+        const companiesData = getMockCompanies();
+        const usersData = getMockUsers();
         
         setSensors(sensorsData);
         setTrackingObjects(objectsData);
+        setCompanies(companiesData);
+        setUsers(usersData);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data");
@@ -45,12 +66,20 @@ const Admin: React.FC = () => {
     fetchData();
   }, []);
 
+  const handleModeChange = (mode: "sensors" | "devices" | "users") => {
+    setEditMode(mode);
+    setSelectedSensor(null);
+    setSelectedDevice(null);
+    setSelectedCompany(null);
+    setSelectedUser(null);
+    setCurrentCompanyId(undefined);
+    setUserManagementView("companies");
+  };
+
   const handleSensorUpdate = async (updatedSensor: SensorData) => {
     try {
-      // In a real app, we would call an API to update the sensor
       await sendCommandToSensor(updatedSensor.id, "update", updatedSensor);
       
-      // Update local state
       setSensors(prev => 
         prev.map(sensor => 
           sensor.id === updatedSensor.id ? updatedSensor : sensor
@@ -67,10 +96,8 @@ const Admin: React.FC = () => {
 
   const handleDeviceUpdate = async (updatedDevice: TrackingObject) => {
     try {
-      // In a real app, we would call an API to update the device
       await updateTrackingObject(updatedDevice.id, updatedDevice);
       
-      // Update local state
       setTrackingObjects(prev => 
         prev.map(device => 
           device.id === updatedDevice.id ? updatedDevice : device
@@ -113,6 +140,80 @@ const Admin: React.FC = () => {
     setSelectedDevice(newDevice);
   };
 
+  const handleCompanyUpdate = async (updatedCompany: Company) => {
+    try {
+      await updateCompany(updatedCompany.id, updatedCompany);
+      
+      setCompanies(prev => 
+        prev.map(company => 
+          company.id === updatedCompany.id ? updatedCompany : company
+        )
+      );
+      
+      toast.success(`Company ${updatedCompany.name} updated successfully`);
+      setSelectedCompany(null);
+    } catch (error) {
+      toast.error("Failed to update company");
+      console.error(error);
+    }
+  };
+
+  const handleAddNewCompany = () => {
+    const newCompany: Company = {
+      id: `company-${Date.now()}`,
+      name: "New Company",
+      industry: "Technology",
+      createdAt: new Date().toISOString().split('T')[0],
+      status: "active"
+    };
+    
+    setSelectedCompany(newCompany);
+  };
+
+  const handleViewCompanyUsers = (companyId: string) => {
+    setCurrentCompanyId(companyId);
+    setUserManagementView("users");
+  };
+
+  const handleUserUpdate = async (updatedUser: User) => {
+    try {
+      await updateUser(updatedUser.id, updatedUser);
+      
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === updatedUser.id ? updatedUser : user
+        )
+      );
+      
+      toast.success(`User ${updatedUser.name} updated successfully`);
+      setSelectedUser(null);
+    } catch (error) {
+      toast.error("Failed to update user");
+      console.error(error);
+    }
+  };
+
+  const handleAddNewUser = () => {
+    const defaultCompanyId = currentCompanyId || (companies.length > 0 ? companies[0].id : "");
+    
+    const newUser: User = {
+      id: `user-${Date.now()}`,
+      name: "New User",
+      email: "user@example.com",
+      role: "user",
+      companyId: defaultCompanyId,
+      lastLogin: new Date().toISOString(),
+      status: "active"
+    };
+    
+    setSelectedUser(newUser);
+  };
+
+  const handleBackToCompanies = () => {
+    setUserManagementView("companies");
+    setCurrentCompanyId(undefined);
+  };
+
   return (
     <PageContainer>
       <AdminHeader />
@@ -120,7 +221,7 @@ const Admin: React.FC = () => {
       <ContentContainer>
         <ModeSwitcher 
           currentMode={editMode} 
-          onModeChange={setEditMode} 
+          onModeChange={handleModeChange} 
         />
 
         {editMode === "sensors" ? (
@@ -137,7 +238,7 @@ const Admin: React.FC = () => {
               onAddNew={handleAddNewSensor}
             />
           )
-        ) : (
+        ) : editMode === "devices" ? (
           selectedDevice ? (
             <DeviceEditor 
               device={selectedDevice} 
@@ -149,6 +250,37 @@ const Admin: React.FC = () => {
               devices={trackingObjects}
               onDeviceSelect={setSelectedDevice}
               onAddNew={handleAddNewDevice}
+            />
+          )
+        ) : (
+          selectedCompany ? (
+            <CompanyEditor
+              company={selectedCompany}
+              onSave={handleCompanyUpdate}
+              onCancel={() => setSelectedCompany(null)}
+            />
+          ) : selectedUser ? (
+            <UserEditor
+              user={selectedUser}
+              companies={companies}
+              onSave={handleUserUpdate}
+              onCancel={() => setSelectedUser(null)}
+            />
+          ) : userManagementView === "companies" ? (
+            <CompanyList
+              companies={companies}
+              onCompanySelect={setSelectedCompany}
+              onAddNew={handleAddNewCompany}
+              onViewUsers={handleViewCompanyUsers}
+            />
+          ) : (
+            <UserList
+              users={users}
+              companies={companies}
+              currentCompanyId={currentCompanyId}
+              onUserSelect={setSelectedUser}
+              onAddNew={handleAddNewUser}
+              onBack={handleBackToCompanies}
             />
           )
         )}
