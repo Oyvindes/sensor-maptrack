@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SensorFolder, Company } from "@/types/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
-import { ArrowLeft, UserRound, Clock } from "lucide-react";
+import { ArrowLeft, UserRound, Clock, MapPin, Hash, Link } from "lucide-react";
 import { getCurrentUser } from "@/services/authService";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
+import { getMockSensors } from "@/services/sensorService";
 
 interface SensorFolderEditorProps {
   folder: SensorFolder;
@@ -24,11 +27,38 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   onCancel
 }) => {
   const [formData, setFormData] = useState<SensorFolder>(folder);
+  const [availableSensors, setAvailableSensors] = useState<Array<{ id: string; name: string }>>([]);
   const currentUser = getCurrentUser();
   const isMasterAdmin = currentUser?.role === 'master';
 
-  const handleChange = (field: keyof SensorFolder, value: string) => {
+  useEffect(() => {
+    // Fetch all sensors for the assignment section
+    const sensors = getMockSensors().map(sensor => ({
+      id: sensor.id,
+      name: sensor.name
+    }));
+    setAvailableSensors(sensors);
+  }, []);
+
+  const handleChange = (field: keyof SensorFolder, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSensorToggle = (sensorId: string, checked: boolean) => {
+    setFormData(prev => {
+      const currentAssignedSensors = prev.assignedSensorIds || [];
+      let updatedSensors: string[];
+      
+      if (checked) {
+        // Add the sensor to assigned list
+        updatedSensors = [...currentAssignedSensors, sensorId];
+      } else {
+        // Remove the sensor from assigned list
+        updatedSensors = currentAssignedSensors.filter(id => id !== sensorId);
+      }
+      
+      return { ...prev, assignedSensorIds: updatedSensors };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,19 +74,51 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
         </Button>
         <SectionTitle>
           {folder.id.startsWith("folder-") && folder.id.length > 15 
-            ? "Add New Folder" 
-            : `Edit Folder: ${folder.name}`}
+            ? "Add New Project" 
+            : `Edit Project: ${folder.name}`}
         </SectionTitle>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Project Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="projectNumber">
+              <div className="flex items-center gap-1">
+                <Hash className="h-4 w-4" />
+                <span>Project Number</span>
+              </div>
+            </Label>
+            <Input
+              id="projectNumber"
+              value={formData.projectNumber || ""}
+              onChange={(e) => handleChange("projectNumber", e.target.value)}
+              placeholder="e.g., PRJ-2023-001"
+            />
+          </div>
+        </div>
+
         <div className="space-y-2">
-          <Label htmlFor="name">Folder Name</Label>
+          <Label htmlFor="address">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-4 w-4" />
+              <span>Project Address</span>
+            </div>
+          </Label>
           <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            required
+            id="address"
+            value={formData.address || ""}
+            onChange={(e) => handleChange("address", e.target.value)}
+            placeholder="Full address of the project location"
           />
         </div>
 
@@ -100,6 +162,40 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
             />
           </div>
         )}
+
+        <div className="space-y-2 pt-4 border-t">
+          <Label className="flex items-center gap-1">
+            <Link className="h-4 w-4" />
+            <span>Assigned Sensors</span>
+          </Label>
+          <Card>
+            <CardContent className="pt-6">
+              {availableSensors.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No sensors available</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {availableSensors.map(sensor => (
+                    <div key={sensor.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`sensor-${sensor.id}`}
+                        checked={(formData.assignedSensorIds || []).includes(sensor.id)}
+                        onCheckedChange={(checked) => 
+                          handleSensorToggle(sensor.id, checked === true)
+                        }
+                      />
+                      <Label 
+                        htmlFor={`sensor-${sensor.id}`}
+                        className="text-sm font-normal"
+                      >
+                        {sensor.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {(formData.creatorName || formData.createdAt) && (
           <div className="pt-2 border-t border-gray-200 dark:border-gray-700">

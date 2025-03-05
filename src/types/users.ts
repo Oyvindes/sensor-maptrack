@@ -28,6 +28,9 @@ export interface SensorFolder {
   createdAt: string;
   createdBy?: string; // ID of the user who created the folder
   creatorName?: string; // Name of the user who created the folder
+  projectNumber?: string; // New field for project number
+  address?: string; // New field for project address
+  assignedSensorIds?: string[]; // New field for assigned sensors
 }
 
 export interface LoginCredentials {

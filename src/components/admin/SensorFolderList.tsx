@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { SensorFolder, Company } from '@/types/users';
 import { Button } from "@/components/ui/button";
-import { Plus, Folder, Edit, UserRound, Clock } from "lucide-react";
+import { Plus, Folder, Edit, UserRound, Clock, MapPin, Hash, Link } from "lucide-react";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { Badge } from "@/components/ui/badge";
 import SensorFolderEditor from './SensorFolderEditor';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { getCurrentUser } from '@/services/authService';
+import { getMockSensors } from '@/services/sensorService';
 
 interface SensorFolderListProps {
   folders: SensorFolder[];
@@ -31,6 +33,7 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<SensorFolder | null>(null);
   const currentUser = getCurrentUser();
+  const allSensors = getMockSensors();
   
   const filteredFolders = folders.filter(folder => {
     if (currentUser?.role === 'master') {
@@ -61,7 +64,10 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
       companyId: selectedCompanyId || currentUser?.companyId || "",
       createdAt: new Date().toISOString().split('T')[0],
       createdBy: currentUser?.id,
-      creatorName: currentUser?.name
+      creatorName: currentUser?.name,
+      projectNumber: `PRJ-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      address: "",
+      assignedSensorIds: []
     };
     setCurrentFolder(newFolder);
     setIsEditing(true);
@@ -90,13 +96,17 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
       setCurrentFolder(null);
     } catch (error) {
       console.error("Error saving folder:", error);
-      toast.error("Failed to save folder");
+      toast.error("Failed to save project");
     }
   };
 
   const getCompanyName = (companyId: string) => {
     const company = companies.find(c => c.id === companyId);
     return company ? company.name : 'Unknown Company';
+  };
+
+  const getSensorCount = (folder: SensorFolder) => {
+    return folder.assignedSensorIds?.length || 0;
   };
 
   const canEditFolder = (folder: SensorFolder) => {
@@ -146,42 +156,67 @@ const SensorFolderList: React.FC<SensorFolderListProps> = ({
         {displayedFolders.map(folder => (
           <div
             key={folder.id}
-            className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
+            className="flex flex-col p-4 border rounded-md hover:bg-muted/50 cursor-pointer"
             onClick={() => onFolderSelect && onFolderSelect(folder.id)}
           >
-            <div className="flex items-center space-x-3">
-              <Folder className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="font-medium">{folder.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  {folder.description || "No description"}
-                </div>
-                <div className="flex items-center mt-1 text-xs text-muted-foreground gap-2">
-                  {folder.creatorName && (
-                    <div className="flex items-center gap-1">
-                      <UserRound className="h-3 w-3" />
-                      <span>{folder.creatorName}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{folder.createdAt}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Folder className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <div className="font-medium">{folder.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {folder.description || "No description"}
                   </div>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {getCompanyName(folder.companyId)}
+                </Badge>
+                {canEditFolder(folder) && (
+                  <Button variant="ghost" size="sm" onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(folder);
+                  }}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">
-                {getCompanyName(folder.companyId)}
-              </Badge>
-              {canEditFolder(folder) && (
-                <Button variant="ghost" size="sm" onClick={(e) => {
-                  e.stopPropagation();
-                  handleEdit(folder);
-                }}>
-                  <Edit className="h-4 w-4" />
-                </Button>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3">
+              {folder.projectNumber && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Hash className="h-3 w-3" />
+                  <span>{folder.projectNumber}</span>
+                </div>
               )}
+              
+              {folder.address && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground md:col-span-2">
+                  <MapPin className="h-3 w-3" />
+                  <span>{folder.address}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-2">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Link className="h-3 w-3" />
+                <span>{getSensorCount(folder)} sensor{getSensorCount(folder) !== 1 ? 's' : ''} assigned</span>
+              </div>
+              
+              {folder.creatorName && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <UserRound className="h-3 w-3" />
+                  <span>{folder.creatorName}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                <span>{folder.createdAt}</span>
+              </div>
             </div>
           </div>
         ))}
