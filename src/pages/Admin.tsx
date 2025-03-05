@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/services/authService";
@@ -83,6 +82,7 @@ const Admin = () => {
               onCompanySave={companyHandlers.handleCompanySave}
               onCompanyCancel={companyHandlers.handleCompanyCancel}
               onAddNewCompany={companyHandlers.handleAddNewCompany}
+              canCreateCompany={companyHandlers.canCreateCompany}
             />
           </TabsContent>
 

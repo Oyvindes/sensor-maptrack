@@ -11,26 +11,30 @@ interface CompanyListProps {
   onCompanySelect: (company: Company) => void;
   onAddNew: () => void;
   onViewUsers: (companyId: string) => void;
+  canCreateCompany?: boolean;
 }
 
 const CompanyList: React.FC<CompanyListProps> = ({ 
   companies, 
   onCompanySelect, 
   onAddNew,
-  onViewUsers
+  onViewUsers,
+  canCreateCompany = false
 }) => {
   return (
     <SectionContainer>
       <div className="flex justify-between items-center mb-4">
         <SectionTitle>Manage Companies</SectionTitle>
-        <Button 
-          onClick={onAddNew} 
-          size="sm" 
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Company</span>
-        </Button>
+        {canCreateCompany && (
+          <Button 
+            onClick={onAddNew} 
+            size="sm" 
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Company</span>
+          </Button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

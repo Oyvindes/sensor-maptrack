@@ -12,6 +12,7 @@ interface CompaniesTabProps {
   onCompanySave: (company: Company) => void;
   onCompanyCancel: () => void;
   onAddNewCompany: () => void;
+  canCreateCompany: boolean;
 }
 
 const CompaniesTab: React.FC<CompaniesTabProps> = ({
@@ -21,7 +22,8 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
   onCompanySelect,
   onCompanySave,
   onCompanyCancel,
-  onAddNewCompany
+  onAddNewCompany,
+  canCreateCompany
 }) => {
   return (
     <>
@@ -31,6 +33,7 @@ const CompaniesTab: React.FC<CompaniesTabProps> = ({
           onCompanySelect={onCompanySelect}
           onAddNew={onAddNewCompany}
           onViewUsers={() => {}}
+          canCreateCompany={canCreateCompany}
         />
       )}
       {mode === "editCompany" && selectedCompany && (
