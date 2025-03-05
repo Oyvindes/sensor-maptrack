@@ -13,7 +13,8 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       createdAt: "2023-05-15",
       projectNumber: "PRJ-2023-001",
       address: "123 Main St, Anytown, US 12345",
-      assignedSensorIds: ["sensor-001", "sensor-002"]
+      assignedSensorIds: ["sensor-001", "sensor-002"],
+      location: { lat: 59.9139, lng: 10.7522 }
     },
     {
       id: "folder-002",
@@ -23,7 +24,8 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       createdAt: "2023-05-16",
       projectNumber: "PRJ-2023-002",
       address: "456 Storage Ave, Anytown, US 12345",
-      assignedSensorIds: ["sensor-003"]
+      assignedSensorIds: ["sensor-003"],
+      location: { lat: 60.3913, lng: 5.3221 }
     },
     {
       id: "folder-003",
@@ -33,7 +35,8 @@ export const getMockSensorFolders = (): SensorFolder[] => {
       createdAt: "2023-05-17",
       projectNumber: "PRJ-2023-003",
       address: "789 Office Blvd, Business Park, US 23456",
-      assignedSensorIds: ["sensor-004", "sensor-005"]
+      assignedSensorIds: ["sensor-004", "sensor-005"],
+      location: { lat: 63.4305, lng: 10.3951 }
     },
     {
       id: "folder-004",

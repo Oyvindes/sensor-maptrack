@@ -2,7 +2,7 @@
 import React from 'react';
 import { SensorFolder, Company } from '@/types/users';
 import { Button } from "@/components/ui/button";
-import { Folder, Edit, UserRound, Clock, MapPin, Hash, Link } from "lucide-react";
+import { Folder, Edit, UserRound, Clock, MapPin, Hash, Link, MapIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface FolderListItemProps {
@@ -26,6 +26,12 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
     const company = companies.find(c => c.id === companyId);
     return company ? company.name : 'Unknown Company';
   };
+
+  const hasLocation = folder.location && (
+    typeof folder.location === 'string' 
+      ? JSON.parse(folder.location).lat && JSON.parse(folder.location).lng
+      : folder.location.lat && folder.location.lng
+  );
 
   return (
     <div
@@ -67,6 +73,7 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
           <div className="flex items-center gap-1 text-xs text-muted-foreground md:col-span-2">
             <MapPin className="h-3 w-3" />
             <span>{folder.address}</span>
+            {hasLocation && <MapIcon className="h-3 w-3 ml-1 text-blue-500" />}
           </div>
         )}
       </div>

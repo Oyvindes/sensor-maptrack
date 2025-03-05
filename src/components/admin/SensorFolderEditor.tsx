@@ -11,6 +11,7 @@ import CompanySelector from "./editor/CompanySelector";
 import SensorAssignment from "./editor/SensorAssignment";
 import ProjectMetadata from "./editor/ProjectMetadata";
 import { toast } from "sonner";
+import TrackingMap from "@/components/TrackingMap";
 
 interface SensorFolderEditorProps {
   folder: SensorFolder;
@@ -29,6 +30,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   const [availableSensors, setAvailableSensors] = useState<Array<{ id: string; name: string }>>([]);
   const currentUser = getCurrentUser();
   const isMasterAdmin = currentUser?.role === 'master';
+  const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
 
   useEffect(() => {
     // Get all mock sensors
@@ -47,7 +49,22 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
       }));
     
     setAvailableSensors(filteredSensors);
-  }, [formData.companyId]);
+
+    // If formData has location data, parse it for the map
+    if (formData.location) {
+      try {
+        if (typeof formData.location === 'string') {
+          const locationData = JSON.parse(formData.location);
+          setMapLocation(locationData);
+        } else {
+          setMapLocation(formData.location);
+        }
+      } catch (e) {
+        console.error("Error parsing location data:", e);
+        setMapLocation(null);
+      }
+    }
+  }, [formData.companyId, formData.location]);
 
   const handleChange = (field: keyof SensorFolder, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -116,6 +133,22 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
           formData={formData}
           onChange={handleChange}
         />
+
+        {mapLocation && (
+          <div className="border rounded-md overflow-hidden h-64 mb-4">
+            <TrackingMap
+              className="h-full w-full"
+              devices={[{
+                id: "project-location",
+                name: formData.name || "Project Location",
+                type: "project",
+                status: "active",
+                location: mapLocation,
+                companyId: formData.companyId
+              }]}
+            />
+          </div>
+        )}
 
         <CompanySelector
           companyId={formData.companyId}
