@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Device, TrackingObject } from "@/types/sensors";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,28 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onS
         </div>
         
         <div className="space-y-2">
+          <Label htmlFor="imei">IMEI</Label>
+          <Input
+            id="imei"
+            name="imei"
+            value={editedDevice.imei || ""}
+            onChange={handleChange}
+            placeholder="Enter device IMEI"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <Input
+            id="status"
+            name="status"
+            value={editedDevice.status}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
           <Label htmlFor="lat">Latitude (Trondheim area)</Label>
           <Input
             id="lat"
@@ -109,17 +132,6 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onS
             step="0.0001"
             value={editedDevice.location?.lng || 10.3951}
             onChange={handleLocationChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Input
-            id="status"
-            name="status"
-            value={editedDevice.status}
-            onChange={handleChange}
             required
           />
         </div>

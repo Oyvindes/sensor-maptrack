@@ -9,7 +9,8 @@ export const getMockDevices = (): Device[] => {
       type: "gateway",
       status: "online",
       location: { lat: 63.4173, lng: 10.4035 },
-      companyId: "company-001"
+      companyId: "company-001",
+      imei: "351756051523999"
     },
     {
       id: "device-002",
@@ -17,7 +18,8 @@ export const getMockDevices = (): Device[] => {
       type: "router",
       status: "online",
       location: { lat: 63.4268, lng: 10.3969 },
-      companyId: "company-001"
+      companyId: "company-001",
+      imei: "351756051524001"
     },
     {
       id: "device-003",
@@ -25,7 +27,8 @@ export const getMockDevices = (): Device[] => {
       type: "tracker",
       status: "offline",
       location: { lat: 63.4352, lng: 10.4111 },
-      companyId: "company-002"
+      companyId: "company-002",
+      imei: "351756051524002"
     }
   ];
 };

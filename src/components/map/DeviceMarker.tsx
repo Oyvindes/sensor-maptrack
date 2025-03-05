@@ -36,6 +36,7 @@ const DeviceMarker: React.FC<DeviceMarkerProps> = ({
             <h3 className="font-bold">{device.name}</h3>
             <p>Type: {device.type}</p>
             <p>Status: {device.status}</p>
+            {device.imei && <p>IMEI: {device.imei}</p>}
           </div>
         )}
       </Popup>
