@@ -54,6 +54,7 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
   };
 
   const handleSensorToggle = (sensorId: string, checked: boolean) => {
+    // Stay in edit mode regardless of how many sensors are left
     setFormData(prev => {
       const currentAssignedSensors = prev.assignedSensorIds || [];
       let updatedSensors: string[];
@@ -74,8 +75,11 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
         toast.info("Sensor removed from project");
       }
       
+      // Always return the updated form data, even if all sensors are removed
       return { ...prev, assignedSensorIds: updatedSensors };
     });
+    
+    // Don't change the mode or navigate away regardless of sensor count
   };
 
   const handleSubmit = (e: React.FormEvent) => {

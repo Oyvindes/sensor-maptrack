@@ -74,7 +74,11 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
   };
 
   const handleRemoveSensor = (sensorId: string, e: React.MouseEvent) => {
+    // Stop propagation to prevent the event from bubbling up
     e.stopPropagation();
+    // Prevent default to avoid any browser default behaviors
+    e.preventDefault();
+    // Call the sensor toggle function to remove the sensor
     onSensorToggle(sensorId, false);
   };
 
@@ -155,9 +159,10 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
                     <Checkbox 
                       id={`sensor-${sensor.id}`}
                       checked={isAssigned}
-                      onCheckedChange={(checked) => 
-                        onSensorToggle(sensor.id, checked === true)
-                      }
+                      onCheckedChange={(checked) => {
+                        // Prevent the default event, just to be extra safe
+                        onSensorToggle(sensor.id, checked === true);
+                      }}
                     />
                     <Label 
                       htmlFor={`sensor-${sensor.id}`}
