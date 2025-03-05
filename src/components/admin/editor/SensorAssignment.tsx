@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,7 +25,6 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
   const [showScanner, setShowScanner] = useState(false);
   const [assignedSensors, setAssignedSensors] = useState<Array<{ id: string; name: string }>>([]);
 
-  // Get names for assigned sensors from available sensors
   useEffect(() => {
     const sensorsWithDetails = assignedSensorIds.map(id => {
       const sensorDetails = availableSensors.find(s => s.id === id);
@@ -45,40 +43,26 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
   const handleAddSensor = () => {
     if (!imeiInput.trim()) return;
     
-    // In a real application, you would search for a sensor with this IMEI
-    // or create a new one if it doesn't exist
-    
-    // Simulating a new sensor ID based on the IMEI
     const newSensorId = `sensor-${imeiInput.replace(/[^0-9]/g, '')}`;
     
-    // Check if this IMEI matches a sensor belonging to the company
-    // For our mock implementation, assume validation passes if companyId exists
     if (!companyId) {
       toast.error("Please select a company before adding sensors");
       return;
     }
     
-    // Simulate IMEI validation against company ownership
-    // In a real app, this would check against a database
-    const validForCompany = Math.random() > 0.3; // 70% chance of success for demo
-    
+    const validForCompany = Math.random() > 0.3;
     if (!validForCompany) {
       toast.error("This sensor IMEI does not belong to the selected company");
       return;
     }
     
-    // Add the sensor to assigned sensors
     onSensorToggle(newSensorId, true);
-    
-    // Clear input
     setImeiInput("");
   };
 
   const handleScanQR = () => {
-    // In a real implementation, this would activate the camera
     setShowScanner(!showScanner);
     
-    // Simulating a successful scan after 2 seconds
     if (!showScanner) {
       setTimeout(() => {
         const scannedIMEI = `IMEI${Math.floor(Math.random() * 1000000)}`;
@@ -88,7 +72,8 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
     }
   };
 
-  const handleRemoveSensor = (sensorId: string) => {
+  const handleRemoveSensor = (sensorId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     onSensorToggle(sensorId, false);
   };
 
@@ -101,7 +86,6 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
       
       <Card>
         <CardContent className="pt-6">
-          {/* IMEI Input and Scanner */}
           <div className="mb-4">
             <div className="flex gap-2 mb-2">
               <Input 
@@ -128,7 +112,6 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
             )}
           </div>
           
-          {/* Assigned Sensors List */}
           {assignedSensors.length > 0 && (
             <div className="mb-6">
               <div className="mb-2">
@@ -146,7 +129,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
                       variant="ghost" 
                       size="sm" 
                       className="h-8 w-8 p-0"
-                      onClick={() => handleRemoveSensor(sensor.id)}
+                      onClick={(e) => handleRemoveSensor(sensor.id, e)}
                     >
                       <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                     </Button>
@@ -155,11 +138,6 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
               </div>
             </div>
           )}
-          
-          {/* Available Sensors List */}
-          <div className="mb-2">
-            <Label className="text-sm font-medium">Available Sensors</Label>
-          </div>
           
           {availableSensors.length === 0 ? (
             <p className="text-muted-foreground text-sm">No sensors available for this company</p>
