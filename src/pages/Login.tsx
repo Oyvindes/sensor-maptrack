@@ -14,9 +14,9 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If already authenticated, redirect to admin
+    // If already authenticated, redirect to dashboard (previously redirected to admin)
     if (isUserAuthenticated()) {
-      navigate('/admin');
+      navigate('/index');
     }
   }, [navigate]);
 
@@ -29,7 +29,7 @@ const Login = () => {
       
       if (result.success) {
         toast.success(result.message);
-        navigate('/admin');
+        navigate('/index'); // Changed from '/admin' to '/index'
       } else {
         toast.error(result.message);
       }
@@ -44,7 +44,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="max-w-md w-full p-8 glass-card rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center mb-6">Admin Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-6">Briks Environment Monitoring</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">

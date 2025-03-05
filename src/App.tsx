@@ -35,12 +35,12 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Redirect root to login if not authenticated, otherwise to admin */}
+            {/* Redirect root to dashboard if authenticated, otherwise to login */}
             <Route 
               path="/" 
               element={
                 isUserAuthenticated() ? 
-                <Navigate to="/admin" replace /> : 
+                <Navigate to="/index" replace /> : 
                 <Navigate to="/login" replace />
               } 
             />
