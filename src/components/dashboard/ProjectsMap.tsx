@@ -75,7 +75,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
   // Function to render custom popups
   const renderCustomPopup = (device: any) => {
     return (
-      <div className="flex flex-col gap-1 p-1">
+      <div className="flex flex-col gap-0.5 p-0.5">
         <h3 className="font-bold text-sm">{device.name}</h3>
         <div className="grid gap-0.5 text-xs">
           {device.projectNumber && <p>Project #: {device.projectNumber}</p>}
@@ -83,7 +83,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
         </div>
         <Button 
           size="sm" 
-          className="mt-1 w-full h-7 text-xs px-2 py-1"
+          className="mt-0.5 w-full h-6 text-xs px-1 py-0"
           onClick={() => {
             const project = projects.find(p => p.id === device.id);
             if (project) {
