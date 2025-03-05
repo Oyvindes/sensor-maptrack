@@ -19,6 +19,7 @@ export interface Sensor {
   unit: string;
   companyId: string;  // Primary ownership is now by company
   folderId?: string;  // Folder is now just for organization, not ownership
+  imei?: string;      // Added IMEI field for device identification
 }
 
 export interface Device {

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { SensorData, SensorType, SensorValue } from "@/components/SensorCard";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import SensorBasicInfo from "./SensorBasicInfo";
 import { getDefaultUnit } from "./utils";
 
 const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, companies = [], onSave, onCancel }) => {
-  const [editedSensor, setEditedSensor] = useState<SensorData & { companyId?: string }>({ ...sensor });
+  const [editedSensor, setEditedSensor] = useState<SensorData & { companyId?: string; imei?: string }>({ ...sensor });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

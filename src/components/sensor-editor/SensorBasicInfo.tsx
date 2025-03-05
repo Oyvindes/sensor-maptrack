@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Company } from "@/types/users";
 
 interface SensorBasicInfoProps {
-  sensor: SensorData & { companyId?: string };
+  sensor: SensorData & { companyId?: string; imei?: string };
   companies: Company[];
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStatusChange: (value: string) => void;
@@ -31,6 +31,17 @@ const SensorBasicInfo: React.FC<SensorBasicInfoProps> = ({
           value={sensor.name}
           onChange={onChange}
           required
+        />
+      </div>
+      
+      <div className="space-y-2 mt-4">
+        <Label htmlFor="imei">IMEI</Label>
+        <Input
+          id="imei"
+          name="imei"
+          value={sensor.imei || ""}
+          onChange={onChange}
+          placeholder="Enter device IMEI"
         />
       </div>
       

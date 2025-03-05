@@ -3,9 +3,9 @@ import { SensorData, SensorType, SensorValue } from "@/components/SensorCard";
 import { Company } from "@/types/users";
 
 export interface SensorEditorProps {
-  sensor: SensorData & { companyId?: string };
+  sensor: SensorData & { companyId?: string; imei?: string };
   companies?: Company[];
-  onSave: (updatedSensor: SensorData & { companyId?: string }) => void;
+  onSave: (updatedSensor: SensorData & { companyId?: string; imei?: string }) => void;
   onCancel: () => void;
 }
 

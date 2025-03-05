@@ -1,25 +1,24 @@
-
 import { SensorData } from "@/components/SensorCard";
 import { getCurrentUser } from "@/services/authService";
 import { toast } from "sonner";
 
 export interface SensorHandlers {
-  handleSensorSelect: (sensor: SensorData & { folderId?: string; companyId?: string }) => void;
-  handleSensorSave: (updatedSensor: SensorData & { folderId?: string; companyId?: string }) => void;
+  handleSensorSelect: (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => void;
+  handleSensorSave: (updatedSensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => void;
   handleSensorCancel: () => void;
   handleAddNewSensor: () => void;
 }
 
 export function useSensorHandlers(
-  sensors: (SensorData & { folderId?: string; companyId?: string })[],
-  setSensors: React.Dispatch<React.SetStateAction<(SensorData & { folderId?: string; companyId?: string })[]>>,
-  setSelectedSensor: React.Dispatch<React.SetStateAction<(SensorData & { folderId?: string; companyId?: string }) | null>>,
+  sensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[],
+  setSensors: React.Dispatch<React.SetStateAction<(SensorData & { folderId?: string; companyId?: string; imei?: string })[]>>,
+  setSelectedSensor: React.Dispatch<React.SetStateAction<(SensorData & { folderId?: string; companyId?: string; imei?: string }) | null>>,
   setMode: React.Dispatch<React.SetStateAction<string>>,
   companies: { id: string }[]
 ): SensorHandlers {
   const currentUser = getCurrentUser();
   
-  const handleSensorSelect = (sensor: SensorData & { folderId?: string; companyId?: string }) => {
+  const handleSensorSelect = (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => {
     // Check if user has permissions for this sensor
     if (!canEditSensor(sensor)) {
       toast.error("You don't have permission to edit this sensor");
@@ -33,14 +32,15 @@ export function useSensorHandlers(
         value: 0,
         unit: "°C"
       }],
-      companyId: sensor.companyId || "company-001"
+      companyId: sensor.companyId || "company-001",
+      imei: sensor.imei || ""
     };
     
     setSelectedSensor(enhancedSensor);
     setMode("editSensor");
   };
 
-  const handleSensorSave = (updatedSensor: SensorData & { folderId?: string; companyId?: string }) => {
+  const handleSensorSave = (updatedSensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => {
     // Check permissions again before saving
     if (!canEditSensor(updatedSensor)) {
       toast.error("You don't have permission to modify this sensor");
@@ -50,6 +50,8 @@ export function useSensorHandlers(
     setSensors(sensors.map(s => s.id === updatedSensor.id ? updatedSensor : s));
     setMode("listSensors");
     setSelectedSensor(null);
+    
+    toast.success(`Sensor ${updatedSensor.name} saved successfully`);
   };
 
   const handleSensorCancel = () => {
@@ -84,7 +86,7 @@ export function useSensorHandlers(
   };
   
   // Helper function to check if user can edit a specific sensor
-  const canEditSensor = (sensor: SensorData & { folderId?: string; companyId?: string }): boolean => {
+  const canEditSensor = (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }): boolean => {
     if (!currentUser) return false;
     
     // Site-wide admins can edit any sensor

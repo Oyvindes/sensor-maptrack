@@ -7,11 +7,11 @@ import { Company } from "@/types/users";
 
 interface SensorsTabProps {
   mode: string;
-  sensors: (SensorData & { folderId?: string; companyId?: string })[];
-  selectedSensor: (SensorData & { folderId?: string; companyId?: string }) | null;
+  sensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[];
+  selectedSensor: (SensorData & { folderId?: string; companyId?: string; imei?: string }) | null;
   companies?: Company[];
-  onSensorSelect: (sensor: SensorData & { folderId?: string }) => void;
-  onSensorSave: (sensor: SensorData & { folderId?: string; companyId?: string }) => void;
+  onSensorSelect: (sensor: SensorData & { folderId?: string; imei?: string }) => void;
+  onSensorSave: (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => void;
   onSensorCancel: () => void;
   onAddNewSensor: () => void;
 }
