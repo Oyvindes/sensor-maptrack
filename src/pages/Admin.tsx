@@ -113,6 +113,7 @@ const Admin = () => {
               onSensorSave={sensorHandlers.handleSensorSave}
               onSensorCancel={sensorHandlers.handleSensorCancel}
               onAddNewSensor={sensorHandlers.handleAddNewSensor}
+              onImportSensors={sensorHandlers.handleImportSensors}
             />
           </TabsContent>
 

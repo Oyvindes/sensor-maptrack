@@ -1,7 +1,7 @@
 
 import React from "react";
 import { SensorData } from "@/components/SensorCard";
-import { Plus, Folder, Pencil } from "lucide-react";
+import { Plus, Folder, Pencil, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
@@ -10,12 +10,14 @@ interface SensorListProps {
   sensors: (SensorData & { folderId?: string })[];
   onSensorSelect: (sensor: SensorData & { folderId?: string }) => void;
   onAddNew: () => void;
+  onImport: () => void;
 }
 
 const SensorList: React.FC<SensorListProps> = ({ 
   sensors, 
   onSensorSelect, 
-  onAddNew 
+  onAddNew,
+  onImport
 }) => {
   // Get folder/project names
   const getFolderName = (folderId?: string) => {
@@ -32,14 +34,25 @@ const SensorList: React.FC<SensorListProps> = ({
     <SectionContainer>
       <div className="flex justify-between items-center mb-4">
         <SectionTitle>Manage Sensors</SectionTitle>
-        <Button 
-          onClick={onAddNew} 
-          size="sm" 
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Sensor</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={onImport} 
+            size="sm" 
+            variant="outline"
+            className="gap-2"
+          >
+            <FileUp className="h-4 w-4" />
+            <span>Import CSV</span>
+          </Button>
+          <Button 
+            onClick={onAddNew} 
+            size="sm" 
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Sensor</span>
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

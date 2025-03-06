@@ -3,6 +3,7 @@ import React from "react";
 import { SensorData } from "@/components/SensorCard";
 import SensorList from "@/components/admin/SensorList";
 import SensorEditor from "@/components/sensor-editor/SensorEditor";
+import SensorImporter from "@/components/admin/sensor-import/SensorImporter";
 import { Company } from "@/types/users";
 
 interface SensorsTabProps {
@@ -14,6 +15,7 @@ interface SensorsTabProps {
   onSensorSave: (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => void;
   onSensorCancel: () => void;
   onAddNewSensor: () => void;
+  onImportSensors?: (sensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[]) => void;
 }
 
 const SensorsTab: React.FC<SensorsTabProps> = ({
@@ -24,7 +26,8 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
   onSensorSelect,
   onSensorSave,
   onSensorCancel,
-  onAddNewSensor
+  onAddNewSensor,
+  onImportSensors
 }) => {
   return (
     <>
@@ -33,6 +36,7 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
           sensors={sensors}
           onSensorSelect={onSensorSelect}
           onAddNew={onAddNewSensor}
+          onImport={() => onImportSensors ? onImportSensors([]) : null}
         />
       )}
       {mode === "editSensor" && selectedSensor && (
@@ -40,6 +44,13 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
           sensor={selectedSensor}
           companies={companies}
           onSave={onSensorSave}
+          onCancel={onSensorCancel}
+        />
+      )}
+      {mode === "importSensors" && (
+        <SensorImporter
+          companies={companies}
+          onSensorsImport={sensors => onImportSensors ? onImportSensors(sensors) : null}
           onCancel={onSensorCancel}
         />
       )}
