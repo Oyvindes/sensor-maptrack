@@ -10,11 +10,11 @@ interface SmtpInfoDisplayProps {
 }
 
 const SmtpInfoDisplay: React.FC<SmtpInfoDisplayProps> = ({ className }) => {
-  const [showSmtpInfo, setShowSmtpInfo] = useState(false);
-  const smtpConfig = getEmailConfigInfo();
+  const [showInfo, setShowInfo] = useState(false);
+  const configInfo = getEmailConfigInfo();
 
-  const toggleSmtpInfo = () => {
-    setShowSmtpInfo(!showSmtpInfo);
+  const toggleInfo = () => {
+    setShowInfo(!showInfo);
   };
 
   return (
@@ -28,16 +28,19 @@ const SmtpInfoDisplay: React.FC<SmtpInfoDisplayProps> = ({ className }) => {
           variant="outline" 
           size="sm" 
           className="mt-1 text-xs gap-1"
-          onClick={toggleSmtpInfo}
+          onClick={toggleInfo}
         >
           <Info className="h-3 w-3" />
-          {showSmtpInfo ? "Hide Details" : "Show Details"}
+          {showInfo ? "Hide Details" : "Show Details"}
         </Button>
         
-        {showSmtpInfo && (
+        {showInfo && (
           <div className="mt-2 text-xs p-2 bg-background/80 rounded border">
             <p>Click the "Open Directions" button to view this location in Google Maps.</p>
             <p className="mt-1 italic">This will open in a new browser tab.</p>
+            {configInfo.status === "Deprecated" && (
+              <p className="mt-1 text-orange-500">Note: Notification system uses MQTT instead of email.</p>
+            )}
           </div>
         )}
       </AlertDescription>

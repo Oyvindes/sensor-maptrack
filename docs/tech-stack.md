@@ -8,6 +8,11 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- MQTT (for real-time messaging and notifications)
+
+## Messaging & Notifications
+
+The application uses MQTT for messaging and notifications instead of traditional email services. This allows for real-time communication with IoT devices and provides a unified messaging framework.
 
 ## How can I deploy this project?
 
