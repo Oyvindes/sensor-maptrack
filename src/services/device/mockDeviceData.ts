@@ -10,7 +10,8 @@ export const getMockDevices = (): Device[] => {
       status: "online",
       location: { lat: 63.4173, lng: 10.4035 },
       companyId: "company-001",
-      imei: "351756051523999"
+      imei: "351756051523999",
+      lastUpdated: new Date(Date.now() - 5 * 60000).toLocaleString() // 5 minutes ago
     },
     {
       id: "device-002",
@@ -19,7 +20,8 @@ export const getMockDevices = (): Device[] => {
       status: "online",
       location: { lat: 63.4268, lng: 10.3969 },
       companyId: "company-001",
-      imei: "351756051524001"
+      imei: "351756051524001",
+      lastUpdated: new Date(Date.now() - 12 * 60000).toLocaleString() // 12 minutes ago
     },
     {
       id: "device-003",
@@ -28,7 +30,8 @@ export const getMockDevices = (): Device[] => {
       status: "offline",
       location: { lat: 63.4352, lng: 10.4111 },
       companyId: "company-002",
-      imei: "351756051524002"
+      imei: "351756051524002",
+      lastUpdated: new Date(Date.now() - 120 * 60000).toLocaleString() // 2 hours ago
     }
   ];
 };
@@ -38,7 +41,7 @@ export const mapDeviceToTrackingObject = (device: Device): TrackingObject => {
     id: device.id,
     name: device.name,
     position: device.location || { lat: 0, lng: 0 },
-    lastUpdated: new Date().toLocaleTimeString(),
+    lastUpdated: device.lastUpdated || new Date().toLocaleTimeString(),
     speed: 0,
     direction: 0,
     batteryLevel: 100,

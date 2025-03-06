@@ -18,7 +18,8 @@ interface DeviceEditorProps {
 const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onSave, onCancel }) => {
   const initialDevice = {
     ...device,
-    location: device.location || { lat: 63.4305, lng: 10.3951 } // Trondheim center
+    location: device.location || { lat: 63.4305, lng: 10.3951 }, // Trondheim center
+    lastUpdated: device.lastUpdated || new Date().toLocaleString()
   };
   
   const [editedDevice, setEditedDevice] = useState<Device>(initialDevice);
@@ -51,7 +52,12 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onS
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(editedDevice);
+    // Update the lastUpdated timestamp when saving
+    const updatedDevice = {
+      ...editedDevice,
+      lastUpdated: new Date().toLocaleString()
+    };
+    onSave(updatedDevice);
   };
   
   return (
@@ -107,6 +113,17 @@ const DeviceEditor: React.FC<DeviceEditorProps> = ({ device, companies = [], onS
             value={editedDevice.status}
             onChange={handleChange}
             required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="lastUpdated">Last Update</Label>
+          <Input
+            id="lastUpdated"
+            name="lastUpdated"
+            value={editedDevice.lastUpdated || "No updates yet"}
+            readOnly
+            className="bg-gray-50"
           />
         </div>
         

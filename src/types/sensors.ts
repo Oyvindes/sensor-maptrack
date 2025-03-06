@@ -20,6 +20,7 @@ export interface Sensor {
   companyId: string;  // Primary ownership is now by company
   folderId?: string;  // Folder is now just for organization, not ownership
   imei?: string;      // Added IMEI field for device identification
+  lastUpdated?: string; // Added for tracking last data update time
 }
 
 export interface Device {
@@ -31,6 +32,7 @@ export interface Device {
   companyId: string;  // Primary ownership is now by company
   folderId?: string;  // Folder is now just for organization, not ownership
   imei?: string;      // Added IMEI field for device identification
+  lastUpdated?: string; // Added for tracking last data update time
 }
 
 export interface TrackingObject {

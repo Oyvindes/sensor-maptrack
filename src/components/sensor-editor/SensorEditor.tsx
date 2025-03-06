@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { SensorData, SensorType, SensorValue } from "@/components/SensorCard";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,12 @@ import SensorBasicInfo from "./SensorBasicInfo";
 import { getDefaultUnit } from "./utils";
 
 const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, companies = [], onSave, onCancel }) => {
-  const [editedSensor, setEditedSensor] = useState<SensorData & { companyId?: string; imei?: string }>({ ...sensor });
+  const initialSensor = {
+    ...sensor,
+    lastUpdated: sensor.lastUpdated || new Date().toLocaleString()
+  };
+  
+  const [editedSensor, setEditedSensor] = useState<SensorData & { companyId?: string; imei?: string }>(initialSensor);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -85,7 +91,12 @@ const SensorEditor: React.FC<SensorEditorProps> = ({ sensor, companies = [], onS
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(editedSensor);
+    // Update the lastUpdated timestamp when saving
+    const updatedSensor = {
+      ...editedSensor,
+      lastUpdated: new Date().toLocaleString()
+    };
+    onSave(updatedSensor);
   };
   
   return (

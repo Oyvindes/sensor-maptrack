@@ -19,6 +19,7 @@ export type SensorData = {
   status: "online" | "offline" | "warning";
   lastUpdated: string;
   companyId?: string;
+  imei?: string;
 };
 
 type SensorCardProps = {

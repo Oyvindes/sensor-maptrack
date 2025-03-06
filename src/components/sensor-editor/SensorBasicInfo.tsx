@@ -45,6 +45,17 @@ const SensorBasicInfo: React.FC<SensorBasicInfoProps> = ({
         />
       </div>
       
+      <div className="space-y-2 mt-4">
+        <Label htmlFor="lastUpdated">Last Update</Label>
+        <Input
+          id="lastUpdated"
+          name="lastUpdated"
+          value={sensor.lastUpdated}
+          readOnly
+          className="bg-gray-50"
+        />
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
