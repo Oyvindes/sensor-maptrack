@@ -1,4 +1,3 @@
-
 import mqtt, { MqttClient, IClientOptions } from 'mqtt';
 import { toast } from 'sonner';
 import { SensorData } from '@/components/SensorCard';
@@ -10,6 +9,7 @@ const DEFAULT_CLIENT_ID = `briks-sensor-app-${Math.random().toString(16).substri
 // MQTT connection state
 let mqttClient: MqttClient | null = null;
 let isConnected = false;
+let currentBrokerUrl: string = '';
 
 // Connection options
 const getDefaultOptions = (): IClientOptions => ({
@@ -28,7 +28,7 @@ export const connectToBroker = (
 ): Promise<boolean> => {
   return new Promise((resolve) => {
     // If already connected to the same broker, resolve immediately
-    if (mqttClient && isConnected && mqttClient.options.href === brokerUrl) {
+    if (mqttClient && isConnected && currentBrokerUrl === brokerUrl) {
       resolve(true);
       return;
     }
@@ -43,6 +43,7 @@ export const connectToBroker = (
     // Connect to new broker
     console.log(`Connecting to MQTT broker: ${brokerUrl}`);
     mqttClient = mqtt.connect(brokerUrl, options);
+    currentBrokerUrl = brokerUrl;
     
     mqttClient.on('connect', () => {
       console.log('Connected to MQTT broker successfully');
@@ -107,7 +108,7 @@ export const isMqttConnected = (): boolean => {
 export const getMqttConnectionStatus = (): { connected: boolean; broker?: string } => {
   return {
     connected: isConnected,
-    broker: mqttClient?.options.href
+    broker: currentBrokerUrl
   };
 };
 
