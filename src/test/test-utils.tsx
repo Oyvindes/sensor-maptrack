@@ -2,6 +2,7 @@
 import { ReactElement } from 'react';
 import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 
 // Custom renderer that includes providers
 export function renderWithProviders(ui: ReactElement) {

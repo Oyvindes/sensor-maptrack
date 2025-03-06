@@ -4,6 +4,7 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { useSensorInteractions } from '../useSensorInteractions';
 import { mockServices, mockToast } from '../../test/test-utils';
 import { toast } from 'sonner';
+import { SensorType } from '@/components/SensorCard';
 
 // Mock the dependencies
 vi.mock('@/services/sensorService', () => ({
@@ -25,7 +26,7 @@ describe('useSensorInteractions hook', () => {
     const testSensor = {
       id: 'sensor-001',
       name: 'Test Sensor',
-      values: [{ type: 'temperature', value: 22, unit: '°C' }],
+      values: [{ type: 'temperature' as SensorType, value: 22, unit: '°C' }],
       status: 'online',
       lastUpdated: '10:00:00'
     };
@@ -47,7 +48,7 @@ describe('useSensorInteractions hook', () => {
     const testSensor = {
       id: 'sensor-001',
       name: 'Test Sensor',
-      values: [{ type: 'temperature', value: 22, unit: '°C' }],
+      values: [{ type: 'temperature' as SensorType, value: 22, unit: '°C' }],
       status: 'online',
       lastUpdated: '10:00:00'
     };
