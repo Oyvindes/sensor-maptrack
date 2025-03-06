@@ -3,7 +3,7 @@ import { User } from "@/types/users";
 
 // Check if user is the protected oe@briks.no account
 export const isProtectedUser = (email: string): boolean => {
-  return email === "oe@briks.no";
+  return email === "oe@briks.no" || email === "pes@briks.no";
 };
 
 // Ensure protected user has correct permissions

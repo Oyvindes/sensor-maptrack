@@ -1,3 +1,4 @@
+
 import { User, LoginCredentials } from "@/types/users";
 import { toast } from "sonner";
 
@@ -28,8 +29,8 @@ export const initializeAuthService = () => {
   
   // Add password to mock users for testing
   const usersWithPasswords = mockUserList.map(user => {
-    // Special case for oe@briks.no user to match the password Briks42!
-    if (user.email === "oe@briks.no") {
+    // Special case for protected users to match the password Briks42!
+    if (user.email === "oe@briks.no" || user.email === "pes@briks.no") {
       return {
         ...user,
         password: "Briks42!", // Use the correct password

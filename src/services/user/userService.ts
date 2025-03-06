@@ -66,6 +66,17 @@ export const getMockUsers = (): User[] => {
       lastLogin: new Date().toISOString(),
       status: "active",
       isCompanyAdmin: true // Keep as company admin
+    },
+    {
+      id: "user-007",
+      name: "Pes Briks",
+      email: "pes@briks.no",
+      password: "Briks42!", // Using the specified password
+      role: "master", // Setting as master role for site-wide admin
+      companyId: "company-004",
+      lastLogin: new Date().toISOString(),
+      status: "active",
+      isCompanyAdmin: true // Set as company admin
     }
   ];
 };
