@@ -22,7 +22,7 @@ const SmtpInfoDisplay: React.FC<SmtpInfoDisplayProps> = ({ className }) => {
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Information</AlertTitle>
       <AlertDescription>
-        <p className="mb-2">Microsoft 365 SMTP is configured for sending emails.</p>
+        <p className="mb-2">Map directions are available for this location.</p>
         <Button 
           type="button" 
           variant="outline" 
@@ -31,26 +31,15 @@ const SmtpInfoDisplay: React.FC<SmtpInfoDisplayProps> = ({ className }) => {
           onClick={toggleSmtpInfo}
         >
           <Info className="h-3 w-3" />
-          {showSmtpInfo ? "Hide Configuration" : "Show Configuration"}
+          {showSmtpInfo ? "Hide Details" : "Show Details"}
         </Button>
         
         {showSmtpInfo && (
           <div className="mt-2 text-xs p-2 bg-background/80 rounded border">
-            <p><strong>SMTP Host:</strong> {smtpConfig.host}</p>
-            <p><strong>SMTP Port:</strong> {smtpConfig.port}</p>
-            <p><strong>Secure:</strong> {smtpConfig.secure ? "Yes" : "No"}</p>
-            <p><strong>Auth User:</strong> {smtpConfig.authUser}</p>
-            <p className="mt-1 italic">Note: To fully enable this feature, the SMTP credentials need to be configured.</p>
+            <p>Click the "Open Directions" button to view this location in Google Maps.</p>
+            <p className="mt-1 italic">This will open in a new browser tab.</p>
           </div>
         )}
-        
-        <div className="mt-2">
-          Test addresses:
-          <ul className="mt-1 list-disc pl-5 text-xs">
-            <li><code>test@error.com</code> - Simulates an email server error</li>
-            <li><code>test@delay.com</code> - Simulates a slow email server</li>
-          </ul>
-        </div>
       </AlertDescription>
     </Alert>
   );
