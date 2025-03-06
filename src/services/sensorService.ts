@@ -19,3 +19,17 @@ export { getMockTrackingObjects } from './tracking/mockTrackingData';
 
 // Email service
 export { sendEmail, getEmailConfigInfo } from './email/emailService';
+
+// MQTT service for sensor communication
+export {
+  connectToBroker,
+  disconnectFromBroker,
+  isMqttConnected,
+  getMqttConnectionStatus,
+  subscribeTopic,
+  unsubscribeTopic,
+  publishMessage,
+  getSensorTopic,
+  sendMqttCommandToSensor,
+  registerForSensorUpdates
+} from './mqtt/mqttService';
