@@ -25,15 +25,20 @@ const queryClient = new QueryClient();
 const App = () => {
   // Initialize authentication service on app start
   useEffect(() => {
-    initializeAuthService();
+    try {
+      initializeAuthService();
+      console.log("Auth service initialized");
+    } catch (error) {
+      console.error("Error initializing auth service:", error);
+    }
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
         <BrowserRouter>
+          <Toaster />
+          <Sonner />
           <Routes>
             {/* Redirect root to dashboard if authenticated, otherwise to login */}
             <Route 
