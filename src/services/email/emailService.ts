@@ -10,12 +10,12 @@ interface EmailData {
 
 // Configuration for Microsoft 365 SMTP
 const emailConfig = {
-  host: process.env.SMTP_HOST || "smtp.office365.com",
+  host: import.meta.env.VITE_SMTP_HOST || "smtp.office365.com",
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD
+    user: import.meta.env.VITE_SMTP_USER,
+    pass: import.meta.env.VITE_SMTP_PASSWORD
   }
 };
 
@@ -81,4 +81,3 @@ export const getEmailConfigInfo = () => {
     authUser: emailConfig.auth.user ? "Configured" : "Not configured"
   };
 };
-
