@@ -2,19 +2,16 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Navigation, Mail } from "lucide-react";
+import { Navigation, ExternalLink } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
   DialogDescription, 
-  DialogFooter, 
   DialogHeader, 
   DialogTitle, 
   DialogTrigger
 } from "@/components/ui/dialog";
 
-import DirectionsEmailForm from "./DirectionsEmailForm";
-import SmtpInfoDisplay from "./SmtpInfoDisplay";
 import { useDirectionsEmail, DirectionsEmailData } from "./useDirectionsEmail";
 
 interface DirectionsDialogProps {
@@ -25,47 +22,16 @@ interface DirectionsDialogProps {
 const DirectionsDialog: React.FC<DirectionsDialogProps> = ({ address, location }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   
-  const {
-    emailAddress,
-    setEmailAddress,
-    isSendingDirections,
-    emailError,
-    setEmailError,
-    sendDirectionsEmail,
-    sendToOwner,
-    openDirectionsInNewTab
-  } = useDirectionsEmail({ address, location });
-
-  const handleEmailChange = (email: string) => {
-    setEmailAddress(email);
-    if (emailError) setEmailError(null);
-  };
+  const { openDirectionsInNewTab } = useDirectionsEmail({ address, location });
 
   const handleDialogChange = (open: boolean) => {
     setDialogOpen(open);
-    if (!open) {
-      setEmailError(null);
-    }
 
     if (window) {
       const event = new CustomEvent('directionsDialogStateChange', { 
         detail: { isOpen: open } 
       });
       window.dispatchEvent(event);
-    }
-  };
-
-  const handleSendEmail = async () => {
-    const success = await sendDirectionsEmail();
-    if (success) {
-      setDialogOpen(false);
-    }
-  };
-
-  const handleSendToOwner = async () => {
-    const success = await sendToOwner();
-    if (success) {
-      setDialogOpen(false);
     }
   };
 
@@ -82,49 +48,32 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({ address, location }
             className="gap-2"
           >
             <Navigation className="h-4 w-4" />
-            <span>Send Directions</span>
+            <span>Get Directions</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md fixed z-[100] bg-background">
           <DialogHeader>
-            <DialogTitle>Send Directions</DialogTitle>
+            <DialogTitle>Get Directions</DialogTitle>
             <DialogDescription>
-              Send Google Maps directions to the project location
+              Directions to the project location
             </DialogDescription>
           </DialogHeader>
           
-          <DirectionsEmailForm
-            projectAddress={address}
-            emailAddress={emailAddress}
-            onEmailChange={handleEmailChange}
-            emailError={emailError}
-            isSendingDirections={isSendingDirections}
-            onOpenDirections={openDirectionsInNewTab}
-          />
-          
-          <SmtpInfoDisplay className="mt-4" />
-          
-          <DialogFooter className="flex sm:justify-between">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleSendToOwner}
-              disabled={isSendingDirections}
-              className="gap-2 hidden sm:flex"
+          <div className="space-y-4 py-4">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm font-medium">Project Address</p>
+              <p className="p-2 bg-muted rounded">{address}</p>
+            </div>
+            
+            <Button
+              type="button"
+              onClick={openDirectionsInNewTab}
+              className="w-full gap-2"
             >
-              <Mail className="h-4 w-4" />
-              <span>Send to Project Owner</span>
+              <ExternalLink className="h-4 w-4" />
+              <span>Open Directions in New Tab</span>
             </Button>
-            <Button 
-              type="button" 
-              onClick={handleSendEmail}
-              disabled={isSendingDirections || !emailAddress}
-              className="gap-2"
-            >
-              <Navigation className="h-4 w-4" />
-              <span>{isSendingDirections ? "Sending..." : "Send Directions"}</span>
-            </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
