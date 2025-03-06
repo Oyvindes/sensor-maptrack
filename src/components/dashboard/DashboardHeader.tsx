@@ -1,9 +1,9 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw, Plus, Settings } from "lucide-react";
 import { getCurrentUser } from "@/services/authService";
 import { Link } from "react-router-dom";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
@@ -27,6 +27,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {onAddNewProject && (
             <Button 
               variant="outline" 

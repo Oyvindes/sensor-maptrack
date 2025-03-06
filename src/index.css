@@ -79,6 +79,21 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    --sidebar-background: 222 47% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 100% 52%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
+
+    --sensor-temp: 0 72% 51%;
+    --sensor-humidity: 199 89% 48%;
+    --sensor-battery: 142 71% 45%;
+    --sensor-proximity: 262 83% 58%;
+    --sensor-signal: 31 95% 56%;
   }
 }
 
@@ -95,11 +110,7 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg;
-  }
-  
-  .glass-card-dark {
-    @apply bg-black/20 backdrop-blur-sm border border-white/10 shadow-lg;
+    @apply bg-white/70 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10 shadow-lg;
   }
   
   .sensor-pulse {
