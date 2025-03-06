@@ -6,11 +6,11 @@ The application provides a complete MQTT client service that handles:
 - Subscribing to topics
 - Publishing messages
 - Receiving real-time updates from sensors
-- Handling notifications (replacing traditional email functionality)
+- Handling all notifications (completely replacing traditional email functionality)
 
 This service is implemented in the `src/services/mqtt/mqttService.ts` file and exposed through the `src/services/sensorService.ts` module.
 
-The MQTT service is designed to work with IoT sensors and devices, allowing real-time data communication between your application and connected hardware. It also serves as the primary notification system, replacing traditional email-based notifications with real-time MQTT messages.
+The MQTT service is designed to work with IoT sensors and devices, allowing real-time data communication between your application and connected hardware. It serves as the comprehensive notification system for the entire application.
 
 ## Using with Node-RED
 

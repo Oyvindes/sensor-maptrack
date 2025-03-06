@@ -12,7 +12,7 @@ This project is built with:
 
 ## Messaging & Notifications
 
-The application uses MQTT for messaging and notifications instead of traditional email services. This allows for real-time communication with IoT devices and provides a unified messaging framework.
+The application uses MQTT for all messaging and notifications. This allows for real-time communication with IoT devices and provides a unified messaging framework. Traditional email functionality has been completely removed from the application.
 
 ## How can I deploy this project?
 

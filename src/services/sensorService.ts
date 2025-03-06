@@ -17,9 +17,6 @@ export { getMockDevices, mapDeviceToTrackingObject } from './device/mockDeviceDa
 // Tracking mock data
 export { getMockTrackingObjects } from './tracking/mockTrackingData';
 
-// Email service
-export { sendEmail, getEmailConfigInfo } from './email/emailService';
-
 // MQTT service for sensor communication
 export {
   connectToBroker,

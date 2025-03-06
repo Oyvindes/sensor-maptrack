@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Info } from "lucide-react";
-import { getEmailConfigInfo } from "@/services/email/emailService";
 
 interface SmtpInfoDisplayProps {
   className?: string;
@@ -11,7 +10,6 @@ interface SmtpInfoDisplayProps {
 
 const SmtpInfoDisplay: React.FC<SmtpInfoDisplayProps> = ({ className }) => {
   const [showInfo, setShowInfo] = useState(false);
-  const configInfo = getEmailConfigInfo();
 
   const toggleInfo = () => {
     setShowInfo(!showInfo);
@@ -38,9 +36,7 @@ const SmtpInfoDisplay: React.FC<SmtpInfoDisplayProps> = ({ className }) => {
           <div className="mt-2 text-xs p-2 bg-background/80 rounded border">
             <p>Click the "Open Directions" button to view this location in Google Maps.</p>
             <p className="mt-1 italic">This will open in a new browser tab.</p>
-            {configInfo.status === "Deprecated" && (
-              <p className="mt-1 text-orange-500">Note: Notification system uses MQTT instead of email.</p>
-            )}
+            <p className="mt-1 text-blue-500">Notifications are handled via MQTT messaging.</p>
           </div>
         )}
       </AlertDescription>
