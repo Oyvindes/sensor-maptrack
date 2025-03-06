@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useSensorInteractions } from '../useSensorInteractions';
 import { mockServices, mockToast } from '../../test/test-utils';
@@ -27,7 +27,7 @@ describe('useSensorInteractions hook', () => {
       id: 'sensor-001',
       name: 'Test Sensor',
       values: [{ type: 'temperature' as SensorType, value: 22, unit: '°C' }],
-      status: 'online',
+      status: 'online' as 'online' | 'offline' | 'warning',
       lastUpdated: '10:00:00'
     };
 
@@ -49,7 +49,7 @@ describe('useSensorInteractions hook', () => {
       id: 'sensor-001',
       name: 'Test Sensor',
       values: [{ type: 'temperature' as SensorType, value: 22, unit: '°C' }],
-      status: 'online',
+      status: 'online' as 'online' | 'offline' | 'warning',
       lastUpdated: '10:00:00'
     };
 
