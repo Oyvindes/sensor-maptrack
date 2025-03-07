@@ -1,5 +1,5 @@
 
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
 
 export interface CameraScanResult {
   success: boolean;
@@ -49,14 +49,20 @@ export async function takePicture(): Promise<string | null> {
       return await filePromise;
     }
     
-    // Use Capacitor Camera plugin
+    // Use Capacitor Camera plugin with improved configuration for Android
     const image = await Camera.getPhoto({
       quality: 90,
-      allowEditing: true,
+      allowEditing: false, // Disable editing for faster capture
       resultType: CameraResultType.Uri,
-      source: CameraSource.Camera
+      source: CameraSource.Camera,
+      direction: CameraDirection.Rear, // Explicitly use rear camera
+      correctOrientation: true, // Ensure proper orientation
+      promptLabelHeader: 'Scan QR Code', // Add guidance for the user
+      promptLabelCancel: 'Cancel',
+      promptLabelPhoto: 'Take Photo'
     });
     
+    console.log('Camera captured image with path:', image.webPath);
     // Return the image path
     return image.webPath;
   } catch (error) {
@@ -67,18 +73,21 @@ export async function takePicture(): Promise<string | null> {
 
 export async function scanSensorQrCode(): Promise<CameraScanResult> {
   try {
-    // In a real implementation, this would use a barcode/QR scanning library
-    // For this mock implementation, we'll simulate scanning a sensor IMEI
+    console.log("Starting QR code scanning process");
     
     // First take a picture
     const imagePath = await takePicture();
     
     if (!imagePath) {
+      console.error("No image captured during QR scan attempt");
       return { 
         success: false, 
         error: "No image captured" 
       };
     }
+    
+    // Log success for debugging
+    console.log("Image captured successfully for QR scanning:", imagePath);
     
     // Simulate QR code processing - in a real app, we would process the image
     // to extract QR/barcode data
@@ -96,7 +105,7 @@ export async function scanSensorQrCode(): Promise<CameraScanResult> {
     console.error("Error scanning QR code:", error);
     return {
       success: false,
-      error: "Error scanning QR code"
+      error: error instanceof Error ? error.message : "Error scanning QR code"
     };
   }
 }
