@@ -49,22 +49,28 @@ export async function takePicture(): Promise<string | null> {
       return await filePromise;
     }
     
-    // Use Capacitor Camera plugin with improved configuration for Android
+    console.log('Starting camera capture with Capacitor...');
+    
+    // Force camera mode for Android - this is the key change
+    // On Android, we need to be very explicit about camera settings
     const image = await Camera.getPhoto({
       quality: 90,
       allowEditing: false, // Disable editing for faster capture
       resultType: CameraResultType.Uri,
-      source: CameraSource.Camera,
+      source: CameraSource.Camera, // Force camera source
       direction: CameraDirection.Rear, // Explicitly use rear camera
       correctOrientation: true, // Ensure proper orientation
-      promptLabelHeader: 'Scan QR Code', // Add guidance for the user
+      // These prompt labels help guide users on Android
+      promptLabelHeader: 'Scan QR Code',
       promptLabelCancel: 'Cancel',
-      promptLabelPhoto: 'Take Photo'
+      promptLabelPhoto: 'Take Photo',
+      saveToGallery: false, // Don't save to gallery for QR scans
+      width: 1200, // Set reasonable dimensions
+      height: 1200
     });
     
-    console.log('Camera captured image with path:', image.webPath);
-    // Return the image path
-    return image.webPath;
+    console.log('Camera captured image successfully:', image?.webPath || 'No webPath returned');
+    return image.webPath || null;
   } catch (error) {
     console.error('Error taking picture:', error);
     return null;
@@ -73,7 +79,7 @@ export async function takePicture(): Promise<string | null> {
 
 export async function scanSensorQrCode(): Promise<CameraScanResult> {
   try {
-    console.log("Starting QR code scanning process");
+    console.log("Starting QR code scanning process...");
     
     // First take a picture
     const imagePath = await takePicture();

@@ -35,6 +35,7 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
           variant="outline" 
           size="icon"
           disabled={scanning}
+          aria-label="Scan QR code"
         >
           {scanning ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -58,7 +59,7 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
           </div>
           <p className="text-sm text-muted-foreground">
             {scanning 
-              ? "Accessing camera... Please allow permissions if prompted" 
+              ? "Accessing camera... Please allow camera permissions when prompted" 
               : "Point camera at QR code"}
           </p>
         </div>
