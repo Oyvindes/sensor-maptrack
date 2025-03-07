@@ -28,12 +28,15 @@ export async function takePicture(): Promise<string | null> {
   try {
     console.log('Starting camera capture process...');
     
-    // Try using Capacitor Camera first if available
+    // Check if we're on Android
+    const isAndroid = /android/i.test(navigator.userAgent);
+    
+    // Try Capacitor first if available (best for native apps)
     const hasCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor;
     
     if (hasCapacitor) {
       try {
-        console.log('Capacitor detected, using native camera API');
+        console.log('Using Capacitor camera API');
         
         // Explicitly configure for QR/Barcode scanning
         const image = await Camera.getPhoto({
@@ -47,7 +50,7 @@ export async function takePicture(): Promise<string | null> {
           promptLabelCancel: 'Cancel',
           promptLabelPhoto: 'Scan QR Code',
           saveToGallery: false, // Don't save QR code images to gallery
-          webUseInput: true, // Use file input on web as fallback
+          webUseInput: false, // Don't use file input on web
           width: 1024, // Optimal for QR scanning
           height: 1024
         });
@@ -56,21 +59,19 @@ export async function takePicture(): Promise<string | null> {
         return image.webPath || null;
       } catch (capacitorError) {
         console.error('Capacitor camera error:', capacitorError);
-        console.log('Falling back to file input method');
-        // Fall back to file input method
+        console.log('Falling back to browser camera API');
       }
     }
     
-    // If Capacitor failed or isn't available, try browser's getUserMedia API
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        console.log('Trying browser camera API');
+    // If not on Android or Capacitor failed, try browser camera API
+    if (!isAndroid && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        console.log('Using browser camera API');
         return await useBrowserCamera();
+      } catch (browserCameraError) {
+        console.error('Browser camera error:', browserCameraError);
+        console.log('Falling back to file input method');
       }
-    } catch (browserCameraError) {
-      console.error('Browser camera error:', browserCameraError);
-      console.log('Falling back to file input method');
-      // Fall back to file input method
     }
     
     // Last resort: use file input method
@@ -78,12 +79,6 @@ export async function takePicture(): Promise<string | null> {
     return await useFileInput();
   } catch (error) {
     console.error('Error in takePicture:', error);
-    
-    // For demo purposes, generate a mock image path
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Development mode: Returning mock image path');
-      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-    }
     
     return null;
   }
@@ -254,23 +249,11 @@ async function useBrowserCamera(): Promise<string | null> {
     } catch (error) {
       console.error('Error accessing camera:', error);
       
-      // Show error message in container
-      container.innerHTML = `
-        <div style="color: white; text-align: center; padding: 20px;">
-          <h3>Camera Access Error</h3>
-          <p>${error instanceof Error ? error.message : 'Could not access camera'}</p>
-          <button id="closeErrorBtn" style="padding: 10px 20px; background-color: #f44336; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer;">Close</button>
-        </div>
-      `;
+      // Clean up container without showing error
+      document.body.removeChild(container);
       
-      // Handle close button click
-      const closeBtn = container.querySelector('#closeErrorBtn');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-          document.body.removeChild(container);
-          resolve(null);
-        });
-      }
+      // Just resolve with null to allow fallback to next method
+      resolve(null);
     }
   });
 }

@@ -1,12 +1,18 @@
-
-import React from "react";
-import { Plus, User, ArrowLeft, Shield } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Plus, User, ArrowLeft, Shield, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { User as UserType, Company } from "@/types/users";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { getCurrentUser } from "@/services/authService";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface UserListProps {
   users: UserType[];
@@ -25,6 +31,7 @@ const UserList: React.FC<UserListProps> = ({
   onAddNew,
   onBack
 }) => {
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
   const currentUser = getCurrentUser();
   
   // Filter users based on permission
@@ -38,11 +45,27 @@ const UserList: React.FC<UserListProps> = ({
   else if (currentCompanyId) {
     filteredUsers = filteredUsers.filter(user => user.companyId === currentCompanyId);
   }
+  // Apply company filter if selected and not already filtered by company
+  else if (companyFilter !== "all") {
+    filteredUsers = filteredUsers.filter(user => user.companyId === companyFilter);
+  }
   
   // Find company name for the current company ID
   const currentCompany = currentCompanyId 
     ? companies.find(company => company.id === currentCompanyId)
     : undefined;
+
+  // Get available companies for the filter
+  const availableCompanies = useMemo(() => {
+    // If already filtered by company, don't show filter
+    if (currentCompanyId || (currentUser?.isCompanyAdmin && currentUser.role === "admin")) {
+      return [];
+    }
+    
+    // Get unique companies from users
+    const uniqueCompanyIds = [...new Set(users.map(user => user.companyId))];
+    return companies.filter(company => uniqueCompanyIds.includes(company.id));
+  }, [companies, users, currentCompanyId, currentUser]);
 
   return (
     <SectionContainer>
@@ -59,14 +82,37 @@ const UserList: React.FC<UserListProps> = ({
               : "All Users"}
           </SectionTitle>
         </div>
-        <Button 
-          onClick={onAddNew} 
-          size="sm" 
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add User</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {availableCompanies.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={companyFilter}
+                onValueChange={setCompanyFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by company" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Companies</SelectItem>
+                  {availableCompanies.map(company => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <Button 
+            onClick={onAddNew} 
+            size="sm" 
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add User</span>
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -103,7 +149,7 @@ const UserList: React.FC<UserListProps> = ({
                   <Badge variant="outline" className="text-xs">Company Admin</Badge>
                 )}
               </div>
-              {!currentCompanyId && (
+              {(!currentCompanyId && companyFilter === "all") && (
                 <div className="text-sm text-muted-foreground">
                   Company: {company?.name || "Unknown"}
                 </div>

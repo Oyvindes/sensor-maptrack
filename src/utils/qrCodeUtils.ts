@@ -226,24 +226,10 @@ export async function processQRCodeImage(imageData: string): Promise<string | nu
       return code.data;
     } else {
       console.log("No QR code found in image after multiple processing attempts");
-      
-      // For development/testing, check if we're in development mode and return a mock IMEI
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Development mode: Returning mock IMEI");
-        return "IMEI:123456789012345";
-      }
-      
       return null;
     }
   } catch (error) {
     console.error("Error processing QR code:", error);
-    
-    // For development/testing, return a mock IMEI
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Development mode: Returning mock IMEI after error");
-      return "IMEI:123456789012345";
-    }
-    
     return null;
   }
 }
