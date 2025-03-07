@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Camera, Plus, Loader2 } from "lucide-react";
+import { ScanBarcode, Plus, Loader2 } from "lucide-react";
 
 interface SensorImeiInputProps {
   imeiInput: string;
@@ -36,12 +36,12 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
           size="icon"
           disabled={scanning}
           aria-label="Scan QR code"
-          title="Scan QR code"
+          title="Scan QR code to get IMEI"
         >
           {scanning ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Camera className="h-4 w-4" />
+            <ScanBarcode className="h-4 w-4" />
           )}
         </Button>
         <Button onClick={onAddSensor} disabled={!imeiInput.trim()}>
@@ -55,13 +55,13 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
             {scanning ? (
               <Loader2 className="h-8 w-8 opacity-70 animate-spin" />
             ) : (
-              <Camera className="h-8 w-8 opacity-50" />
+              <ScanBarcode className="h-8 w-8 opacity-50" />
             )}
           </div>
           <p className="text-sm text-muted-foreground">
             {scanning 
               ? "Accessing camera... Please allow camera permissions when prompted" 
-              : "Point camera at QR code"}
+              : "Point camera at sensor QR code to capture IMEI"}
           </p>
         </div>
       )}
