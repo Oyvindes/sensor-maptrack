@@ -13,6 +13,7 @@ export const useFolderEditor = (
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
   const [mapFocusPosition, setMapFocusPosition] = useState<[number, number] | undefined>(undefined);
   const [directionsDialogOpen, setDirectionsDialogOpen] = useState(false);
+  const [isSavingInProgress, setIsSavingInProgress] = useState(false);
 
   useEffect(() => {
     const allSensors = getMockSensors();
@@ -97,9 +98,24 @@ export const useFolderEditor = (
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    if (isSavingInProgress) {
+      console.log("Save already in progress, ignoring duplicate submission");
+      return;
+    }
+    
+    try {
+      setIsSavingInProgress(true);
+      // In a real application, this would include validation
+      onSave(formData);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Failed to save project");
+    } finally {
+      setIsSavingInProgress(false);
+    }
   };
 
   const handleCompanyChange = (companyId: string) => {
@@ -116,6 +132,7 @@ export const useFolderEditor = (
     mapLocation,
     mapFocusPosition,
     directionsDialogOpen,
+    isSavingInProgress,
     handleChange,
     handleSensorToggle,
     handleSubmit,

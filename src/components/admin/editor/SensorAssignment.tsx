@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, Plus, Camera, X, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { scanSensorQrCode } from "@/utils/cameraUtils";
 
 interface SensorAssignmentProps {
   availableSensors: Array<{ id: string; name: string }>;
@@ -24,6 +25,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 }) => {
   const [imeiInput, setImeiInput] = useState("");
   const [showScanner, setShowScanner] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [assignedSensors, setAssignedSensors] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
@@ -61,15 +63,28 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
     setImeiInput("");
   };
 
-  const handleScanQR = () => {
-    setShowScanner(!showScanner);
-    
-    if (!showScanner) {
-      setTimeout(() => {
-        const scannedIMEI = `IMEI${Math.floor(Math.random() * 1000000)}`;
-        setImeiInput(scannedIMEI);
-        setShowScanner(false);
-      }, 2000);
+  const handleScanQR = async () => {
+    try {
+      setScanning(true);
+      setShowScanner(true);
+      
+      // This is a simulated delay to show the scanning UI
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const result = await scanSensorQrCode();
+      
+      if (result.success && result.data) {
+        setImeiInput(result.data);
+        toast.success("QR code scanned successfully");
+      } else {
+        toast.error(result.error || "Failed to scan QR code");
+      }
+    } catch (error) {
+      console.error("Error scanning QR code:", error);
+      toast.error("An error occurred while scanning");
+    } finally {
+      setScanning(false);
+      setShowScanner(false);
     }
   };
 
@@ -100,8 +115,17 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
                 onChange={handleImeiChange}
                 className="flex-1"
               />
-              <Button onClick={handleScanQR} variant="outline" size="icon">
-                <Camera className="h-4 w-4" />
+              <Button 
+                onClick={handleScanQR} 
+                variant="outline" 
+                size="icon"
+                disabled={scanning}
+              >
+                {scanning ? (
+                  <span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
               </Button>
               <Button onClick={handleAddSensor} disabled={!imeiInput.trim()}>
                 <Plus className="h-4 w-4 mr-1" /> Add
@@ -111,7 +135,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
             {showScanner && (
               <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md text-center">
                 <div className="w-full aspect-video bg-gray-200 dark:bg-gray-700 mb-2 flex items-center justify-center">
-                  <Camera className="h-8 w-8 opacity-50" />
+                  <Camera className="h-8 w-8 opacity-50 animate-pulse" />
                 </div>
                 <p className="text-sm text-muted-foreground">Point camera at QR code</p>
               </div>

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Cpu, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { takePicture } from "@/utils/cameraUtils";
+import { scanSensorQrCode } from "@/utils/cameraUtils";
 import { toast } from "sonner";
 
 interface ProjectsListProps {
@@ -23,21 +23,48 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 }) => {
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
 
-  const handleCameraClick = async (e: React.MouseEvent, projectId: string) => {
+  const handleCameraClick = async (e: React.MouseEvent, project: SensorFolder) => {
     e.stopPropagation(); // Prevent card click event
     
     try {
-      setLoadingProjectId(projectId);
-      const imagePath = await takePicture();
+      setLoadingProjectId(project.id);
       
-      if (imagePath) {
-        toast.success("Photo captured successfully");
-        // Here you would typically save the image path to the project
-        // This would require additional backend implementation
-        console.log(`Captured image for project ${projectId}:`, imagePath);
+      const scanResult = await scanSensorQrCode();
+      
+      if (scanResult.success && scanResult.data) {
+        // Format the scanned IMEI as a sensor ID
+        const sensorImei = scanResult.data.replace(/[^0-9]/g, '');
+        const sensorId = `sensor-${sensorImei}`;
+        
+        // Check if sensor already assigned to this project
+        if (project.assignedSensorIds?.includes(sensorId)) {
+          toast.info("This sensor is already assigned to this project");
+        } else {
+          // Here we would typically update the project with the new sensor
+          // via an API call. For now, we'll just log it.
+          console.log(`Sensor ${sensorId} scanned for project ${project.id}`);
+          
+          // Create a copy of the project with the new sensor added
+          const updatedProject = { 
+            ...project,
+            assignedSensorIds: [...(project.assignedSensorIds || []), sensorId]
+          };
+          
+          // Simulate updating the project
+          // In a real application, this would be part of an API call
+          // or dispatched to a state management system
+          setTimeout(() => {
+            toast.success(`Sensor ${sensorImei} added to ${project.name}`);
+            
+            // Re-select the project to effectively refresh it
+            onProjectSelect(updatedProject);
+          }, 500);
+        }
+      } else {
+        toast.error(scanResult.error || "Failed to scan sensor");
       }
     } catch (error) {
-      toast.error("Failed to capture photo");
+      toast.error("Failed to process sensor scan");
       console.error("Camera error:", error);
     } finally {
       setLoadingProjectId(null);
@@ -97,7 +124,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                   variant="ghost" 
                   size="icon" 
                   className="h-6 w-6"
-                  onClick={(e) => handleCameraClick(e, project.id)}
+                  onClick={(e) => handleCameraClick(e, project)}
                   disabled={loadingProjectId === project.id}
                 >
                   {loadingProjectId === project.id ? (

@@ -1,6 +1,14 @@
+
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
-export async function takePicture() {
+export interface CameraScanResult {
+  success: boolean;
+  data?: string;
+  image?: string;
+  error?: string;
+}
+
+export async function takePicture(): Promise<string | null> {
   try {
     // Check if running in a browser environment without Capacitor
     const isBrowser = typeof window !== 'undefined' && 
@@ -54,5 +62,41 @@ export async function takePicture() {
   } catch (error) {
     console.error('Error taking picture:', error);
     return null;
+  }
+}
+
+export async function scanSensorQrCode(): Promise<CameraScanResult> {
+  try {
+    // In a real implementation, this would use a barcode/QR scanning library
+    // For this mock implementation, we'll simulate scanning a sensor IMEI
+    
+    // First take a picture
+    const imagePath = await takePicture();
+    
+    if (!imagePath) {
+      return { 
+        success: false, 
+        error: "No image captured" 
+      };
+    }
+    
+    // Simulate QR code processing - in a real app, we would process the image
+    // to extract QR/barcode data
+    console.log("Simulating QR code processing from image:", imagePath);
+    
+    // Generate a random mock IMEI
+    const mockImei = `IMEI${Math.floor(Math.random() * 10000000).toString().padStart(8, '0')}`;
+    
+    return {
+      success: true,
+      data: mockImei,
+      image: imagePath
+    };
+  } catch (error) {
+    console.error("Error scanning QR code:", error);
+    return {
+      success: false,
+      error: "Error scanning QR code"
+    };
   }
 }
