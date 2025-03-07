@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScanBarcode, Plus, Loader2 } from "lucide-react";
@@ -21,18 +20,34 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
   onScanQR,
   onAddSensor
 }) => {
+  // Add state to track the visibility of the scanner with animation
+  const [isVisible, setIsVisible] = useState(showScanner);
+  
+  // Use effect to handle the transition
+  useEffect(() => {
+    if (showScanner) {
+      setIsVisible(true);
+    } else {
+      // Delay hiding to allow for animation
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showScanner]);
+  
   return (
     <div className="mb-4">
       <div className="flex gap-2 mb-2">
-        <Input 
-          placeholder="Enter sensor IMEI number" 
+        <Input
+          placeholder="Enter sensor IMEI number"
           value={imeiInput}
           onChange={onImeiChange}
           className="flex-1"
         />
-        <Button 
-          onClick={onScanQR} 
-          variant="outline" 
+        <Button
+          onClick={onScanQR}
+          variant="outline"
           size="icon"
           disabled={scanning}
           aria-label="Scan QR code"
@@ -49,7 +64,12 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
         </Button>
       </div>
       
-      {showScanner && (
+      {/* Use CSS transitions for smooth appearance/disappearance */}
+      <div
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          isVisible ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
         <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md text-center">
           <div className="w-full aspect-video bg-gray-200 dark:bg-gray-700 mb-2 flex items-center justify-center">
             {scanning ? (
@@ -59,12 +79,12 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            {scanning 
-              ? "Accessing camera... Please allow camera permissions when prompted" 
+            {scanning
+              ? "Accessing camera... Please allow camera permissions when prompted"
               : "Point camera at sensor QR code to capture IMEI"}
           </p>
         </div>
-      )}
+      </div>
     </div>
   );
 };

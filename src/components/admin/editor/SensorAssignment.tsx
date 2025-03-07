@@ -73,8 +73,31 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
       const result = await scanSensorQrCode();
       
       if (result.success && result.data) {
+        // Set the IMEI input value
         setImeiInput(result.data);
-        toast.success("QR code scanned successfully");
+        
+        // Create sensor ID from the scanned data
+        const newSensorId = `sensor-${result.data.replace(/[^0-9]/g, '')}`;
+        
+        if (!companyId) {
+          toast.error("Please select a company before adding sensors");
+          return;
+        }
+        
+        // Check if the sensor is valid for the company (same logic as in handleAddSensor)
+        const validForCompany = Math.random() > 0.3;
+        if (!validForCompany) {
+          toast.error("This sensor IMEI does not belong to the selected company");
+          return;
+        }
+        
+        // Add the sensor to the project
+        onSensorToggle(newSensorId, true);
+        
+        // Clear the input field after adding
+        setImeiInput("");
+        
+        toast.success("QR code scanned and sensor added successfully");
       } else {
         toast.error(result.error || "Failed to scan QR code");
       }
@@ -82,8 +105,11 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
       console.error("Error scanning QR code:", error);
       toast.error("An error occurred while scanning");
     } finally {
-      setScanning(false);
-      setShowScanner(false);
+      // Use a small delay before hiding the scanner UI to make the transition smoother
+      setTimeout(() => {
+        setScanning(false);
+        setShowScanner(false);
+      }, 300);
     }
   };
 
