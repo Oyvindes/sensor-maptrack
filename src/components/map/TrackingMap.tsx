@@ -1,13 +1,13 @@
-
 import React, { useEffect } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Sensor, Device, TrackingObject } from "@/types/sensors";
 import FlyToLocation from "./FlyToLocation";
+import FitBoundsToMarkers from "./FitBoundsToMarkers";
 import DeviceMarker from "./DeviceMarker";
 import SensorMarker from "./SensorMarker";
 import TrackingObjectMarker from "./TrackingObjectMarker";
-import { getMapCenter, addPopupInteractionStyles } from "./mapUtils";
+import { getMapCenter, addPopupInteractionStyles, getBoundsForAllMarkers } from "./mapUtils";
 import "./MapIcon"; // Import to ensure default icon is set
 
 interface TrackingMapProps {
@@ -17,6 +17,7 @@ interface TrackingMapProps {
   highlightId?: string;
   focusLocation?: [number, number];
   focusZoom?: number;
+  fitAllMarkers?: boolean; // New prop to fit bounds to all markers
   onDeviceClick?: (deviceId: string) => void;
   onSensorClick?: (sensorId: string) => void;
   onObjectSelect?: (object: TrackingObject) => void;
@@ -31,6 +32,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   highlightId,
   focusLocation,
   focusZoom = 16,
+  fitAllMarkers = false,
   onDeviceClick,
   onSensorClick,
   onObjectSelect,
@@ -38,6 +40,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
   renderCustomPopup
 }) => {
   const mapCenter = getMapCenter(focusLocation, devices, sensors, objects);
+  const allMarkersBounds = fitAllMarkers ? getBoundsForAllMarkers(devices, sensors, objects) : null;
 
   useEffect(() => {
     // Disable auto-close for popups when clicking inside them (for buttons)
@@ -65,6 +68,10 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
         />
         
         {/* Add FlyToLocation component to handle dynamic location changes */}
+        {focusLocation && !fitAllMarkers && <FlyToLocation position={focusLocation} zoom={focusZoom} />}
+        
+        {/* Add FitBoundsToMarkers component to fit bounds to all markers */}
+        {fitAllMarkers && allMarkersBounds && <FitBoundsToMarkers bounds={allMarkersBounds} />}
         {focusLocation && <FlyToLocation position={focusLocation} zoom={focusZoom} />}
         
         {/* Display devices */}

@@ -16,9 +16,10 @@ const TrackingSection: React.FC<TrackingSectionProps> = ({
   return (
     <SectionContainer>
       <SectionTitle>Tracking Map</SectionTitle>
-      <TrackingMap 
-        objects={trackingObjects} 
+      <TrackingMap
+        objects={trackingObjects}
         className="w-full animate-fade-up [animation-delay:300ms]"
+        fitAllMarkers={true} // Enable automatic zoom adjustment to fit all markers
         onObjectSelect={onObjectSelect}
       />
     </SectionContainer>

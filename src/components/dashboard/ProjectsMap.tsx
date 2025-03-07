@@ -127,9 +127,10 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 
   return (
     <div className={cn("rounded-xl overflow-hidden", className)}>
-      <TrackingMap 
+      <TrackingMap
         devices={devices}
         className="h-full w-full"
+        fitAllMarkers={true} // Enable automatic zoom adjustment to fit all markers
         onDeviceClick={(deviceId) => {
           console.log("Device clicked:", deviceId);
           const project = projects.find(p => p.id === deviceId);
