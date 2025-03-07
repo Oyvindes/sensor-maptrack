@@ -68,8 +68,36 @@ export function useProjectManagement() {
     setEditingProject(true);
   };
 
+  const handleProjectStatusChange = async (
+    projectId: string,
+    newStatus: "running" | "stopped",
+    projects: SensorFolder[],
+    setProjects: React.Dispatch<React.SetStateAction<SensorFolder[]>>
+  ) => {
+    try {
+      // Update the project status
+      const updatedProjects = projects.map(project =>
+        project.id === projectId
+          ? {
+              ...project,
+              status: newStatus,
+              startedAt: newStatus === "running" ? new Date().toISOString() : undefined
+            }
+          : project
+      );
+      
+      setProjects(updatedProjects);
+      return true;
+    } catch (error) {
+      console.error('Error updating project status:', error);
+      toast.error('Failed to update project status');
+      return false;
+    }
+  };
+
   return {
     handleProjectSave,
-    handleAddNewProject
+    handleAddNewProject,
+    handleProjectStatusChange
   };
 }

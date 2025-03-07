@@ -3,25 +3,53 @@ import React, { useState } from "react";
 import { SensorFolder } from "@/types/users";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Cpu, Camera } from "lucide-react";
+import { MapPin, Cpu, Camera, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { scanSensorQrCode } from "@/utils/cameraUtils";
 import { toast } from "sonner";
+import { startProjectDataCollection, stopProjectDataCollection } from "@/services/sensor/sensorDataCollection";
 
 interface ProjectsListProps {
   projects: SensorFolder[];
   isLoading: boolean;
   onProjectSelect: (project: SensorFolder) => void;
+  onProjectStatusChange?: (projectId: string, status: "running" | "stopped") => void;
   className?: string;
 }
-
-const ProjectsList: React.FC<ProjectsListProps> = ({ 
-  projects, 
+const ProjectsList: React.FC<ProjectsListProps> = ({
+  projects,
   isLoading,
   onProjectSelect,
-  className 
+  onProjectStatusChange,
+  className
 }) => {
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
+
+  const handleStatusChange = (e: React.MouseEvent, project: SensorFolder) => {
+    e.stopPropagation(); // Prevent card click event
+    if (onProjectStatusChange) {
+      const newStatus = project.status === "running" ? "stopped" : "running";
+      
+      try {
+        if (newStatus === "running") {
+          if (!project.assignedSensorIds?.length) {
+            toast.error("Cannot start project without assigned sensors");
+            return;
+          }
+          startProjectDataCollection(project);
+          toast.success(`Started data collection for ${project.name}`);
+        } else {
+          stopProjectDataCollection(project.id);
+          toast.success(`Stopped data collection for ${project.name}`);
+        }
+        
+        onProjectStatusChange(project.id, newStatus);
+      } catch (error) {
+        console.error("Error changing project status:", error);
+        toast.error("Failed to change project status");
+      }
+    }
+  };
 
   const handleCameraClick = async (e: React.MouseEvent, project: SensorFolder) => {
     e.stopPropagation(); // Prevent card click event
@@ -119,20 +147,40 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                     <Cpu className="h-3 w-3" />
                     {project.assignedSensorIds?.length || 0}
                   </span>
+                  <span className={cn(
+                    "flex items-center gap-1",
+                    project.status === "running" ? "text-green-500" : "text-muted-foreground"
+                  )}>
+                    •
+                  </span>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6"
-                  onClick={(e) => handleCameraClick(e, project)}
-                  disabled={loadingProjectId === project.id}
-                >
-                  {loadingProjectId === project.id ? (
-                    <div className="h-3 w-3 rounded-full border-2 border-t-transparent animate-spin" />
-                  ) : (
-                    <Camera className="h-3 w-3" />
-                  )}
-                </Button>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => handleStatusChange(e, project)}
+                  >
+                    {project.status === "running" ? (
+                      <Square className="h-3 w-3 text-red-500" />
+                    ) : (
+                      <Play className="h-3 w-3 text-green-500" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => handleCameraClick(e, project)}
+                    disabled={loadingProjectId === project.id}
+                  >
+                    {loadingProjectId === project.id ? (
+                      <div className="h-3 w-3 rounded-full border-2 border-t-transparent animate-spin" />
+                    ) : (
+                      <Camera className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>

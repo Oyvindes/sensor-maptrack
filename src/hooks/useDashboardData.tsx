@@ -29,7 +29,11 @@ export function useDashboardData() {
   
   const { trackingObjects, setTrackingObjects, handleObjectSelect } = useTrackingObjects();
   const { handleSensorClick } = useSensorInteractions();
-  const { handleProjectSave: projectSaveHandler, handleAddNewProject: addNewProjectHandler } = useProjectManagement();
+  const {
+    handleProjectSave: projectSaveHandler,
+    handleAddNewProject: addNewProjectHandler,
+    handleProjectStatusChange: projectStatusHandler
+  } = useProjectManagement();
   const { handleRefresh: refreshHandler } = useDashboardActions();
 
   // Wrapper functions to maintain the same API for consumers
@@ -63,6 +67,11 @@ export function useDashboardData() {
     refreshHandler(setSensors, setTrackingObjects, setProjects);
   };
 
+  const handleProjectStatusChange = async (projectId: string, status: "running" | "stopped") => {
+    const success = await projectStatusHandler(projectId, status, projects, setProjects);
+    return success;
+  };
+
   return {
     sensors,
     trackingObjects,
@@ -78,6 +87,7 @@ export function useDashboardData() {
     handleProjectSave,
     handleProjectCancel,
     handleAddNewProject,
-    handleRefresh
+    handleRefresh,
+    handleProjectStatusChange
   };
 }

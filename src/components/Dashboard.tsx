@@ -24,7 +24,8 @@ const Dashboard: React.FC = () => {
     handleProjectSave,
     handleProjectCancel,
     handleAddNewProject,
-    handleRefresh
+    handleRefresh,
+    handleProjectStatusChange
   } = useDashboardData();
 
   // Get companies for the folder editor
@@ -56,19 +57,21 @@ const Dashboard: React.FC = () => {
             onCancel={handleProjectCancel}
           />
         ) : currentView === "dashboard" ? (
-          <ProjectsSection 
-            projects={projects} 
+          <ProjectsSection
+            projects={projects}
             isLoading={isLoading}
-            onProjectSelect={handleProjectSelect} 
+            onProjectSelect={handleProjectSelect}
+            onProjectStatusChange={handleProjectStatusChange}
           />
         ) : (
           <div className="w-full animate-fade-up [animation-delay:300ms]">
             <h2 className="text-xl font-semibold mb-4">Projects</h2>
-            <ProjectsList 
-              projects={projects} 
+            <ProjectsList
+              projects={projects}
               isLoading={isLoading}
               onProjectSelect={handleProjectSelect}
-              className="h-auto w-full" 
+              onProjectStatusChange={handleProjectStatusChange}
+              className="h-auto w-full"
             />
           </div>
         )}

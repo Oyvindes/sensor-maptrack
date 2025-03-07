@@ -32,6 +32,8 @@ export interface SensorFolder {
   address?: string; // New field for project address
   assignedSensorIds?: string[]; // New field for assigned sensors
   location?: { lat: number; lng: number } | string; // New field for geolocation
+  status?: "running" | "stopped"; // Project running status
+  startedAt?: string; // Timestamp when project was last started
 }
 
 export interface LoginCredentials {

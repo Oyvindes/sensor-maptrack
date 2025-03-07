@@ -9,12 +9,14 @@ interface ProjectsSectionProps {
   projects: SensorFolder[];
   isLoading: boolean;
   onProjectSelect: (project: SensorFolder) => void;
+  onProjectStatusChange?: (projectId: string, status: "running" | "stopped") => void;
 }
 
-const ProjectsSection: React.FC<ProjectsSectionProps> = ({ 
-  projects, 
+const ProjectsSection: React.FC<ProjectsSectionProps> = ({
+  projects,
   isLoading,
-  onProjectSelect 
+  onProjectSelect,
+  onProjectStatusChange
 }) => {
   return (
     <SectionContainer>
@@ -29,10 +31,11 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           />
         </div>
         <div>
-          <ProjectsList 
-            projects={projects} 
+          <ProjectsList
+            projects={projects}
             isLoading={isLoading}
             onProjectSelect={onProjectSelect}
+            onProjectStatusChange={onProjectStatusChange}
             className="h-[400px] overflow-auto animate-fade-up [animation-delay:400ms]"
           />
         </div>
