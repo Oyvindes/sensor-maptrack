@@ -49,27 +49,28 @@ export async function takePicture(): Promise<string | null> {
       return await filePromise;
     }
     
-    console.log('Starting camera capture with Capacitor...');
+    console.log('Starting camera in QR SCAN MODE...');
     
-    // Force camera mode for Android - this is the key change
-    // On Android, we need to be very explicit about camera settings
+    // Force QR/Barcode scan mode for Android
+    // We're being very explicit about the configuration to force scan mode
     const image = await Camera.getPhoto({
       quality: 90,
-      allowEditing: false, // Disable editing for faster capture
+      allowEditing: false, // Must be false for scan mode
       resultType: CameraResultType.Uri,
-      source: CameraSource.Camera, // Force camera source
-      direction: CameraDirection.Rear, // Explicitly use rear camera
-      correctOrientation: true, // Ensure proper orientation
-      // These prompt labels help guide users on Android
+      source: CameraSource.Camera, // Force camera source not PHOTOS
+      direction: CameraDirection.Rear, // Must use rear camera for scanning
+      correctOrientation: true,
+      // Guide the user with clear instructions
       promptLabelHeader: 'Scan QR Code',
       promptLabelCancel: 'Cancel',
-      promptLabelPhoto: 'Take Photo',
-      saveToGallery: false, // Don't save to gallery for QR scans
-      width: 1200, // Set reasonable dimensions
-      height: 1200
+      promptLabelPhoto: 'Capture QR Code', // Make it clear we're scanning, not taking photos
+      saveToGallery: false, // Don't clutter gallery with QR images
+      webUseInput: false, // Avoid using the file input on web
+      width: 1024, // Set optimal dimensions for QR scanning
+      height: 1024
     });
     
-    console.log('Camera captured image successfully:', image?.webPath || 'No webPath returned');
+    console.log('Camera captured image for QR processing:', image?.webPath || 'No image captured');
     return image.webPath || null;
   } catch (error) {
     console.error('Error taking picture:', error);
