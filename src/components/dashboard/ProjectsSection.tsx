@@ -31,6 +31,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           />
         </div>
         <div>
+          <h3 className="text-base font-semibold mb-2 animate-fade-up [animation-delay:350ms]">Started Projects</h3>
           <ProjectsList
             projects={projects.filter(p => p.status === "running")}
             isLoading={isLoading}

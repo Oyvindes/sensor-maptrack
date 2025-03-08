@@ -150,12 +150,20 @@ export const generateProjectReport = async (
 ): Promise<Blob> => {
   try {
     console.log('Starting PDF generation with jsPDF v3...');
-    // Updated jsPDF constructor with options object
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    
+    // Create the jsPDF instance with safe defaults
+    let pdf;
+    try {
+      pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      console.log('jsPDF instance created successfully');
+    } catch (pdfError) {
+      console.error('Error creating jsPDF instance:', pdfError);
+      throw new Error(`Failed to initialize PDF document: ${pdfError.message || 'Unknown error'}`);
+    }
     
     let yOffset = 20;
     
@@ -260,10 +268,24 @@ export const generateProjectReport = async (
   pdf.setFontSize(10);
   pdf.text(`Report generated on ${new Date().toLocaleString()}`, 20, yOffset);
 
-  return pdf.output('blob') as Blob;
+  // Safely generate the blob with proper error handling
+  try {
+    console.log('Generating PDF blob...');
+    const blob = pdf.output('blob');
+    
+    if (!blob) {
+      throw new Error('PDF output returned null or undefined');
+    }
+    
+    console.log('PDF blob generated successfully');
+    return blob;
+  } catch (outputError) {
+    console.error('Error generating PDF output:', outputError);
+    throw new Error(`Failed to generate PDF output: ${outputError.message || 'Unknown error'}`);
+  }
   } catch (error) {
     console.error('Error in PDF generation:', error);
-    throw new Error(`Failed to generate PDF: ${error.message}`);
+    throw new Error(`Failed to generate PDF: ${error.message || 'Unknown error'}`);
   }
 };
 
@@ -292,41 +314,57 @@ export const downloadProjectReport = async (
     const timestamp = new Date();
     const filename = `${project.name}-report-${timestamp.toISOString().split('T')[0]}.pdf`;
     
-    // Generate the PDF with selected data types
-    console.log('Calling generateProjectReport...');
+    // Use a try-catch block with more specific error handling
     let pdfBlob;
     try {
+      // Ensure jsPDF is properly imported and initialized with default params
+      console.log('Initializing PDF generation with jsPDF v3');
       pdfBlob = await generateProjectReport(project, selectedDataTypes);
-      console.log('PDF blob generated successfully');
+      console.log('PDF blob generated successfully, size:', pdfBlob.size);
+      
+      if (!pdfBlob || pdfBlob.size === 0) {
+        throw new Error('Generated PDF blob is empty or invalid');
+      }
     } catch (genError) {
       console.error('Error in generateProjectReport:', genError);
-      throw new Error(`PDF generation failed: ${genError.message}`);
+      throw new Error(`PDF generation failed: ${genError.message || 'Unknown error'}`);
     }
     
-    // Create URL from the blob
-    console.log('Creating URL from blob...');
+    // Create URL from the blob with safer error handling
     let url;
     try {
+      console.log('Creating URL from blob...');
       url = URL.createObjectURL(pdfBlob);
-      console.log('URL created successfully');
+      
+      if (!url) {
+        throw new Error('URL creation returned empty result');
+      }
+      console.log('URL created successfully:', url.substring(0, 30) + '...');
     } catch (urlError) {
       console.error('Error creating URL from blob:', urlError);
-      throw new Error(`Failed to create URL from PDF: ${urlError.message}`);
+      throw new Error(`Failed to create URL from PDF: ${urlError.message || 'Unknown error'}`);
     }
     
-    // Create download link
-    console.log('Creating download link...');
+    // Create download link with more reliable implementation
     try {
+      console.log('Creating download link...');
       const link = document.createElement('a');
       link.href = url;
       link.download = filename;
+      link.style.display = 'none';
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      console.log('Download initiated');
+      
+      // Using a small timeout to ensure the browser has time to process
+      setTimeout(() => {
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          console.log('Download initiated and link cleaned up');
+        }, 100);
+      }, 100);
     } catch (linkError) {
       console.error('Error in download process:', linkError);
-      throw new Error(`Failed to initiate download: ${linkError.message}`);
+      throw new Error(`Failed to initiate download: ${linkError.message || 'Unknown error'}`);
     }
     
     // Create a new PDF record

@@ -48,7 +48,7 @@ const PdfSettingsButton = () => {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md z-[9999]">
           <DialogHeader>
             <DialogTitle>PDF Report Settings</DialogTitle>
           </DialogHeader>

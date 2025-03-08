@@ -72,7 +72,7 @@ const PdfDataSelectionDialog: React.FC<PdfDataSelectionDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md z-[9999]">
         <DialogHeader>
           <DialogTitle>Select Data for PDF Report</DialogTitle>
           <DialogDescription>

@@ -53,6 +53,8 @@ export interface SensorFolder {
   stoppedAt?: string; // Timestamp when project was last stopped
   pdfHistory?: PdfRecord[]; // History of generated PDF reports
   sensorPlacementImages?: SensorPlacementImage[]; // Images showing sensor placements
+  sensorImages?: string[]; // Simple array of image URLs for sensor placements
+  hasImageIssues?: boolean; // Flag indicating if there are issues with sensor images
 }
 
 export interface LoginCredentials {

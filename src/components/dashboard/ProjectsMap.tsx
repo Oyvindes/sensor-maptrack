@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { SensorFolder } from "@/types/users";
 import { MapPin, ArrowRight } from "lucide-react";
 import TrackingMap from "@/components/TrackingMap";
 import { cn } from "@/lib/utils";
 import { Location } from "@/types/sensors";
 import { Button } from "@/components/ui/button";
+import { getAddressCoordinates } from "@/services/geocodingService";
 
 interface ProjectsMapProps {
   projects: SensorFolder[];
@@ -14,47 +15,84 @@ interface ProjectsMapProps {
   className?: string;
 }
 
-const ProjectsMap: React.FC<ProjectsMapProps> = ({ 
-  projects, 
+const ProjectsMap: React.FC<ProjectsMapProps> = ({
+  projects,
   isLoading,
   onProjectSelect,
-  className 
+  className
 }) => {
-  // Parse location data and filter projects that have valid location data
-  const projectsWithLocation = projects.filter(project => {
-    if (!project.location) return false;
-    
-    // If it's already the correct shape, keep it
-    if (typeof project.location === 'object' && 'lat' in project.location && 'lng' in project.location) {
-      return true;
-    }
-    
-    // If it's a string, try to parse it
-    if (typeof project.location === 'string') {
-      try {
-        JSON.parse(project.location);
-        return true;
-      } catch (e) {
-        console.error(`Failed to parse location for project ${project.id}:`, e);
-        return false;
+  // State to track geocoded projects
+  const [geocodedProjects, setGeocodedProjects] = useState<SensorFolder[]>([]);
+  const [isGeocodingComplete, setIsGeocodingComplete] = useState(false);
+
+  // Process projects to add location data where needed
+  useEffect(() => {
+    const processProjects = async () => {
+      const processed = [...projects];
+      let needsGeocoding = false;
+
+      // Process each project to ensure it has location data
+      for (let i = 0; i < processed.length; i++) {
+        const project = processed[i];
+        
+        // Skip if project already has valid location data
+        if (project.location &&
+           (typeof project.location === 'object' && 'lat' in project.location && 'lng' in project.location)) {
+          continue;
+        }
+        
+        // Try to parse string location
+        if (project.location && typeof project.location === 'string') {
+          try {
+            const parsed = JSON.parse(project.location);
+            if (parsed && 'lat' in parsed && 'lng' in parsed) {
+              processed[i].location = parsed;
+              continue;
+            }
+          } catch (e) {
+            console.warn(`Failed to parse location for project ${project.id}:`, e);
+          }
+        }
+        
+        // If we have an address but no location, get coordinates for it
+        if (project.address && !project.location) {
+          needsGeocoding = true;
+          try {
+            console.log(`Geocoding address for project ${project.id}: ${project.address}`);
+            const coords = await getAddressCoordinates(project.address);
+            processed[i].location = coords;
+          } catch (e) {
+            console.error(`Geocoding failed for project ${project.id}:`, e);
+          }
+        }
       }
-    }
+      
+      setGeocodedProjects(processed);
+      setIsGeocodingComplete(true);
+    };
     
-    return false;
-  });
+    processProjects();
+  }, [projects]);
+  
+  // Wait for geocoding to complete before filtering projects
+  const projectsWithLocation = isGeocodingComplete
+    ? geocodedProjects.filter(project =>
+        project.location &&
+        (typeof project.location === 'object' && 'lat' in project.location && 'lng' in project.location)
+      )
+    : [];
   
   // Convert projects to devices for TrackingMap with proper location typing
   const devices = projectsWithLocation.map(project => {
-    // Parse the location if it's a string
+    // Parse the location data with type safety
     let locationData: Location;
     
     if (typeof project.location === 'string') {
       try {
         locationData = JSON.parse(project.location);
       } catch (e) {
-        // Fallback to Trondheim center if parsing fails
-        console.error(`Using fallback location for project ${project.id}`);
-        locationData = { lat: 63.4305, lng: 10.3951 }; // Trondheim center
+        console.error(`Using default location for project ${project.id}`);
+        locationData = { lat: 61.497, lng: 8.468 }; // Central Norway coordinates
       }
     } else {
       locationData = project.location as Location;
@@ -104,11 +142,13 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
     );
   };
 
-  if (isLoading) {
+  if (isLoading || !isGeocodingComplete) {
     return (
       <div className={cn("glass-card rounded-xl animate-pulse-soft", className)}>
         <div className="h-full flex items-center justify-center">
-          <p className="text-muted-foreground">Loading projects map...</p>
+          <p className="text-muted-foreground">
+            {!isGeocodingComplete ? "Geocoding addresses..." : "Loading projects map..."}
+          </p>
         </div>
       </div>
     );

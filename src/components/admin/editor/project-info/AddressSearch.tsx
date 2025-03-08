@@ -37,7 +37,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
       setIsSearching(true);
       
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)},Trondheim,Norway&addressdetails=1&limit=3`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)},Norway&addressdetails=1&limit=5`,
         {
           headers: {
             "Accept-Language": "en-US,en;q=0.9,nb;q=0.8",
@@ -71,8 +71,22 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
         setSuggestions(addressSuggestions);
         setShowSuggestions(true);
       } else {
-        // Trondheim mock addresses with real coordinates
+        // Mock addresses from across Norway with real coordinates
         const mockAddresses: AddressSuggestion[] = [
+          {
+            address: "Karl Johans gate 31",
+            postcode: "0159",
+            city: "Oslo",
+            lat: 59.9138,
+            lng: 10.7387
+          },
+          {
+            address: "Bryggen 15",
+            postcode: "5003",
+            city: "Bergen",
+            lat: 60.3973,
+            lng: 5.3241
+          },
           {
             address: "Munkegata 1",
             postcode: "7013",
@@ -81,37 +95,44 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
             lng: 10.3951
           },
           {
-            address: "Olav Tryggvasons gate 1",
-            postcode: "7011",
-            city: "Trondheim",
-            lat: 63.4336,
-            lng: 10.4027
+            address: "Storgata 10",
+            postcode: "9008",
+            city: "Tromsø",
+            lat: 69.6489,
+            lng: 18.9551
           },
           {
-            address: "Kongens gate 14",
-            postcode: "7011", 
-            city: "Trondheim",
-            lat: 63.4298,
-            lng: 10.3940
+            address: "Kirkegata 15",
+            postcode: "4006",
+            city: "Stavanger",
+            lat: 58.9701,
+            lng: 5.7333
           }
         ];
         
         setSuggestions(mockAddresses);
         setShowSuggestions(true);
-        toast.warning("Using sample Trondheim addresses - no exact match found");
+        toast.warning("Using sample Norwegian addresses - no exact match found");
       }
     } catch (error) {
       console.error("Error fetching address suggestions:", error);
       toast.error("Failed to fetch address data");
       
-      // Backup Trondheim address if API fails
+      // Backup addresses from major Norwegian cities if API fails
       const mockAddresses: AddressSuggestion[] = [
         {
-          address: "Prinsens gate 22",
-          postcode: "7012",
-          city: "Trondheim",
-          lat: 63.4292,
-          lng: 10.3942
+          address: "Karl Johans gate 1",
+          postcode: "0154",
+          city: "Oslo",
+          lat: 59.9127,
+          lng: 10.7461
+        },
+        {
+          address: "Bryggen 1",
+          postcode: "5003",
+          city: "Bergen",
+          lat: 60.3973,
+          lng: 5.3241
         }
       ];
       
