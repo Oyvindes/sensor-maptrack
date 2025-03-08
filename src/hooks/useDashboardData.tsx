@@ -1,5 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { SensorFolder } from "@/types/users";
 import { useProjectData } from "./useProjectData";
 import { useTrackingObjects } from "./useTrackingObjects";
@@ -32,15 +33,31 @@ export function useDashboardData() {
   const {
     handleProjectSave: projectSaveHandler,
     handleAddNewProject: addNewProjectHandler,
-    handleProjectStatusChange: projectStatusHandler
+    handleProjectStatusChange: projectStatusHandler,
+    setDefaultDataTypes,
+    isGeneratingReportOnStop
   } = useProjectManagement();
   const { handleRefresh: refreshHandler } = useDashboardActions();
 
   // Wrapper functions to maintain the same API for consumers
+  const [viewingSensorData, setViewingSensorData] = useState(false);
+
   const handleProjectSelect = (project: SensorFolder) => {
     console.log("Project selected:", project.id);
     setSelectedProject(project);
-    setEditingProject(true);
+    
+    if (project.status === "running") {
+      setViewingSensorData(true);
+      setEditingProject(false);
+    } else {
+      setViewingSensorData(false);
+      setEditingProject(true);
+    }
+  };
+
+  const handleCloseGraphs = () => {
+    setViewingSensorData(false);
+    setSelectedProject(null);
   };
 
   const handleProjectSave = async (updatedProject: SensorFolder) => {
@@ -88,6 +105,10 @@ export function useDashboardData() {
     handleProjectCancel,
     handleAddNewProject,
     handleRefresh,
-    handleProjectStatusChange
+    handleProjectStatusChange,
+    viewingSensorData,
+    handleCloseGraphs,
+    setDefaultDataTypes,
+    isGeneratingReportOnStop
   };
 }

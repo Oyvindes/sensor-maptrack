@@ -18,14 +18,32 @@ const storeSensorData = async (sensorId: string, data: any) => {
   return Promise.resolve({ success: true });
 };
 
+// Function to generate realistic sensor values
+const generateSensorValues = () => {
+  return {
+    temperature: 20 + Math.random() * 10, // 20-30°C
+    humidity: 40 + Math.random() * 30,    // 40-70%
+    battery: 80 + Math.random() * 20,     // 80-100%
+    signal: 60 + Math.random() * 40,      // 60-100%
+  };
+};
+
 // Function to collect data from a single sensor
 const collectSensorData = async (sensorId: string) => {
   try {
-    // Simulate getting real-time sensor data
+    const timestamp = new Date().toISOString();
+    const values = generateSensorValues();
+    
+    // Create data points for each sensor value
     const data = {
-      timestamp: new Date().toISOString(),
-      value: Math.random() * 100, // Replace with actual sensor reading
-      sensorId
+      timestamp,
+      sensorId,
+      values: {
+        temperature: { value: values.temperature, unit: '°C' },
+        humidity: { value: values.humidity, unit: '%' },
+        battery: { value: values.battery, unit: '%' },
+        signal: { value: values.signal, unit: '%' }
+      }
     };
     
     await storeSensorData(sensorId, data);

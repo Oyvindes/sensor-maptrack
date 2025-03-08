@@ -8,6 +8,7 @@ import SensorImeiInput from "./sensor-assignment/SensorImeiInput";
 import AssignedSensorsList from "./sensor-assignment/AssignedSensorsList";
 import AvailableSensorsList from "./sensor-assignment/AvailableSensorsList";
 import { scanSensorQrCode } from "@/utils/cameraUtils";
+import { validateSensorForCompany } from "@/services/sensor/sensorApi";
 
 interface SensorAssignmentProps {
   availableSensors: Array<{ id: string; name: string }>;
@@ -42,24 +43,37 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
     setImeiInput(e.target.value);
   };
 
-  const handleAddSensor = () => {
+  const handleAddSensor = async () => {
     if (!imeiInput.trim()) return;
-    
-    const newSensorId = `sensor-${imeiInput.replace(/[^0-9]/g, '')}`;
     
     if (!companyId) {
       toast.error("Please select a company before adding sensors");
       return;
     }
     
-    const validForCompany = Math.random() > 0.3;
-    if (!validForCompany) {
-      toast.error("This sensor IMEI does not belong to the selected company");
-      return;
-    }
+    // Show loading indicator
+    toast.loading("Validating sensor...");
     
-    onSensorToggle(newSensorId, true);
-    setImeiInput("");
+    try {
+      // Validate the sensor with the API
+      const validation = await validateSensorForCompany(imeiInput, companyId);
+      
+      // Handle validation result
+      if (validation.valid && validation.sensorId) {
+        // Add the validated sensor
+        toast.success(validation.message);
+        onSensorToggle(validation.sensorId, true);
+        setImeiInput("");
+      } else {
+        // Show error message from validation
+        toast.error(validation.message);
+      }
+    } catch (error) {
+      console.error("Error validating sensor:", error);
+      toast.error("Failed to validate sensor. Please try again.");
+    } finally {
+      toast.dismiss();
+    }
   };
 
   const handleScanQR = async () => {
@@ -67,37 +81,43 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
       setScanning(true);
       setShowScanner(true);
       
-      // This is a simulated delay to show the scanning UI
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      // Start the QR code scanning process
       const result = await scanSensorQrCode();
       
       if (result.success && result.data) {
-        // Set the IMEI input value
+        // Set the IMEI input value to show in the UI
         setImeiInput(result.data);
-        
-        // Create sensor ID from the scanned data
-        const newSensorId = `sensor-${result.data.replace(/[^0-9]/g, '')}`;
         
         if (!companyId) {
           toast.error("Please select a company before adding sensors");
           return;
         }
         
-        // Check if the sensor is valid for the company (same logic as in handleAddSensor)
-        const validForCompany = Math.random() > 0.3;
-        if (!validForCompany) {
-          toast.error("This sensor IMEI does not belong to the selected company");
-          return;
+        // Show loading indicator
+        toast.loading("Validating scanned sensor...");
+        
+        try {
+          // Validate the sensor with the company using our API
+          const validation = await validateSensorForCompany(result.data, companyId);
+          
+          if (validation.valid && validation.sensorId) {
+            // Add the validated sensor to the project
+            onSensorToggle(validation.sensorId, true);
+            
+            // Clear the input field after adding
+            setImeiInput("");
+            
+            toast.success("Sensor validated and added successfully");
+          } else {
+            // Keep the IMEI value in the input but show error message
+            toast.error(validation.message);
+          }
+        } catch (validationError) {
+          console.error("Error validating sensor:", validationError);
+          toast.error("Failed to validate sensor. Please try again.");
+        } finally {
+          toast.dismiss();
         }
-        
-        // Add the sensor to the project
-        onSensorToggle(newSensorId, true);
-        
-        // Clear the input field after adding
-        setImeiInput("");
-        
-        toast.success("QR code scanned and sensor added successfully");
       } else {
         toast.error(result.error || "Failed to scan QR code");
       }

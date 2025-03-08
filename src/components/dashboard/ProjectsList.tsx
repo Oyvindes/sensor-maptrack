@@ -1,11 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { SensorFolder } from "@/types/users";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Cpu, Camera, Play, Square } from "lucide-react";
+import { MapPin, Cpu, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { scanSensorQrCode } from "@/utils/cameraUtils";
 import { toast } from "sonner";
 import { startProjectDataCollection, stopProjectDataCollection } from "@/services/sensor/sensorDataCollection";
 
@@ -23,8 +22,6 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
   onProjectStatusChange,
   className
 }) => {
-  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
-
   const handleStatusChange = (e: React.MouseEvent, project: SensorFolder) => {
     e.stopPropagation(); // Prevent card click event
     if (onProjectStatusChange) {
@@ -48,54 +45,6 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
         console.error("Error changing project status:", error);
         toast.error("Failed to change project status");
       }
-    }
-  };
-
-  const handleCameraClick = async (e: React.MouseEvent, project: SensorFolder) => {
-    e.stopPropagation(); // Prevent card click event
-    
-    try {
-      setLoadingProjectId(project.id);
-      
-      const scanResult = await scanSensorQrCode();
-      
-      if (scanResult.success && scanResult.data) {
-        // Format the scanned IMEI as a sensor ID
-        const sensorImei = scanResult.data.replace(/[^0-9]/g, '');
-        const sensorId = `sensor-${sensorImei}`;
-        
-        // Check if sensor already assigned to this project
-        if (project.assignedSensorIds?.includes(sensorId)) {
-          toast.info("This sensor is already assigned to this project");
-        } else {
-          // Here we would typically update the project with the new sensor
-          // via an API call. For now, we'll just log it.
-          console.log(`Sensor ${sensorId} scanned for project ${project.id}`);
-          
-          // Create a copy of the project with the new sensor added
-          const updatedProject = { 
-            ...project,
-            assignedSensorIds: [...(project.assignedSensorIds || []), sensorId]
-          };
-          
-          // Simulate updating the project
-          // In a real application, this would be part of an API call
-          // or dispatched to a state management system
-          setTimeout(() => {
-            toast.success(`Sensor ${sensorImei} added to ${project.name}`);
-            
-            // Re-select the project to effectively refresh it
-            onProjectSelect(updatedProject);
-          }, 500);
-        }
-      } else {
-        toast.error(scanResult.error || "Failed to scan sensor");
-      }
-    } catch (error) {
-      toast.error("Failed to process sensor scan");
-      console.error("Camera error:", error);
-    } finally {
-      setLoadingProjectId(null);
     }
   };
 
@@ -154,33 +103,18 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                     •
                   </span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => handleStatusChange(e, project)}
-                  >
-                    {project.status === "running" ? (
-                      <Square className="h-3 w-3 text-red-500" />
-                    ) : (
-                      <Play className="h-3 w-3 text-green-500" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => handleCameraClick(e, project)}
-                    disabled={loadingProjectId === project.id}
-                  >
-                    {loadingProjectId === project.id ? (
-                      <div className="h-3 w-3 rounded-full border-2 border-t-transparent animate-spin" />
-                    ) : (
-                      <Camera className="h-3 w-3" />
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => handleStatusChange(e, project)}
+                >
+                  {project.status === "running" ? (
+                    <Square className="h-3 w-3 text-red-500" />
+                  ) : (
+                    <Play className="h-3 w-3 text-green-500" />
+                  )}
+                </Button>
               </div>
             </div>
           </CardContent>

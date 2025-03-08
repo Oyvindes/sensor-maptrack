@@ -4,6 +4,7 @@ import { RefreshCcw, Plus, Settings } from "lucide-react";
 import { getCurrentUser } from "@/services/authService";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import PdfSettingsButton from "./PdfSettingsButton";
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
@@ -20,7 +21,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <div className="sticky top-0 z-10 w-full backdrop-blur-md bg-background/80">
       <div className="container py-3 flex justify-between items-center">
-        <div>
+        <div className="flex flex-col">
           <h1 className="text-xl font-semibold">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Welcome back, {currentUser?.name || 'User'}
@@ -28,6 +29,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <PdfSettingsButton />
           {onAddNewProject && (
             <Button 
               variant="outline" 

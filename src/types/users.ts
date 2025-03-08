@@ -19,6 +19,22 @@ export interface User {
   isCompanyAdmin?: boolean; // New field to mark users as company admins
 }
 
+export interface PdfRecord {
+  id: string;
+  filename: string;
+  createdAt: string;
+  createdBy?: string;
+  creatorName?: string;
+  blobUrl?: string; // For immediate viewing in the session
+}
+
+export interface SensorPlacementImage {
+  sensorId: string;
+  imageUrl: string;
+  caption?: string;
+  createdAt: string;
+}
+
 export interface SensorFolder {
   id: string;
   name: string;
@@ -34,6 +50,9 @@ export interface SensorFolder {
   location?: { lat: number; lng: number } | string; // New field for geolocation
   status?: "running" | "stopped"; // Project running status
   startedAt?: string; // Timestamp when project was last started
+  stoppedAt?: string; // Timestamp when project was last stopped
+  pdfHistory?: PdfRecord[]; // History of generated PDF reports
+  sensorPlacementImages?: SensorPlacementImage[]; // Images showing sensor placements
 }
 
 export interface LoginCredentials {

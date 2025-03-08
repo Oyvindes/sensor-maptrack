@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import SensorDataGraphs from "./dashboard/SensorDataGraphs";
 import { PageContainer, ContentContainer } from "./Layout";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import DashboardHeader from "./dashboard/DashboardHeader";
@@ -25,7 +26,9 @@ const Dashboard: React.FC = () => {
     handleProjectCancel,
     handleAddNewProject,
     handleRefresh,
-    handleProjectStatusChange
+    handleProjectStatusChange,
+    viewingSensorData,
+    handleCloseGraphs
   } = useDashboardData();
 
   // Get companies for the folder editor
@@ -49,7 +52,12 @@ const Dashboard: React.FC = () => {
       />
 
       <ContentContainer>
-        {editingProject && selectedProject ? (
+        {viewingSensorData && selectedProject ? (
+          <SensorDataGraphs
+            project={selectedProject}
+            onClose={handleCloseGraphs}
+          />
+        ) : editingProject && selectedProject ? (
           <SensorFolderEditor
             folder={selectedProject}
             companies={companies}

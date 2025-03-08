@@ -32,7 +32,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         </div>
         <div>
           <ProjectsList
-            projects={projects}
+            projects={projects.filter(p => p.status === "running")}
             isLoading={isLoading}
             onProjectSelect={onProjectSelect}
             onProjectStatusChange={onProjectStatusChange}

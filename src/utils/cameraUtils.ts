@@ -26,56 +26,48 @@ export function stopCameraStream() {
  */
 export async function takePicture(): Promise<string | null> {
   try {
-    console.log('Starting camera capture process...');
+    console.log('Starting capture process...');
     
     // Check if we're on Android
     const isAndroid = /android/i.test(navigator.userAgent);
     
-    // Try Capacitor first if available (best for native apps)
-    const hasCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor;
-    
-    if (hasCapacitor) {
-      try {
-        console.log('Using Capacitor camera API');
-        
-        // Explicitly configure for QR/Barcode scanning
-        const image = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false, // Must be false for QR scanning
-          resultType: CameraResultType.Uri,
-          source: CameraSource.Camera, // Force camera source not gallery
-          direction: CameraDirection.Rear, // Use rear camera for scanning
-          correctOrientation: true,
-          promptLabelHeader: 'Scan QR Code',
-          promptLabelCancel: 'Cancel',
-          promptLabelPhoto: 'Scan QR Code',
-          saveToGallery: false, // Don't save QR code images to gallery
-          webUseInput: false, // Don't use file input on web
-          width: 1024, // Optimal for QR scanning
-          height: 1024
-        });
-        
-        console.log('Camera captured QR image:', image?.webPath || 'No image captured');
-        return image.webPath || null;
-      } catch (capacitorError) {
-        console.error('Capacitor camera error:', capacitorError);
-        console.log('Falling back to browser camera API');
+    // On Android devices, try Capacitor camera API first
+    if (isAndroid) {
+      const hasCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor;
+      
+      if (hasCapacitor) {
+        try {
+          console.log('Using Capacitor camera API for Android device');
+          
+          // Explicitly configure for QR/Barcode scanning
+          const image = await Camera.getPhoto({
+            quality: 90,
+            allowEditing: false, // Must be false for QR scanning
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera, // Force camera source not gallery
+            direction: CameraDirection.Rear, // Use rear camera for scanning
+            correctOrientation: true,
+            promptLabelHeader: 'Scan QR Code',
+            promptLabelCancel: 'Cancel',
+            promptLabelPhoto: 'Scan QR Code',
+            saveToGallery: false, // Don't save QR code images to gallery
+            webUseInput: true, // Allow fallback to file input on web if camera fails
+            width: 1024, // Optimal for QR scanning
+            height: 1024
+          });
+          
+          console.log('Camera captured QR image:', image?.webPath || 'No image captured');
+          return image.webPath || null;
+        } catch (capacitorError) {
+          console.error('Capacitor camera error on Android:', capacitorError);
+          // For Android, return null to allow falling back to native camera
+          return null;
+        }
       }
     }
     
-    // If not on Android or Capacitor failed, try browser camera API
-    if (!isAndroid && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        console.log('Using browser camera API');
-        return await useBrowserCamera();
-      } catch (browserCameraError) {
-        console.error('Browser camera error:', browserCameraError);
-        console.log('Falling back to file input method');
-      }
-    }
-    
-    // Last resort: use file input method
-    console.log('Using file input method as fallback');
+    // For PC (non-Android) or if Android Capacitor failed, skip camera and use file input directly
+    console.log('Using file input method for PC or as Android fallback');
     return await useFileInput();
   } catch (error) {
     console.error('Error in takePicture:', error);
@@ -84,17 +76,14 @@ export async function takePicture(): Promise<string | null> {
   }
 }
 
+// Browser camera API is not used on PC - only file upload is allowed
+
 /**
- * Uses the browser's camera API to capture an image
+ * Uses a file input to select an image
  * @returns Promise with the image data URL or null if failed
  */
-async function useBrowserCamera(): Promise<string | null> {
-  // First, make sure any existing stream is stopped
-  stopCameraStream();
-  
-  // Create video and canvas elements for camera capture
-  const video = document.createElement('video');
-  const canvas = document.createElement('canvas');
+async function useFileInput(): Promise<string | null> {
+  // Create container for file input UI
   const container = document.createElement('div');
   
   // Style the container
@@ -109,22 +98,36 @@ async function useBrowserCamera(): Promise<string | null> {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    padding: '20px'
   });
   
-  // Style the video element
-  Object.assign(video.style, {
-    width: '100%',
-    maxWidth: '400px',
-    maxHeight: '70vh',
-    objectFit: 'contain',
-    marginBottom: '20px'
+  // Create a message
+  const message = document.createElement('div');
+  const isPc = !/android/i.test(navigator.userAgent);
+  message.innerHTML = isPc ?
+    'Please select an image file containing a QR code<br/><small>(Camera scanning is disabled on PC)</small>' :
+    'Please select a QR code image from your device';
+  Object.assign(message.style, {
+    color: 'white',
+    fontSize: '16px',
+    marginBottom: '20px',
+    textAlign: 'center'
   });
   
-  // Create capture button
-  const captureButton = document.createElement('button');
-  captureButton.textContent = 'Capture QR Code';
-  Object.assign(captureButton.style, {
+  // Create a file input element
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  (input as any).capture = 'environment'; // Use the camera if available
+  Object.assign(input.style, {
+    display: 'none' // Hide the actual input
+  });
+  
+  // Create a button to trigger file selection
+  const selectButton = document.createElement('button');
+  selectButton.textContent = 'Select Image';
+  Object.assign(selectButton.style, {
     padding: '10px 20px',
     backgroundColor: '#4CAF50',
     color: 'white',
@@ -149,159 +152,46 @@ async function useBrowserCamera(): Promise<string | null> {
   });
   
   // Add elements to container
-  container.appendChild(video);
-  container.appendChild(captureButton);
+  container.appendChild(message);
+  container.appendChild(selectButton);
+  container.appendChild(input);
   container.appendChild(cancelButton);
   
   // Add container to document
   document.body.appendChild(container);
   
-  // Create a promise that resolves when a picture is taken or cancelled
-  return new Promise<string | null>(async (resolve) => {
-    try {
-      // Request camera access
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }, // Use back camera if available
-        audio: false
-      });
-      
-      // Store the stream to be able to stop it later
-      activeVideoStream = stream;
-      
-      // Set up video element with the stream
-      video.srcObject = stream;
-      video.setAttribute('playsinline', 'true'); // Required for iOS
-      video.play();
-      
-      // Set up canvas with video dimensions once metadata is loaded
-      video.onloadedmetadata = () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-      };
-      
-      // Handle capture button click
-      captureButton.onclick = () => {
-        // Draw current video frame to canvas
-        const context = canvas.getContext('2d');
-        if (context) {
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
-          // Convert canvas to data URL
-          const imageData = canvas.toDataURL('image/png');
-          
-          // Clean up
-          stopCameraStream();
-          document.body.removeChild(container);
-          
-          // Resolve with the image data
-          resolve(imageData);
-        } else {
-          console.error('Could not get canvas context');
-          resolve(null);
-        }
-      };
-      
-      // Handle cancel button click
-      cancelButton.onclick = () => {
-        // Clean up
-        stopCameraStream();
-        document.body.removeChild(container);
-        
-        // Resolve with null
-        resolve(null);
-      };
-      
-      // Set up automatic QR code detection
-      const { processQRCodeImage } = await import('./qrCodeUtils');
-      
-      // Process frames from the video stream to detect QR codes
-      const scanInterval = setInterval(async () => {
-        if (!activeVideoStream) {
-          clearInterval(scanInterval);
-          return;
-        }
-        
-        // Draw current video frame to canvas
-        const context = canvas.getContext('2d');
-        if (context) {
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
-          // Convert canvas to data URL
-          const imageData = canvas.toDataURL('image/png');
-          
-          // Process the image to extract QR code data
-          const qrData = await processQRCodeImage(imageData);
-          
-          if (qrData) {
-            console.log("QR code detected automatically:", qrData);
-            
-            // Clean up
-            clearInterval(scanInterval);
-            stopCameraStream();
-            document.body.removeChild(container);
-            
-            // Resolve with the image data
-            resolve(imageData);
-          }
-        }
-      }, 500); // Check every 500ms
-      
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      
-      // Clean up container without showing error
-      document.body.removeChild(container);
-      
-      // Just resolve with null to allow fallback to next method
-      resolve(null);
-    }
-  });
-}
-
-/**
- * Uses a file input to select an image
- * @returns Promise with the image data URL or null if failed
- */
-async function useFileInput(): Promise<string | null> {
-  // Create a file input element
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  (input as any).capture = 'environment'; // Use the camera if available
-  
   // Create a promise that resolves when the file is selected
-  const filePromise = new Promise<string | null>((resolve) => {
+  return new Promise<string | null>((resolve) => {
+    selectButton.onclick = () => {
+      input.click();
+    };
+    
     input.onchange = (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = () => {
+          document.body.removeChild(container);
           resolve(reader.result as string);
         };
         reader.onerror = () => {
           console.error('Error reading file');
+          document.body.removeChild(container);
           resolve(null);
         };
         reader.readAsDataURL(file);
       } else {
+        // No file selected
         resolve(null);
       }
     };
     
     // Handle cancel case
-    setTimeout(() => {
-      if (!input.files || input.files.length === 0) {
-        console.log('File selection cancelled or timed out');
-        resolve(null);
-      }
-    }, 100000); // 100 second timeout
+    cancelButton.onclick = () => {
+      document.body.removeChild(container);
+      resolve(null);
+    };
   });
-  
-  // Trigger the file input click
-  input.click();
-  
-  // Wait for the file to be selected
-  return await filePromise;
 }
 
 /**
