@@ -152,7 +152,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 
   if (isLoading || !isGeocodingComplete) {
     return (
-      <div className={cn("glass-card rounded-xl animate-pulse-soft", className)}>
+      <div className={cn("animate-pulse-soft", className)}>
         <div className="h-full flex items-center justify-center">
           <p className="text-muted-foreground">
             {!isGeocodingComplete ? "Geocoding addresses..." : "Loading projects map..."}
@@ -164,10 +164,11 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 
   if (projectsWithLocation.length === 0) {
     return (
-      <div className={cn("glass-card rounded-xl p-4", className)}>
+      <div className={cn("p-4", className)}>
         <div className="h-full flex flex-col items-center justify-center space-y-2">
           <MapPin className="h-12 w-12 text-muted-foreground opacity-50" />
-          <p className="text-muted-foreground">No projects with location data found</p>
+          <p className="text-muted-foreground">No running projects found</p>
+          <p className="text-xs text-muted-foreground">Start a project to see it on the map</p>
         </div>
       </div>
     );

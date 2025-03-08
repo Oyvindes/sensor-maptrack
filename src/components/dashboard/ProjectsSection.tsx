@@ -20,25 +20,29 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 }) => {
   return (
     <SectionContainer>
-      <SectionTitle>Projects Map</SectionTitle>
+      <SectionTitle>Running Projects Map</SectionTitle>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <ProjectsMap 
-            projects={projects} 
+        <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden">
+          <ProjectsMap
+            projects={projects.filter(p => p.status === "running")}
             isLoading={isLoading}
             onProjectSelect={onProjectSelect}
             className="w-full h-[400px] animate-fade-up [animation-delay:300ms]"
           />
         </div>
-        <div>
-          <h3 className="text-base font-semibold mb-2 animate-fade-up [animation-delay:350ms]">Started Projects</h3>
-          <ProjectsList
-            projects={projects.filter(p => p.status === "running")}
-            isLoading={isLoading}
-            onProjectSelect={onProjectSelect}
-            onProjectStatusChange={onProjectStatusChange}
-            className="h-[400px] overflow-auto animate-fade-up [animation-delay:400ms]"
-          />
+        <div className="flex flex-col glass-card rounded-xl h-[433px]"> {/* Match the height of the map container + title */}
+          <h3 className="text-base font-semibold p-3 border-b border-border animate-fade-up [animation-delay:350ms]">
+            Started Projects
+          </h3>
+          <div className="flex-1 overflow-hidden">
+            <ProjectsList
+              projects={projects.filter(p => p.status === "running")}
+              isLoading={isLoading}
+              onProjectSelect={onProjectSelect}
+              onProjectStatusChange={onProjectStatusChange}
+              className="h-full overflow-auto animate-fade-up [animation-delay:400ms]"
+            />
+          </div>
         </div>
       </div>
     </SectionContainer>

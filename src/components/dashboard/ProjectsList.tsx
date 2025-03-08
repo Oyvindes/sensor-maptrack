@@ -65,9 +65,10 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 
   if (projects.length === 0) {
     return (
-      <div className={cn("glass-card rounded-xl p-4", className)}>
+      <div className={cn("p-4", className)}>
         <div className="h-full flex flex-col items-center justify-center space-y-2">
-          <p className="text-muted-foreground">No projects found</p>
+          <p className="text-muted-foreground">No started projects</p>
+          <p className="text-xs text-muted-foreground">Projects will appear here when started</p>
         </div>
       </div>
     );
