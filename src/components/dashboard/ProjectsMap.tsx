@@ -47,6 +47,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
             const parsed = JSON.parse(project.location);
             if (parsed && 'lat' in parsed && 'lng' in parsed) {
               processed[i].location = parsed;
+              console.log(`Parsed location for project ${project.id}:`, parsed);
               continue;
             }
           } catch (e) {
@@ -60,6 +61,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
           try {
             console.log(`Geocoding address for project ${project.id}: ${project.address}`);
             const coords = await getAddressCoordinates(project.address);
+            console.log(`Received coordinates for project ${project.id}:`, coords);
             processed[i].location = coords;
           } catch (e) {
             console.error(`Geocoding failed for project ${project.id}:`, e);
@@ -90,12 +92,18 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
     if (typeof project.location === 'string') {
       try {
         locationData = JSON.parse(project.location);
+        console.log(`Parsed string location for project ${project.id}:`, locationData);
       } catch (e) {
-        console.error(`Using default location for project ${project.id}`);
+        console.error(`Using default location for project ${project.id}, parsing error:`, e);
         locationData = { lat: 61.497, lng: 8.468 }; // Central Norway coordinates
       }
-    } else {
+    } else if (project.location && typeof project.location === 'object' && 'lat' in project.location && 'lng' in project.location) {
+      // Already in the correct format
       locationData = project.location as Location;
+      console.log(`Using object location for project ${project.id}:`, locationData);
+    } else {
+      console.error(`Invalid location format for project ${project.id}:`, project.location);
+      locationData = { lat: 61.497, lng: 8.468 }; // Central Norway coordinates
     }
     
     return {

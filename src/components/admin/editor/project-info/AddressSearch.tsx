@@ -71,73 +71,15 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
         setSuggestions(addressSuggestions);
         setShowSuggestions(true);
       } else {
-        // Mock addresses from across Norway with real coordinates
-        const mockAddresses: AddressSuggestion[] = [
-          {
-            address: "Karl Johans gate 31",
-            postcode: "0159",
-            city: "Oslo",
-            lat: 59.9138,
-            lng: 10.7387
-          },
-          {
-            address: "Bryggen 15",
-            postcode: "5003",
-            city: "Bergen",
-            lat: 60.3973,
-            lng: 5.3241
-          },
-          {
-            address: "Munkegata 1",
-            postcode: "7013",
-            city: "Trondheim",
-            lat: 63.4305,
-            lng: 10.3951
-          },
-          {
-            address: "Storgata 10",
-            postcode: "9008",
-            city: "Tromsø",
-            lat: 69.6489,
-            lng: 18.9551
-          },
-          {
-            address: "Kirkegata 15",
-            postcode: "4006",
-            city: "Stavanger",
-            lat: 58.9701,
-            lng: 5.7333
-          }
-        ];
-        
-        setSuggestions(mockAddresses);
-        setShowSuggestions(true);
-        toast.warning("Using sample Norwegian addresses - no exact match found");
+        setSuggestions([]);
+        setShowSuggestions(false);
+        toast.warning("No matching addresses found. Please try a different search term.");
       }
     } catch (error) {
       console.error("Error fetching address suggestions:", error);
-      toast.error("Failed to fetch address data");
-      
-      // Backup addresses from major Norwegian cities if API fails
-      const mockAddresses: AddressSuggestion[] = [
-        {
-          address: "Karl Johans gate 1",
-          postcode: "0154",
-          city: "Oslo",
-          lat: 59.9127,
-          lng: 10.7461
-        },
-        {
-          address: "Bryggen 1",
-          postcode: "5003",
-          city: "Bergen",
-          lat: 60.3973,
-          lng: 5.3241
-        }
-      ];
-      
-      setSuggestions(mockAddresses);
-      setShowSuggestions(true);
+      toast.error("Failed to fetch address data. Please check your connection and try again.");
+      setSuggestions([]);
+      setShowSuggestions(false);
     } finally {
       setIsSearching(false);
     }

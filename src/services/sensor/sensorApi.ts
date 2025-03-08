@@ -64,13 +64,15 @@ export const validateSensorForCompany = async (
   
   // Clean the IMEI/ID and format it as an ID
   const cleanedImei = sensorImei.replace(/\D/g, '');
-  const sensorId = `sensor-${cleanedImei}`;
+  // Try both formats - with and without the "sensor-" prefix
+  const sensorId = cleanedImei;
+  const legacySensorId = `sensor-${cleanedImei}`;
   
   // Simulate server validation with mock data
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Find the sensor in our mock database
-      const sensor = sensors.find(s => s.id === sensorId);
+      // Find the sensor in our mock database with either id format
+      const sensor = sensors.find(s => s.id === sensorId || s.id === legacySensorId);
       
       if (!sensor) {
         resolve({

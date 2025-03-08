@@ -4,6 +4,31 @@ import { SensorData } from "@/components/SensorCard";
 export const getMockSensors = (): (SensorData & { folderId?: string, companyId: string })[] => {
   return [
     {
+      id: "123548561254875", // Using the IMEI directly as identifier
+      name: "Briks Sensor IMEI-123548561254875",
+      imei: "123548561254875", // Adding the IMEI as a separate field
+      values: [
+        {
+          type: "temperature",
+          value: 21.3,
+          unit: "°C",
+        },
+        {
+          type: "humidity",
+          value: 48.7,
+          unit: "%",
+        },
+        {
+          type: "battery",
+          value: 95,
+          unit: "%",
+        }
+      ],
+      status: "online",
+      lastUpdated: new Date().toLocaleTimeString(),
+      companyId: "company-004" // Briks company ID
+    },
+    {
       id: "sensor-001",
       name: "Environmental Sensor 1",
       values: [

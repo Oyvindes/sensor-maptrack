@@ -101,26 +101,29 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult> 
 };
 
 /**
- * Get coordinates for an address, with fallback to central Norway
- * Uses cached results when available
+ * Format coordinates to a consistent number of decimal places
+ * This ensures consistent display across the application
  */
-const geocodingCache = new Map<string, GeocodingResult>();
+export const formatCoordinates = (lat: number, lng: number, decimals: number = 5): { lat: number; lng: number } => {
+  return {
+    lat: parseFloat(lat.toFixed(decimals)),
+    lng: parseFloat(lng.toFixed(decimals))
+  };
+};
 
+/**
+ * Get coordinates for an address, with fallback to central Norway
+ * No caching - always fetch fresh results
+ */
 export const getAddressCoordinates = async (address: string): Promise<{ lat: number; lng: number }> => {
   if (!address) {
     return NORWAY_DEFAULT;
   }
   
-  // Check cache first
-  if (geocodingCache.has(address)) {
-    return geocodingCache.get(address) as GeocodingResult;
-  }
-  
-  // Otherwise geocode the address
+  // Always geocode the address (no caching)
   const result = await geocodeAddress(address);
+  console.log(`Fresh geocoding result for ${address}:`, result);
   
-  // Cache the result
-  geocodingCache.set(address, result);
-  
-  return { lat: result.lat, lng: result.lng };
+  // Format coordinates to consistent decimal places
+  return formatCoordinates(result.lat, result.lng);
 };
