@@ -9,7 +9,260 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          created_at: string | null
+          id: string
+          industry: string | null
+          name: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          name: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          name?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      folder_sensors: {
+        Row: {
+          created_at: string | null
+          folder_id: string | null
+          id: string
+          sensor_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          sensor_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          sensor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_sensors_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "sensor_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folder_sensors_sensor_id_fkey"
+            columns: ["sensor_id"]
+            isOneToOne: false
+            referencedRelation: "sensors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_pdfs: {
+        Row: {
+          created_at: string | null
+          creator_id: string | null
+          creator_name: string | null
+          filename: string
+          folder_id: string | null
+          id: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id?: string | null
+          creator_name?: string | null
+          filename: string
+          folder_id?: string | null
+          id?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string | null
+          creator_name?: string | null
+          filename?: string
+          folder_id?: string | null
+          id?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_pdfs_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "sensor_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sensor_folders: {
+        Row: {
+          address: string | null
+          company_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          location: Json | null
+          name: string
+          project_number: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location?: Json | null
+          name: string
+          project_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location?: Json | null
+          name?: string
+          project_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sensor_folders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sensor_values: {
+        Row: {
+          created_at: string | null
+          id: string
+          sensor_id: string | null
+          type: string
+          unit: string
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          sensor_id?: string | null
+          type: string
+          unit: string
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          sensor_id?: string | null
+          type?: string
+          unit?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sensor_values_sensor_id_fkey"
+            columns: ["sensor_id"]
+            isOneToOne: false
+            referencedRelation: "sensors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sensors: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          folder_id: string | null
+          id: string
+          imei: string | null
+          name: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          imei?: string | null
+          name: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          imei?: string | null
+          name?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tracking_objects: {
+        Row: {
+          battery_level: number | null
+          company_id: string | null
+          direction: number | null
+          id: string
+          last_updated: string | null
+          name: string
+          position: Json
+          speed: number | null
+        }
+        Insert: {
+          battery_level?: number | null
+          company_id?: string | null
+          direction?: number | null
+          id?: string
+          last_updated?: string | null
+          name: string
+          position: Json
+          speed?: number | null
+        }
+        Update: {
+          battery_level?: number | null
+          company_id?: string | null
+          direction?: number | null
+          id?: string
+          last_updated?: string | null
+          name?: string
+          position?: Json
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_objects_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
