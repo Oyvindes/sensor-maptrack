@@ -1,6 +1,11 @@
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
 import { formatCoordinates } from "../geocodingService";
+import { 
+  fetchSensorFolders, 
+  saveSensorFolder,
+  updateProjectStatus
+} from "./supabaseFolderService";
 
 /**
  * Format a project's address and coordinates for consistent display
@@ -45,55 +50,48 @@ export const formatProjectAddressDisplay = (project: SensorFolder): string => {
   return displayText;
 };
 
-// No mockup data for projects - UI will handle empty state gracefully
-export const getMockSensorFolders = (): SensorFolder[] => {
-  // Return an empty array instead of mock data
-  return [];
+// Replace mock data with real database calls
+export const getMockSensorFolders = async (): Promise<SensorFolder[]> => {
+  return await fetchSensorFolders();
 };
 
 export const createSensorFolder = async (
   folderData: Omit<SensorFolder, "id" | "createdAt">
 ): Promise<{ success: boolean; data: SensorFolder; message: string }> => {
-  console.log("Creating new project:", folderData);
-  
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newId = `folder-${Date.now().toString().slice(-3)}`;
-      const createdFolder: SensorFolder = { 
-        ...folderData, 
-        id: newId, 
-        createdAt: new Date().toISOString().split('T')[0] 
-      };
-      
-      const result = {
-        success: true,
-        data: createdFolder,
-        message: `Project ${createdFolder.name} created successfully`,
-      };
-      
-      toast.success(result.message);
-      resolve(result);
-    }, 800);
-  });
+  // Convert to a SensorFolder by adding temp ID
+  const tempFolder: SensorFolder = {
+    ...folderData,
+    id: `temp-${Date.now()}`,
+    createdAt: new Date().toISOString().split('T')[0]
+  };
+
+  return await saveSensorFolder(tempFolder);
 };
 
 export const updateSensorFolder = async (
   folderId: string,
   data: Partial<SensorFolder>
 ): Promise<{ success: boolean; message: string }> => {
-  console.log(`Updating project ${folderId}`, data);
+  // First get the current folder data
+  const folders = await fetchSensorFolders();
+  const existingFolder = folders.find(f => f.id === folderId);
   
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const result = {
-        success: true,
-        message: `Project ${folderId} updated successfully`,
-      };
-      
-      toast.success(result.message);
-      resolve(result);
-    }, 800);
-  });
+  if (!existingFolder) {
+    return {
+      success: false,
+      message: `Project with ID ${folderId} not found`
+    };
+  }
+
+  // Merge with updates
+  const updatedFolder: SensorFolder = {
+    ...existingFolder,
+    ...data
+  };
+
+  const result = await saveSensorFolder(updatedFolder);
+  return {
+    success: result.success,
+    message: result.message
+  };
 };

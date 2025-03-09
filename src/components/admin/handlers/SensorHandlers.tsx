@@ -2,6 +2,7 @@
 import { SensorData } from "@/components/SensorCard";
 import { getCurrentUser } from "@/services/authService";
 import { toast } from "sonner";
+import { saveSensor } from "@/services/sensor/supabaseSensorService";
 
 export interface SensorHandlers {
   handleSensorSelect: (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => void;
@@ -42,32 +43,42 @@ export function useSensorHandlers(
     setMode("editSensor");
   };
 
-  const handleSensorSave = (updatedSensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => {
+  const handleSensorSave = async (updatedSensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => {
     // Check permissions again before saving
     if (!canEditSensor(updatedSensor)) {
       toast.error("You don't have permission to modify this sensor");
       return;
     }
     
-    setSensors(prevSensors => {
-      // Check if we're updating an existing sensor
-      const existingIndex = prevSensors.findIndex(s => s.id === updatedSensor.id);
+    try {
+      // Save to Supabase
+      const result = await saveSensor(updatedSensor);
       
-      if (existingIndex >= 0) {
-        // Update existing sensor
-        const newSensors = [...prevSensors];
-        newSensors[existingIndex] = updatedSensor;
-        return newSensors;
-      } else {
-        // Add new sensor
-        return [...prevSensors, updatedSensor];
+      if (!result.success) {
+        throw new Error(result.message);
       }
-    });
-    
-    setMode("listSensors");
-    setSelectedSensor(null);
-    
-    toast.success(`Sensor ${updatedSensor.name} saved successfully`);
+
+      // Update local state
+      if (result.data) {
+        const isNew = !sensors.some(s => s.id === result.data?.id);
+        
+        if (isNew) {
+          setSensors([...sensors, result.data]);
+        } else {
+          setSensors(
+            sensors.map(s => s.id === result.data?.id ? result.data : s)
+          );
+        }
+      }
+      
+      setMode("listSensors");
+      setSelectedSensor(null);
+      
+      toast.success(result.message);
+    } catch (error) {
+      console.error('Error saving sensor:', error);
+      toast.error('Failed to save sensor: ' + error.message);
+    }
   };
 
   const handleSensorCancel = () => {
@@ -87,7 +98,7 @@ export function useSensorHandlers(
       : currentUser.companyId;
     
     setSelectedSensor({
-      id: `sensor-${Date.now().toString().slice(-3)}`,
+      id: `temp-${Date.now()}`,
       name: "",
       values: [{
         type: "temperature",
@@ -101,7 +112,7 @@ export function useSensorHandlers(
     setMode("editSensor");
   };
   
-  const handleImportSensors = (importedSensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[]) => {
+  const handleImportSensors = async (importedSensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[]) => {
     if (!currentUser) {
       toast.error("You must be logged in to import sensors");
       return;
@@ -121,14 +132,41 @@ export function useSensorHandlers(
     const newSensors = importedSensors.filter(s => !existingImeis.includes(s.imei));
     const duplicates = importedSensors.length - newSensors.length;
     
-    // Add the new sensors to the existing sensors
-    setSensors(prevSensors => [...prevSensors, ...newSensors]);
+    // Save each new sensor to the database
+    const savedSensors = [];
+    const failedSensors = [];
     
-    // Show success message
-    toast.success(
-      `Imported ${newSensors.length} sensors successfully` + 
-      (duplicates > 0 ? ` (${duplicates} duplicates skipped)` : "")
-    );
+    for (const sensor of newSensors) {
+      try {
+        const result = await saveSensor(sensor);
+        if (result.success && result.data) {
+          savedSensors.push(result.data);
+        } else {
+          failedSensors.push(sensor);
+        }
+      } catch (error) {
+        console.error("Error saving imported sensor:", error);
+        failedSensors.push(sensor);
+      }
+    }
+    
+    // Add the new sensors to the existing sensors
+    if (savedSensors.length > 0) {
+      setSensors(prevSensors => [...prevSensors, ...savedSensors]);
+    }
+    
+    // Show success/error message
+    if (savedSensors.length > 0) {
+      toast.success(
+        `Imported ${savedSensors.length} sensors successfully` + 
+        (duplicates > 0 ? ` (${duplicates} duplicates skipped)` : "") +
+        (failedSensors.length > 0 ? ` (${failedSensors.length} failed)` : "")
+      );
+    } else if (failedSensors.length > 0) {
+      toast.error(`Failed to import ${failedSensors.length} sensors`);
+    } else if (duplicates > 0) {
+      toast.info(`All ${duplicates} sensors already exist in the database`);
+    }
     
     setMode("listSensors");
   };

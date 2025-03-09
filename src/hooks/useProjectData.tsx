@@ -21,8 +21,8 @@ export function useProjectData() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const sensorsData = getMockSensors();
-        const projectsData = getMockSensorFolders();
+        const sensorsData = await getMockSensors();
+        const projectsData = await getMockSensorFolders();
         
         // Filter out sensors that don't have a folderId
         const filteredSensors = sensorsData.filter(sensor => sensor.folderId);
@@ -44,6 +44,7 @@ export function useProjectData() {
 
     fetchData();
     
+    // Set up a simulated data update interval for UI testing
     const interval = setInterval(() => {
       setSensors(prev => 
         prev.map(sensor => ({

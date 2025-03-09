@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SensorFolder, Company } from "@/types/users";
 import { toast } from "sonner";
 import { AdminMode } from "@/hooks/useAdminState";
+import { saveSensorFolder } from "@/services/folder/supabaseFolderService";
 
 export const useFolderHandlers = (
   sensorFolders: SensorFolder[],
@@ -33,34 +34,34 @@ export const useFolderHandlers = (
     setIsUpdatingFolder(true);
 
     try {
-      // Simulate an API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Check if we're editing an existing folder or creating a new one
-      if (sensorFolders.some(f => f.id === updatedFolder.id)) {
-        setSensorFolders(
-          sensorFolders.map(folder => 
-            folder.id === updatedFolder.id ? updatedFolder : folder
-          )
-        );
-        toast.success('Project updated successfully');
-      } else {
-        // Create new folder with a real ID
-        const newFolder = {
-          ...updatedFolder,
-          id: `folder-${Date.now()}`,
-          createdAt: new Date().toISOString().split('T')[0]
-        };
-        
-        setSensorFolders([...sensorFolders, newFolder]);
-        toast.success('Project created successfully');
+      // Save to Supabase
+      const result = await saveSensorFolder(updatedFolder);
+      
+      if (!result.success) {
+        throw new Error(result.message);
       }
 
+      // Update local state
+      if (result.data) {
+        const isNew = !sensorFolders.some(f => f.id === result.data?.id);
+        
+        if (isNew) {
+          setSensorFolders([...sensorFolders, result.data]);
+        } else {
+          setSensorFolders(
+            sensorFolders.map(folder => 
+              folder.id === result.data?.id ? result.data : folder
+            )
+          );
+        }
+      }
+      
+      toast.success(result.message);
       setMode("listFolders" as AdminMode);
       setSelectedFolder(null);
     } catch (error) {
       console.error('Error saving folder:', error);
-      toast.error('Failed to save project');
+      toast.error('Failed to save project: ' + error.message);
     } finally {
       setIsUpdatingFolder(false);
     }

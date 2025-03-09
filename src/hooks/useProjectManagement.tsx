@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { SensorFolder } from "@/types/users";
 import { getCurrentUser } from '@/services/authService';
 import { useState } from "react";
+import { saveSensorFolder, updateProjectStatus } from '@/services/folder/supabaseFolderService';
+import { fetchSensors } from "@/services/sensor/supabaseSensorService";
 
 export function useProjectManagement() {
   const [isGeneratingReportOnStop, setIsGeneratingReportOnStop] = useState(false);
@@ -20,34 +22,34 @@ export function useProjectManagement() {
     setIsUpdatingProject(true);
 
     try {
-      // Simulate an API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Check if we're editing an existing project or creating a new one
-      if (projects.some(p => p.id === updatedProject.id)) {
-        setProjects(
-          projects.map(project => 
-            project.id === updatedProject.id ? updatedProject : project
-          )
-        );
-        toast.success('Project updated successfully');
-      } else {
-        // Create new project with a real ID
-        const newProject = {
-          ...updatedProject,
-          id: `folder-${Date.now()}`,
-          createdAt: new Date().toISOString().split('T')[0]
-        };
-        
-        setProjects([...projects, newProject]);
-        toast.success('Project created successfully');
+      // Save to Supabase
+      const result = await saveSensorFolder(updatedProject);
+      
+      if (!result.success) {
+        throw new Error(result.message);
       }
 
+      // Update local state with the saved project that has proper IDs
+      if (result.data) {
+        const isNew = !projects.some(p => p.id === result.data?.id);
+        
+        if (isNew) {
+          setProjects([...projects, result.data]);
+        } else {
+          setProjects(
+            projects.map(project => 
+              project.id === result.data?.id ? result.data : project
+            )
+          );
+        }
+      }
+      
+      toast.success(result.message);
       setEditingProject(false);
       setSelectedProject(null);
     } catch (error) {
       console.error('Error saving project:', error);
-      toast.error('Failed to save project');
+      toast.error('Failed to save project: ' + error.message);
     } finally {
       setIsUpdatingProject(false);
     }
@@ -84,12 +86,20 @@ export function useProjectManagement() {
     dataTypesToInclude?: string[]
   ) => {
     try {
+      // First check if the project exists
       const project = projects.find(p => p.id === projectId);
       if (!project) {
         throw new Error('Project not found');
       }
 
-      // Update the project status
+      // Update status in database
+      const result = await updateProjectStatus(projectId, newStatus);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      // Update local state
       const updatedProjects = projects.map(p =>
         p.id === projectId
           ? {
@@ -102,6 +112,7 @@ export function useProjectManagement() {
       );
       
       setProjects(updatedProjects);
+      toast.success(result.message);
 
       // Generate and download PDF report when stopping a project
       if (newStatus === "stopped") {
@@ -138,7 +149,7 @@ export function useProjectManagement() {
       return true;
     } catch (error) {
       console.error('Error updating project status:', error);
-      toast.error('Failed to update project status');
+      toast.error('Failed to update project status: ' + error.message);
       return false;
     }
   };
