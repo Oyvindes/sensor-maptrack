@@ -26,6 +26,8 @@ export const mapCompanyIdToUUID = (companyId: string): string => {
     return companyId;
   }
 
+  console.warn(`No UUID mapping found for company ID: ${companyId}`);
+  
   // Default fallback UUID if no mapping exists
   return 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 };

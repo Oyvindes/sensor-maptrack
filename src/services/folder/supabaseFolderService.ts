@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
-import { mapCompanyIdToUUID } from "@/utils/uuidUtils";
+import { mapCompanyIdToUUID, isValidUUID } from "@/utils/uuidUtils";
 
 /**
  * Fetch all sensor folders/projects from the database
@@ -116,13 +116,25 @@ export const saveSensorFolder = async (
       }
     }
     
+    // Map company ID to UUID or keep as is if already valid UUID
+    let mappedCompanyId = null;
+    if (folder.companyId) {
+      // Check if it's already a valid UUID
+      if (isValidUUID(folder.companyId)) {
+        mappedCompanyId = folder.companyId;
+      } else {
+        // Use the mapping function
+        mappedCompanyId = mapCompanyIdToUUID(folder.companyId);
+      }
+    }
+    
     // Prepare folder data for insert/update
     const folderData = {
       name: folder.name,
       description: folder.description,
       address: folder.address,
       location: locationForDb,
-      company_id: folder.companyId ? mapCompanyIdToUUID(folder.companyId) : null,
+      company_id: mappedCompanyId,
       project_number: folder.projectNumber,
       status: folder.status || 'stopped',
       updated_at: new Date().toISOString()
