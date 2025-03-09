@@ -1,12 +1,11 @@
-
 import L from "leaflet";
 
-// Fix Leaflet icon issue by providing absolute URL paths to the icon assets
-// This is a common issue with Leaflet in React applications
+// Use local marker icon images to prevent Vite URL normalization issues
+// These files are stored in the public directory
 const defaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconUrl: '/marker-icon.png',
+  iconRetinaUrl: '/marker-icon-2x.png',
+  shadowUrl: '/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],

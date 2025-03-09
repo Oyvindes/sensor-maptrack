@@ -35,7 +35,7 @@ export function useSensorHandlers(
         value: 0,
         unit: "°C"
       }],
-      companyId: sensor.companyId || "company-001",
+      companyId: sensor.companyId || "company-001", // Will be mapped to UUID in the service layer
       imei: sensor.imei || ""
     };
     
@@ -93,8 +93,8 @@ export function useSensorHandlers(
     }
     
     // For new sensors, set the company ID to the user's company
-    const companyId = currentUser.role === 'master' 
-      ? (companies[0]?.id || "system") 
+    const companyId = currentUser.role === 'master'
+      ? (companies[0]?.id || "system")
       : currentUser.companyId;
     
     setSelectedSensor({

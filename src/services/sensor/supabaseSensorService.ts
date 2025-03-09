@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { SensorData } from "@/components/SensorCard";
 import { toast } from "sonner";
+import { mapCompanyIdToUUID } from "@/utils/uuidUtils";
 
 /**
  * Get all sensors from the database
@@ -79,7 +79,7 @@ export const saveSensor = async (
       name: sensor.name,
       status: sensor.status,
       imei: sensor.imei || null,
-      company_id: sensor.companyId,
+      company_id: sensor.companyId ? mapCompanyIdToUUID(sensor.companyId) : null,
       folder_id: sensor.folderId || null,
       updated_at: new Date().toISOString()
     };
