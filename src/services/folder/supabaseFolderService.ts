@@ -41,7 +41,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         .map(fs => fs.sensor_id);
 
       // Parse location if it's stored as a string or as JSON data
-      let parsedLocation: { lat: number; lng: number } | string | undefined = folder.location;
+      let parsedLocation: { lat: number; lng: number } | string | undefined = undefined;
       
       if (folder.location) {
         if (typeof folder.location === 'string') {
@@ -53,14 +53,17 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
           }
         } else if (typeof folder.location === 'object' && folder.location !== null) {
           // Convert Supabase JSONB to the correct type
-          if ('lat' in folder.location && 'lng' in folder.location) {
+          const locationObj = folder.location as Record<string, any>;
+          
+          if ('lat' in locationObj && 'lng' in locationObj) {
             parsedLocation = {
-              lat: Number(folder.location.lat),
-              lng: Number(folder.location.lng)
+              lat: Number(locationObj.lat),
+              lng: Number(locationObj.lng)
             };
           } else {
             console.warn(`Invalid location object format for folder ${folder.id}`);
-            parsedLocation = JSON.stringify(folder.location);
+            // Convert to a string representation instead of throwing it away
+            parsedLocation = JSON.stringify(locationObj);
           }
         } else {
           console.warn(`Unexpected location type for folder ${folder.id}: ${typeof folder.location}`);
