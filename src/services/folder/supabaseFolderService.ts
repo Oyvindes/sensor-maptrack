@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
@@ -39,13 +38,31 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         .filter(fs => fs.folder_id === folder.id)
         .map(fs => fs.sensor_id);
 
-      // Parse location if it's stored as a string
-      let locationData = folder.location;
-      if (typeof locationData === 'string') {
-        try {
-          locationData = JSON.parse(locationData);
-        } catch (e) {
-          console.warn(`Error parsing location for folder ${folder.id}:`, e);
+      // Parse location if it's stored as a string or as JSON data
+      let parsedLocation: { lat: number; lng: number } | string | undefined = folder.location;
+      
+      if (folder.location) {
+        if (typeof folder.location === 'string') {
+          try {
+            parsedLocation = JSON.parse(folder.location);
+          } catch (e) {
+            console.warn(`Error parsing location string for folder ${folder.id}:`, e);
+            parsedLocation = folder.location;
+          }
+        } else if (typeof folder.location === 'object') {
+          // Convert Supabase JSONB to the correct type
+          if ('lat' in folder.location && 'lng' in folder.location) {
+            parsedLocation = {
+              lat: Number(folder.location.lat),
+              lng: Number(folder.location.lng)
+            };
+          } else {
+            console.warn(`Invalid location object format for folder ${folder.id}`);
+            parsedLocation = JSON.stringify(folder.location);
+          }
+        } else {
+          console.warn(`Unexpected location type for folder ${folder.id}: ${typeof folder.location}`);
+          parsedLocation = JSON.stringify(folder.location);
         }
       }
 
@@ -54,7 +71,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         name: folder.name,
         description: folder.description || "",
         address: folder.address || "",
-        location: locationData,
+        location: parsedLocation,
         companyId: folder.company_id,
         projectNumber: folder.project_number || "",
         status: folder.status as "running" | "stopped" || "stopped",
@@ -83,12 +100,23 @@ export const saveSensorFolder = async (
     const isNewFolder = folder.id.startsWith('folder-') && folder.id.includes('temp-') || 
                         folder.id.startsWith('temp-');
     
+    // Convert location to proper format for database storage
+    let locationForDb = folder.location;
+    if (typeof folder.location === 'string' && folder.location.trim() !== '') {
+      try {
+        locationForDb = JSON.parse(folder.location);
+      } catch (e) {
+        console.warn(`Error parsing location string: ${e}`);
+        // Keep as string if can't parse
+      }
+    }
+    
     // Prepare folder data for insert/update
     const folderData = {
       name: folder.name,
       description: folder.description,
       address: folder.address,
-      location: folder.location,
+      location: locationForDb,
       company_id: folder.companyId,
       project_number: folder.projectNumber,
       status: folder.status || 'stopped',

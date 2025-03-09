@@ -40,26 +40,38 @@ export function useAdminState() {
   const [sensorFolders, setSensorFolders] = useState<SensorFolder[]>([]);
 
   useEffect(() => {
+    // Get companies and users
     setCompanies(getMockCompanies());
     setUsers(getMockUsers());
     
-    // Make sure all sensors have the values property properly set
-    setSensors(getMockSensors().map(sensor => {
-      // Ensure sensor has values array
-      if (!sensor.values || !Array.isArray(sensor.values)) {
-        // Convert old format to new format if needed
-        return {
-          ...sensor,
-          values: [{
-            type: "temperature",
-            value: 0,
-            unit: "°C"
-          }]
-        };
+    // Fetch sensors (async)
+    const fetchSensors = async () => {
+      try {
+        const sensorsData = await getMockSensors();
+        // Make sure all sensors have the values property properly set
+        setSensors(sensorsData.map(sensor => {
+          // Ensure sensor has values array and add folderId if it exists
+          if (!sensor.values || !Array.isArray(sensor.values)) {
+            // Convert old format to new format if needed
+            return {
+              ...sensor,
+              values: [{
+                type: "temperature",
+                value: 0,
+                unit: "°C"
+              }]
+            };
+          }
+          return sensor;
+        }));
+      } catch (error) {
+        console.error("Error fetching sensors:", error);
       }
-      return sensor;
-    }));
+    };
     
+    fetchSensors();
+    
+    // Get devices and tracking objects
     const deviceData = getMockDevices();
     setDevices(deviceData);
     setTrackingObjects(deviceData.map(mapDeviceToTrackingObject));

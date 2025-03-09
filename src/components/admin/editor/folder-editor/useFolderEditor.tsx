@@ -16,18 +16,27 @@ export const useFolderEditor = (
   const [isSavingInProgress, setIsSavingInProgress] = useState(false);
 
   useEffect(() => {
-    const allSensors = getMockSensors();
-    
-    const filteredSensors = allSensors
-      .filter(sensor => {
-        return sensor.companyId === formData.companyId;
-      })
-      .map(sensor => ({
-        id: sensor.id,
-        name: sensor.name
-      }));
-    
-    setAvailableSensors(filteredSensors);
+    const fetchSensors = async () => {
+      try {
+        const allSensors = await getMockSensors();
+        
+        const filteredSensors = allSensors
+          .filter(sensor => {
+            return sensor.companyId === formData.companyId;
+          })
+          .map(sensor => ({
+            id: sensor.id,
+            name: sensor.name
+          }));
+        
+        setAvailableSensors(filteredSensors);
+      } catch (error) {
+        console.error("Error fetching sensors:", error);
+        setAvailableSensors([]);
+      }
+    };
+
+    fetchSensors();
 
     if (formData.location) {
       try {

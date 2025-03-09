@@ -24,8 +24,10 @@ export function useProjectData() {
         const sensorsData = await getMockSensors();
         const projectsData = await getMockSensorFolders();
         
-        // Filter out sensors that don't have a folderId
-        const filteredSensors = sensorsData.filter(sensor => sensor.folderId);
+        // Filter out sensors that don't have a folderId property or it's undefined
+        const filteredSensors = sensorsData.filter(sensor => 
+          'folderId' in sensor && sensor.folderId !== undefined
+        );
         
         // Filter projects based on user's company if not master admin
         const filteredProjects = currentUser?.role === 'master' 

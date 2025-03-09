@@ -1,3 +1,4 @@
+
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
 import { formatCoordinates } from "../geocodingService";
@@ -57,7 +58,7 @@ export const getMockSensorFolders = async (): Promise<SensorFolder[]> => {
 
 export const createSensorFolder = async (
   folderData: Omit<SensorFolder, "id" | "createdAt">
-): Promise<{ success: boolean; data: SensorFolder; message: string }> => {
+): Promise<{ success: boolean; data: SensorFolder | null; message: string }> => {
   // Convert to a SensorFolder by adding temp ID
   const tempFolder: SensorFolder = {
     ...folderData,
@@ -65,7 +66,12 @@ export const createSensorFolder = async (
     createdAt: new Date().toISOString().split('T')[0]
   };
 
-  return await saveSensorFolder(tempFolder);
+  const result = await saveSensorFolder(tempFolder);
+  return {
+    success: result.success,
+    data: result.data || null,
+    message: result.message
+  };
 };
 
 export const updateSensorFolder = async (

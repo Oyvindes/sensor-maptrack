@@ -17,19 +17,29 @@ export function useDashboardActions() {
   ) => {
     toast.info("Refreshing data...");
     
-    setTimeout(() => {
-      const sensorsData = getMockSensors();
-      const filteredSensors = sensorsData.filter(sensor => sensor.folderId);
-      const projectsData = getMockSensorFolders();
-      
-      const filteredProjects = currentUser?.role === 'master' 
-        ? projectsData 
-        : projectsData.filter(project => project.companyId === currentUser?.companyId);
-      
-      setSensors(filteredSensors);
-      setTrackingObjects(getMockTrackingObjects());
-      setProjects(filteredProjects);
-      toast.success("Data refreshed successfully");
+    setTimeout(async () => {
+      try {
+        // Fetch data asynchronously
+        const sensorsData = await getMockSensors();
+        const trackingObjectsData = getMockTrackingObjects();
+        const projectsData = await getMockSensorFolders();
+        
+        // Filter sensors that have a folderId
+        const filteredSensors = sensorsData.filter(sensor => 'folderId' in sensor && sensor.folderId);
+        
+        // Filter projects based on user company
+        const filteredProjects = currentUser?.role === 'master' 
+          ? projectsData 
+          : projectsData.filter(project => project.companyId === currentUser?.companyId);
+        
+        setSensors(filteredSensors);
+        setTrackingObjects(trackingObjectsData);
+        setProjects(filteredProjects);
+        toast.success("Data refreshed successfully");
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        toast.error("Failed to refresh data");
+      }
     }, 1000);
   };
 
