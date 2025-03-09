@@ -122,11 +122,13 @@ export const saveSensorFolder = async (
       description: folder.description,
       address: folder.address,
       location: locationForDb,
-      company_id: folder.companyId,
+      company_id: folder.companyId ? mapCompanyIdToUUID(folder.companyId) : null,
       project_number: folder.projectNumber,
       status: folder.status || 'stopped',
       updated_at: new Date().toISOString()
     };
+
+    console.log("Saving folder with company_id:", folderData.company_id, "from original:", folder.companyId);
 
     let folderId = folder.id;
 

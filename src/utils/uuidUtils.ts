@@ -1,3 +1,4 @@
+
 // Utility functions for handling UUID conversions
 
 /**
@@ -12,6 +13,7 @@ export const mapCompanyIdToUUID = (companyId: string): string => {
     'company-002': 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
     'company-003': 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
     'company-004': 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
+    'company-005': 'f0eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
   };
 
   // If we have a mapping for this company ID, return it
