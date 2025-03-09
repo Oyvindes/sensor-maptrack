@@ -2,13 +2,13 @@
 export { fetchSensors as getMockSensors } from './sensor/supabaseSensorService';
 export { saveSensor } from './sensor/supabaseSensorService';
 
-// Mock functions for tracking objects (these were missing)
-import { getTrackingObjects } from './tracking/mockTrackingData';
-export const getMockTrackingObjects = () => getTrackingObjects();
+// Mock functions for tracking objects
+import { getMockTrackingObjects } from './tracking/mockTrackingData';
+export { getMockTrackingObjects };
 
-// Mock functions for devices (these were missing)
-import { getDevices } from './device/mockDeviceData';
-export const getMockDevices = () => getDevices();
+// Mock functions for devices
+import { getMockDevices } from './device/mockDeviceData';
+export { getMockDevices };
 
 // Keep other exports from the original files
 export { 
@@ -17,7 +17,7 @@ export {
   validateSensorForCompany
 } from './sensor/sensorApi';
 
-// MQTT related functions (these were missing)
+// MQTT related functions
 export const sendMqttCommandToSensor = async (sensorId: string, command: string) => {
   console.log(`MQTT command ${command} sent to sensor ${sensorId}`);
   return { success: true, message: "Command sent via MQTT" };

@@ -1,6 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types";
 
 /**
  * Fetch all sensor folders/projects from the database
@@ -49,7 +51,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
             console.warn(`Error parsing location string for folder ${folder.id}:`, e);
             parsedLocation = folder.location;
           }
-        } else if (typeof folder.location === 'object') {
+        } else if (typeof folder.location === 'object' && folder.location !== null) {
           // Convert Supabase JSONB to the correct type
           if ('lat' in folder.location && 'lng' in folder.location) {
             parsedLocation = {
@@ -62,7 +64,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
           }
         } else {
           console.warn(`Unexpected location type for folder ${folder.id}: ${typeof folder.location}`);
-          parsedLocation = JSON.stringify(folder.location);
+          parsedLocation = undefined;
         }
       }
 
