@@ -19,7 +19,8 @@ const TrackingSection: React.FC<TrackingSectionProps> = ({
       <TrackingMap
         objects={trackingObjects}
         className="w-full animate-fade-up [animation-delay:300ms]"
-        fitAllMarkers={true} // Enable automatic zoom adjustment to fit all markers
+        fitAllMarkers={true} // Initial fit to all markers
+        autoFitMarkers={false} // Don't automatically fit to markers when zooming
         onObjectSelect={onObjectSelect}
       />
     </SectionContainer>

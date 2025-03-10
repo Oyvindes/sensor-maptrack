@@ -179,7 +179,8 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
       <TrackingMap
         devices={devices}
         className="h-full w-full"
-        fitAllMarkers={true} // Enable automatic zoom adjustment to fit all markers
+        fitAllMarkers={true} // Initial fit to all markers
+        autoFitMarkers={false} // Don't automatically fit to markers when zooming
         onDeviceClick={(deviceId) => {
           console.log("Device clicked:", deviceId);
           const project = projects.find(p => p.id === deviceId);
