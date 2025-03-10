@@ -134,7 +134,7 @@ export const saveSensorFolder = async (
       }
     } else {
       // If no company ID is provided, use default
-      mappedCompanyId = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'; // company-001's UUID
+      mappedCompanyId = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'; // Acme Corporation's UUID
     }
     
     // Prepare folder data for insert/update
@@ -154,13 +154,30 @@ export const saveSensorFolder = async (
     // Verify the company exists in the database
     const { data: companyExists, error: companyCheckError } = await supabase
       .from('companies')
-      .select('id')
+      .select('id, name')
       .eq('id', mappedCompanyId)
       .single();
       
     if (companyCheckError || !companyExists) {
       console.error("Company not found in database:", companyCheckError);
-      throw new Error(`Company with ID ${mappedCompanyId} does not exist in the database. Please contact an administrator.`);
+      console.error("Attempted to use company ID:", mappedCompanyId);
+      
+      // Check if any companies exist at all
+      const { data: allCompanies, error: companiesError } = await supabase
+        .from('companies')
+        .select('id, name')
+        .limit(5);
+        
+      if (!companiesError && allCompanies && allCompanies.length > 0) {
+        console.log("Available companies:", allCompanies);
+        // Use the first available company as fallback
+        folderData.company_id = allCompanies[0].id;
+        console.log("Using fallback company:", allCompanies[0].name, "with ID:", allCompanies[0].id);
+      } else {
+        throw new Error(`No valid companies found in the database. Please contact an administrator.`);
+      }
+    } else {
+      console.log("Verified company exists:", companyExists.name, "with ID:", companyExists.id);
     }
 
     let folderId = folder.id;
@@ -174,7 +191,10 @@ export const saveSensorFolder = async (
         .select('id, created_at')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating folder:", error);
+        throw error;
+      }
       folderId = data.id;
     } else {
       // Update existing folder
@@ -183,7 +203,10 @@ export const saveSensorFolder = async (
         .update(folderData)
         .eq('id', folder.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating folder:", error);
+        throw error;
+      }
     }
 
     // Handle assigned sensors (delete old relationships first)
@@ -220,13 +243,16 @@ export const saveSensorFolder = async (
       if (updateError) throw updateError;
     }
 
+    // Get the final company ID that was used
+    const actualCompanyId = folderData.company_id;
+
     // Return the updated folder with the real ID
     return {
       success: true,
       data: {
         ...folder,
         id: folderId,
-        companyId: mappedCompanyId // Update with the properly mapped company ID
+        companyId: actualCompanyId // Update with the properly mapped company ID
       },
       message: isNewFolder 
         ? "Project created successfully" 

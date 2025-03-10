@@ -6,14 +6,14 @@
  * This is needed because the mock data uses string IDs but Supabase expects valid UUIDs
  */
 export const mapCompanyIdToUUID = (companyId: string): string => {
-  // Return null for undefined or empty companyId
+  // Return empty string for undefined or empty companyId
   if (!companyId) {
     console.warn('Empty company ID passed to mapCompanyIdToUUID');
     return '';
   }
   
   // Map of mock company IDs to valid UUIDs
-  // These UUIDs must exist in the companies table
+  // These UUIDs must exist in the companies table and match the seeded data
   const companyMap: Record<string, string> = {
     'system': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     'company-001': 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
@@ -21,7 +21,7 @@ export const mapCompanyIdToUUID = (companyId: string): string => {
     'company-003': 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
     'company-004': 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
     'company-005': 'f0eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
-    'briks': 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', // Map 'briks' to an existing company UUID
+    'briks': 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', // Map 'briks' to Briks company UUID
   };
 
   // If we have a mapping for this company ID, return it
@@ -39,7 +39,7 @@ export const mapCompanyIdToUUID = (companyId: string): string => {
   console.warn(`No UUID mapping found for company ID: ${companyId}`);
   
   // Default fallback UUID - make sure this ID exists in the companies table
-  return 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'; // Using company-001's UUID as default
+  return 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'; // Using Acme Corporation's UUID as default
 };
 
 /**

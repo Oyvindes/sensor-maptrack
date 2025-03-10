@@ -18,7 +18,7 @@ export const useFolderEditor = (
   const [isSavingInProgress, setIsSavingInProgress] = useState(false);
 
   useEffect(() => {
-    const fetchSensors = async () => {
+    const fetchAvailableSensors = async () => {
       try {
         // Convert company ID to the proper format for database queries
         let companyUuid: string | null = null;
@@ -40,9 +40,25 @@ export const useFolderEditor = (
             // For debugging
             console.log(`Sensor ${sensor.id} has companyId: ${sensor.companyId}`);
             
+            if (!sensor.companyId || !formData.companyId) {
+              console.log(`Sensor ${sensor.id} or form has no companyId`);
+              return false;
+            }
+            
+            // Get UUID for sensor's company ID
+            const sensorCompanyUuid = isValidUUID(sensor.companyId) 
+              ? sensor.companyId 
+              : mapCompanyIdToUUID(sensor.companyId);
+              
             // Check against both the original ID and the UUID
-            return sensor.companyId === formData.companyId || 
-                   sensor.companyId === companyUuid;
+            const isMatch = sensor.companyId === formData.companyId || 
+                   sensor.companyId === companyUuid ||
+                   sensorCompanyUuid === companyUuid ||
+                   sensorCompanyUuid === formData.companyId;
+                   
+            console.log(`Sensor ${sensor.id} match status: ${isMatch}`);
+            
+            return isMatch;
           })
           .map(sensor => ({
             id: sensor.id,
@@ -57,7 +73,7 @@ export const useFolderEditor = (
       }
     };
 
-    fetchSensors();
+    fetchAvailableSensors();
 
     if (formData.location) {
       try {
