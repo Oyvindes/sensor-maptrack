@@ -18,11 +18,13 @@ export const mapCompanyIdToUUID = (companyId: string): string => {
 
   // If we have a mapping for this company ID, return it
   if (companyMap[companyId]) {
+    console.log(`Mapped company ID ${companyId} to UUID ${companyMap[companyId]}`);
     return companyMap[companyId];
   }
 
   // If the companyId is already in UUID format, return it as is
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
+    console.log(`Company ID ${companyId} is already a valid UUID`);
     return companyId;
   }
 

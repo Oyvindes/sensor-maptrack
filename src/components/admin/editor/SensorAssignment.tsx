@@ -29,6 +29,9 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
   const [assignedSensors, setAssignedSensors] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
+    console.log("SensorAssignment - Available sensors:", availableSensors);
+    console.log("SensorAssignment - Assigned sensor IDs:", assignedSensorIds);
+    
     const sensorsWithDetails = assignedSensorIds.map(id => {
       const sensorDetails = availableSensors.find(s => s.id === id);
       return {
@@ -162,11 +165,26 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
             onRemoveSensor={handleRemoveSensor}
           />
           
-          <AvailableSensorsList
-            availableSensors={availableSensors}
-            assignedSensorIds={assignedSensorIds}
-            onSensorToggle={onSensorToggle}
-          />
+          {companyId ? (
+            <div>
+              <div className="mb-4 font-medium text-sm">Available Sensors</div>
+              {availableSensors.length === 0 ? (
+                <div className="text-muted-foreground text-sm p-4 bg-muted/30 rounded-md">
+                  No sensors are available for this company. Please go to the Sensors tab to add sensors to this company first.
+                </div>
+              ) : (
+                <AvailableSensorsList
+                  availableSensors={availableSensors}
+                  assignedSensorIds={assignedSensorIds}
+                  onSensorToggle={onSensorToggle}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-sm p-4 bg-muted/30 rounded-md">
+              Please select a company to see available sensors.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

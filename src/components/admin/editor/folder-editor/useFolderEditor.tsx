@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { SensorFolder } from "@/types/users";
 import { getMockSensors } from "@/services/sensorService";
 import { toast } from "sonner";
+import { fetchSensors } from "@/services/sensor/supabaseSensorService";
+import { isValidUUID, mapCompanyIdToUUID } from "@/utils/uuidUtils";
 
 export const useFolderEditor = (
   folder: SensorFolder,
@@ -18,17 +20,36 @@ export const useFolderEditor = (
   useEffect(() => {
     const fetchSensors = async () => {
       try {
+        // Convert company ID to the proper format for database queries
+        let companyUuid: string | null = null;
+        
+        if (formData.companyId) {
+          if (isValidUUID(formData.companyId)) {
+            companyUuid = formData.companyId;
+          } else {
+            companyUuid = mapCompanyIdToUUID(formData.companyId);
+          }
+        }
+        
+        console.log(`Fetching sensors for company: ${formData.companyId} (UUID: ${companyUuid})`);
+        
         const allSensors = await getMockSensors();
         
         const filteredSensors = allSensors
           .filter(sensor => {
-            return sensor.companyId === formData.companyId;
+            // For debugging
+            console.log(`Sensor ${sensor.id} has companyId: ${sensor.companyId}`);
+            
+            // Check against both the original ID and the UUID
+            return sensor.companyId === formData.companyId || 
+                   sensor.companyId === companyUuid;
           })
           .map(sensor => ({
             id: sensor.id,
             name: sensor.name
           }));
         
+        console.log(`Found ${filteredSensors.length} sensors for company ${formData.companyId}`);
         setAvailableSensors(filteredSensors);
       } catch (error) {
         console.error("Error fetching sensors:", error);
