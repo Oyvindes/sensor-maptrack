@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
@@ -126,6 +127,14 @@ export const saveSensorFolder = async (
         // Use the mapping function
         mappedCompanyId = mapCompanyIdToUUID(folder.companyId);
       }
+      
+      // Verify that we have a valid company ID
+      if (!mappedCompanyId) {
+        throw new Error("Invalid company ID. Please select a valid company.");
+      }
+    } else {
+      // If no company ID is provided, use default
+      mappedCompanyId = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'; // company-001's UUID
     }
     
     // Prepare folder data for insert/update
@@ -141,6 +150,18 @@ export const saveSensorFolder = async (
     };
 
     console.log("Saving folder with company_id:", folderData.company_id, "from original:", folder.companyId);
+
+    // Verify the company exists in the database
+    const { data: companyExists, error: companyCheckError } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('id', mappedCompanyId)
+      .single();
+      
+    if (companyCheckError || !companyExists) {
+      console.error("Company not found in database:", companyCheckError);
+      throw new Error(`Company with ID ${mappedCompanyId} does not exist in the database. Please contact an administrator.`);
+    }
 
     let folderId = folder.id;
 
@@ -204,7 +225,8 @@ export const saveSensorFolder = async (
       success: true,
       data: {
         ...folder,
-        id: folderId
+        id: folderId,
+        companyId: mappedCompanyId // Update with the properly mapped company ID
       },
       message: isNewFolder 
         ? "Project created successfully" 
