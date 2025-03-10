@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { SensorFolder } from "@/types/users";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import ProjectPdfHistory from "./ProjectPdfHistory";
 import PdfDataSelectionDialog from "./PdfDataSelectionDialog";
 import { toast } from "sonner";
 import { useProjectData } from "@/hooks/useProjectData";
+import { getMockSensors } from "@/services/sensorService";
 
 interface SensorDataGraphsProps {
   project: SensorFolder;
@@ -25,6 +27,11 @@ interface SensorReading {
     battery: SensorValue;
     signal: SensorValue;
   };
+}
+
+interface SensorInfo {
+  id: string;
+  name: string;
 }
 
 // Value type configurations
@@ -60,9 +67,33 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({ project: initialPro
   const [project, setProject] = useState<SensorFolder>(initialProject);
   const { setProjects } = useProjectData();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [sensorInfoMap, setSensorInfoMap] = useState<Record<string, SensorInfo>>({});
   
   // Data selection dialog state
   const [isDataSelectionOpen, setIsDataSelectionOpen] = useState(false);
+
+  // Fetch sensor names when component mounts
+  useEffect(() => {
+    const fetchSensorInfo = async () => {
+      try {
+        const allSensors = await getMockSensors();
+        const sensorMap: Record<string, SensorInfo> = {};
+        
+        allSensors.forEach(sensor => {
+          sensorMap[sensor.id] = {
+            id: sensor.id,
+            name: sensor.name
+          };
+        });
+        
+        setSensorInfoMap(sensorMap);
+      } catch (error) {
+        console.error("Error fetching sensor info:", error);
+      }
+    };
+    
+    fetchSensorInfo();
+  }, []);
 
   // Update local project state if parent project changes
   useEffect(() => {
@@ -140,10 +171,12 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({ project: initialPro
         {project.assignedSensorIds.map((sensorId) => {
           const data = generateMockData(sensorId);
           const latestData = data[data.length - 1];
+          // Get sensor name from map or fall back to ID if not found
+          const sensorName = sensorInfoMap[sensorId]?.name || `Sensor ${sensorId}`;
           
           return (
             <div key={sensorId} className="space-y-4">
-              <h3 className="text-xl font-semibold">Sensor {sensorId}</h3>
+              <h3 className="text-xl font-semibold">{sensorName}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(valueConfigs).map(([key, config]) => {
                   const currentValue = latestData.values[key as keyof typeof latestData.values];
