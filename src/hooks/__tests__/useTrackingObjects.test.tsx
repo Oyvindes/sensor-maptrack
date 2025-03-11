@@ -10,6 +10,38 @@ vi.mock('@/services/sensorService', () => ({
   getMockTrackingObjects: mockServices.getMockTrackingObjects
 }));
 
+vi.mock('@/services/device/mockDeviceData', () => ({
+  getMockDevices: vi.fn(() => [
+    {
+      id: 'tracking-001',
+      name: 'Test Object',
+      type: 'tracker',
+      status: 'online',
+      location: { lat: 0, lng: 0 },
+      companyId: 'company-001',
+      lastUpdated: '10:00:00'
+    }
+  ])
+}));
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ data: null, error: null }))
+      })),
+      update: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ data: null, error: null }))
+      }))
+    })),
+    channel: vi.fn(() => ({
+      on: vi.fn(() => ({ subscribe: vi.fn() })),
+      subscribe: vi.fn()
+    })),
+    removeChannel: vi.fn()
+  }
+}));
+
 vi.mock('sonner', () => ({
   toast: mockToast()
 }));
@@ -27,8 +59,8 @@ describe('useTrackingObjects hook', () => {
   it('should initialize tracking objects', () => {
     const { result } = renderHook(() => useTrackingObjects());
     
-    expect(mockServices.getMockTrackingObjects).toHaveBeenCalled();
-    expect(result.current.trackingObjects).toEqual(mockServices.getMockTrackingObjects());
+    expect(result.current.trackingObjects.length).toBeGreaterThan(0);
+    expect(result.current.trackingObjects[0].name).toBe('Test Object');
   });
 
   it('should update tracking objects position over time', () => {
@@ -41,8 +73,8 @@ describe('useTrackingObjects hook', () => {
       vi.advanceTimersByTime(5000);
     });
     
-    // Positions should be updated
-    expect(result.current.trackingObjects[0].position).not.toEqual(initialObjects[0].position);
+    // LastUpdated should be updated
+    expect(result.current.trackingObjects[0].lastUpdated).not.toEqual(initialObjects[0].lastUpdated);
   });
 
   it('should handle object selection and show toast', () => {

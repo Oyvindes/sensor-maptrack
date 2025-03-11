@@ -1,14 +1,37 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Device, TrackingObject } from '@/types/sensors';
+import { Device, TrackingObject, Location } from '@/types/sensors';
 import { getMockDevices } from '@/services/device/mockDeviceData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
 
 export const useTrackingObjects = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Convert Supabase position JSON to our Location type
+  const parsePosition = (position: Json | null): Location => {
+    if (!position) return { lat: 0, lng: 0 };
+    
+    try {
+      // Handle when position is an object with lat/lng properties
+      if (typeof position === 'object' && position !== null && !Array.isArray(position)) {
+        const lat = typeof position.lat === 'number' ? position.lat : 
+                   typeof position.lat === 'string' ? parseFloat(position.lat) : 0;
+        
+        const lng = typeof position.lng === 'number' ? position.lng : 
+                   typeof position.lng === 'string' ? parseFloat(position.lng) : 0;
+                   
+        return { lat, lng };
+      }
+    } catch (error) {
+      console.error('Error parsing position:', error);
+    }
+    
+    return { lat: 0, lng: 0 };
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -27,23 +50,20 @@ export const useTrackingObjects = () => {
         const formattedTrackingObjects = trackingData.map(item => ({
           id: item.id,
           name: item.name,
-          position: {
-            lat: typeof item.position === 'object' ? Number(item.position.lat) : 0,
-            lng: typeof item.position === 'object' ? Number(item.position.lng) : 0
-          },
+          position: parsePosition(item.position),
           lastUpdated: item.last_updated ? new Date(item.last_updated).toLocaleString() : new Date().toLocaleString(),
-          speed: Number(item.speed) || 0,
-          direction: Number(item.direction) || 0,
-          batteryLevel: Number(item.battery_level) || 100,
+          speed: typeof item.speed === 'number' ? item.speed : 0,
+          direction: typeof item.direction === 'number' ? item.direction : 0,
+          batteryLevel: typeof item.battery_level === 'number' ? item.battery_level : 100,
         }));
         setTrackingObjects(formattedTrackingObjects);
 
         // Convert to device format for backwards compatibility
-        const deviceData = formattedTrackingObjects.map(obj => ({
+        const deviceData: Device[] = formattedTrackingObjects.map(obj => ({
           id: obj.id,
           name: obj.name,
           type: 'tracker',
-          status: 'online',
+          status: 'online' as const, // Use const assertion to match the union type
           location: obj.position,
           companyId: trackingData.find(item => item.id === obj.id)?.company_id || 'system',
           lastUpdated: obj.lastUpdated
@@ -95,12 +115,18 @@ export const useTrackingObjects = () => {
   // Function to update a tracking object in the database
   const updateTrackingObject = useCallback(async (updatedDevice: Device) => {
     try {
+      // Create a properly formatted position object for Supabase
+      const position: Record<string, number> = {
+        lat: updatedDevice.location?.lat || 0,
+        lng: updatedDevice.location?.lng || 0
+      };
+
       // Update in Supabase
       const { error } = await supabase
         .from('tracking_objects')
         .update({
           name: updatedDevice.name,
-          position: updatedDevice.location,
+          position: position,
           last_updated: new Date().toISOString(),
           company_id: updatedDevice.companyId
         })
