@@ -4,9 +4,13 @@ import { SensorData } from "@/components/SensorCard";
 import SensorList from "@/components/admin/SensorList";
 import SensorEditor from "@/components/sensor-editor/SensorEditor";
 import SensorImporter from "@/components/admin/sensor-import/SensorImporter";
+import DeleteSensorsImporter from "@/components/admin/sensor-import/DeleteSensorsImporter";
 import { Company } from "@/types/users";
 
+type SetMode = React.Dispatch<React.SetStateAction<string>>;
+
 interface SensorsTabProps {
+  setMode: SetMode;
   mode: string;
   sensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[];
   selectedSensor: (SensorData & { folderId?: string; companyId?: string; imei?: string }) | null;
@@ -16,10 +20,12 @@ interface SensorsTabProps {
   onSensorCancel: () => void;
   onAddNewSensor: () => void;
   onImportSensors?: (sensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[]) => void;
+  onDeleteByCsv?: (sensorIdentifiers: { id?: string; imei?: string }[]) => void;
 }
 
 const SensorsTab: React.FC<SensorsTabProps> = ({
   mode,
+  setMode,
   sensors,
   selectedSensor,
   companies = [],
@@ -27,7 +33,8 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
   onSensorSave,
   onSensorCancel,
   onAddNewSensor,
-  onImportSensors
+  onImportSensors,
+  onDeleteByCsv
 }) => {
   return (
     <>
@@ -37,6 +44,11 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
           onSensorSelect={onSensorSelect}
           onAddNew={onAddNewSensor}
           onImport={() => onImportSensors ? onImportSensors([]) : null}
+          onDelete={() => {
+            if (onDeleteByCsv && setMode) {
+              setMode("deleteSensors");
+            }
+          }}
         />
       )}
       {mode === "editSensor" && selectedSensor && (
@@ -51,6 +63,12 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
         <SensorImporter
           companies={companies}
           onSensorsImport={sensors => onImportSensors ? onImportSensors(sensors) : null}
+          onCancel={onSensorCancel}
+        />
+      )}
+      {mode === "deleteSensors" && (
+        <DeleteSensorsImporter
+          onSensorsDelete={sensorIdentifiers => onDeleteByCsv ? onDeleteByCsv(sensorIdentifiers) : null}
           onCancel={onSensorCancel}
         />
       )}

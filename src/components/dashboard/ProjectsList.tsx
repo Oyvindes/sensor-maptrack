@@ -1,9 +1,9 @@
 
-import React from "react";
+import React, { useCallback } from "react";
 import { SensorFolder } from "@/types/users";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Cpu, Play, Square } from "lucide-react";
+import { MapPin, Cpu, Play, Square, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { startProjectDataCollection, stopProjectDataCollection } from "@/services/sensor/sensorDataCollection";
@@ -13,6 +13,7 @@ interface ProjectsListProps {
   isLoading: boolean;
   onProjectSelect: (project: SensorFolder) => void;
   onProjectStatusChange?: (projectId: string, status: "running" | "stopped") => void;
+  onProjectDelete?: (projectId: string) => void;
   className?: string;
 }
 const ProjectsList: React.FC<ProjectsListProps> = ({
@@ -20,8 +21,21 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
   isLoading,
   onProjectSelect,
   onProjectStatusChange,
+  onProjectDelete,
   className
 }) => {
+  const handleDelete = useCallback((e: React.MouseEvent, project: SensorFolder) => {
+    e.stopPropagation(); // Prevent card click event
+    if (onProjectDelete) {
+      // If the project is running, prevent deletion
+      if (project.status === "running") {
+        toast.error("Cannot delete a running project. Stop it first.");
+        return;
+      }
+      onProjectDelete(project.id);
+    }
+  }, [onProjectDelete]);
+
   const handleStatusChange = (e: React.MouseEvent, project: SensorFolder) => {
     e.stopPropagation(); // Prevent card click event
     if (onProjectStatusChange) {
@@ -104,18 +118,30 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                     •
                   </span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={(e) => handleStatusChange(e, project)}
-                >
-                  {project.status === "running" ? (
-                    <Square className="h-3 w-3 text-red-500" />
-                  ) : (
-                    <Play className="h-3 w-3 text-green-500" />
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => handleStatusChange(e, project)}
+                  >
+                    {project.status === "running" ? (
+                      <Square className="h-3 w-3 text-red-500" />
+                    ) : (
+                      <Play className="h-3 w-3 text-green-500" />
+                    )}
+                  </Button>
+                  {onProjectDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={(e) => handleDelete(e, project)}
+                    >
+                      <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                    </Button>
                   )}
-                </Button>
+                </div>
               </div>
             </div>
           </CardContent>

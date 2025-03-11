@@ -1,7 +1,7 @@
 
 import React from "react";
 import { SensorData } from "@/components/SensorCard";
-import { Plus, Folder, Pencil, FileUp } from "lucide-react";
+import { Plus, Folder, Pencil, FileUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
@@ -11,13 +11,15 @@ interface SensorListProps {
   onSensorSelect: (sensor: SensorData & { folderId?: string }) => void;
   onAddNew: () => void;
   onImport: () => void;
+  onDelete: () => void;
 }
 
 const SensorList: React.FC<SensorListProps> = ({ 
   sensors, 
   onSensorSelect, 
   onAddNew,
-  onImport
+  onImport,
+  onDelete
 }) => {
   // Get folder/project names
   const getFolderName = (folderId?: string) => {
@@ -44,7 +46,16 @@ const SensorList: React.FC<SensorListProps> = ({
             <FileUp className="h-4 w-4" />
             <span>Import CSV</span>
           </Button>
-          <Button 
+          <Button
+            onClick={onDelete}
+            size="sm"
+            variant="outline"
+            className="gap-2 text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>Delete by CSV</span>
+          </Button>
+          <Button
             onClick={onAddNew} 
             size="sm" 
             className="gap-2"

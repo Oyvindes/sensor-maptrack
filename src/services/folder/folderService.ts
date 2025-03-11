@@ -2,10 +2,11 @@
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
 import { formatCoordinates } from "../geocodingService";
-import { 
-  fetchSensorFolders, 
+import {
+  fetchSensorFolders,
   saveSensorFolder,
-  updateProjectStatus
+  updateProjectStatus,
+  deleteProject
 } from "./supabaseFolderService";
 
 /**
@@ -100,4 +101,10 @@ export const updateSensorFolder = async (
     success: result.success,
     message: result.message
   };
+};
+
+export const deleteFolder = async (
+  folderId: string
+): Promise<{ success: boolean; message: string }> => {
+  return deleteProject(folderId);
 };

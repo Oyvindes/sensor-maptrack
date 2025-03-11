@@ -1,29 +1,45 @@
-
 import React from "react";
-import TrackingMap from "@/components/TrackingMap";
-import { TrackingObject } from "@/types/sensors";
-import { SectionContainer, SectionTitle } from "@/components/Layout";
+import TrackingMap from "@/components/map/TrackingMap";
+import { useTrackingObjects } from "@/hooks/useTrackingObjects";
+import { Device } from "@/types/sensors";
 
 interface TrackingSectionProps {
-  trackingObjects: TrackingObject[];
-  onObjectSelect: (object: TrackingObject) => void;
+  className?: string;
 }
 
-const TrackingSection: React.FC<TrackingSectionProps> = ({ 
-  trackingObjects, 
-  onObjectSelect 
-}) => {
+const TrackingSection: React.FC<TrackingSectionProps> = ({ className }) => {
+  const { devices, isLoading } = useTrackingObjects();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96">Loading...</div>;
+  }
+
   return (
-    <SectionContainer>
-      <SectionTitle>Tracking Map</SectionTitle>
-      <TrackingMap
-        objects={trackingObjects}
-        className="w-full animate-fade-up [animation-delay:300ms]"
-        fitAllMarkers={true} // Initial fit to all markers
-        autoFitMarkers={false} // Don't automatically fit to markers when zooming
-        onObjectSelect={onObjectSelect}
-      />
-    </SectionContainer>
+    <div className={className}>
+      <h2 className="text-xl font-semibold mb-4">Tracking</h2>
+      <div className="rounded-lg overflow-hidden border bg-background">
+        <TrackingMap
+          devices={devices}
+          fitAllMarkers={true}
+          className="h-[600px] w-full"
+          onDeviceClick={(deviceId) => {
+            console.log('Device clicked:', deviceId);
+            // Add device click handler implementation here
+          }}
+          renderCustomPopup={(item: Device) => (
+            <div>
+              <h3 className="font-medium">{item.name}</h3>
+              <p className="text-sm text-muted-foreground">ID: {item.id}</p>
+              {item.location && (
+                <p className="text-sm text-muted-foreground">
+                  Location: {item.location.lat.toFixed(6)}, {item.location.lng.toFixed(6)}
+                </p>
+              )}
+            </div>
+          )}
+        />
+      </div>
+    </div>
   );
 };
 

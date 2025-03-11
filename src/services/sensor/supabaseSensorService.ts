@@ -151,3 +151,37 @@ export const saveSensor = async (
     };
   }
 };
+
+/**
+ * Delete a sensor from the database
+ */
+export const deleteSensor = async (sensorId: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    // First delete sensor values
+    const { error: valuesError } = await supabase
+      .from('sensor_values')
+      .delete()
+      .eq('sensor_id', sensorId);
+
+    if (valuesError) throw valuesError;
+
+    // Then delete the sensor
+    const { error } = await supabase
+      .from('sensors')
+      .delete()
+      .eq('id', sensorId);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      message: "Sensor deleted successfully"
+    };
+  } catch (error) {
+    console.error("Error deleting sensor:", error);
+    return {
+      success: false,
+      message: `Failed to delete sensor: ${error.message}`
+    };
+  }
+};

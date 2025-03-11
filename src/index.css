@@ -114,11 +114,14 @@
   }
   
   .sensor-pulse {
-    @apply relative;
+    @apply relative inline-flex items-center justify-center z-0;
   }
   
   .sensor-pulse::after {
     @apply content-[''] absolute w-full h-full rounded-full bg-current opacity-30 animate-ping-subtle;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .transition-all-ease {

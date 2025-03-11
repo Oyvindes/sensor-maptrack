@@ -299,3 +299,39 @@ export const updateProjectStatus = async (
     };
   }
 };
+
+/**
+ * Delete a project and its folder-sensor relationships
+ */
+export const deleteProject = async (
+  projectId: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    // First delete folder-sensor relationships
+    const { error: deleteRelError } = await supabase
+      .from('folder_sensors')
+      .delete()
+      .eq('folder_id', projectId);
+
+    if (deleteRelError) throw deleteRelError;
+
+    // Then delete the folder itself
+    const { error } = await supabase
+      .from('sensor_folders')
+      .delete()
+      .eq('id', projectId);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      message: "Project deleted successfully"
+    };
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return {
+      success: false,
+      message: `Failed to delete project: ${error.message}`
+    };
+  }
+};

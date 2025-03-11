@@ -4,6 +4,7 @@ import { SensorFolder } from "@/types/users";
 import { getCurrentUser } from '@/services/authService';
 import { useState } from "react";
 import { saveSensorFolder, updateProjectStatus } from '@/services/folder/supabaseFolderService';
+import { deleteFolder } from '@/services/folder/folderService';
 import { fetchSensors } from "@/services/sensor/supabaseSensorService";
 
 export function useProjectManagement() {
@@ -153,12 +154,37 @@ export function useProjectManagement() {
       return false;
     }
   };
+const handleProjectDelete = async (
+  projectId: string,
+  projects: SensorFolder[],
+  setProjects: React.Dispatch<React.SetStateAction<SensorFolder[]>>,
+  setSelectedProject: React.Dispatch<React.SetStateAction<SensorFolder | null>>
+) => {
+  try {
+    const result = await deleteFolder(projectId);
+    
+    if (!result.success) {
+      throw new Error(result.message);
+    }
 
-  return {
-    handleProjectSave,
-    handleAddNewProject,
-    handleProjectStatusChange,
-    setDefaultDataTypes,
-    isGeneratingReportOnStop
-  };
+    setProjects(projects.filter(p => p.id !== projectId));
+    setSelectedProject(null);
+    toast.success("Project deleted successfully");
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    toast.error('Failed to delete project: ' + error.message);
+    return false;
+  }
+};
+
+return {
+  handleProjectSave,
+  handleAddNewProject,
+  handleProjectStatusChange,
+  handleProjectDelete,
+  setDefaultDataTypes,
+  isGeneratingReportOnStop
+};
 }

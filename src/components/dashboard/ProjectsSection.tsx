@@ -11,13 +11,15 @@ interface ProjectsSectionProps {
   isLoading: boolean;
   onProjectSelect: (project: SensorFolder) => void;
   onProjectStatusChange?: (projectId: string, status: "running" | "stopped") => void;
+  onProjectDelete?: (projectId: string) => void;
 }
 
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   projects,
   isLoading,
   onProjectSelect,
-  onProjectStatusChange
+  onProjectStatusChange,
+  onProjectDelete
 }) => {
   // Filter projects for different views
   const runningProjects = projects.filter(p => p.status === "running");
@@ -53,6 +55,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   isLoading={isLoading}
                   onProjectSelect={onProjectSelect}
                   onProjectStatusChange={onProjectStatusChange}
+                  onProjectDelete={onProjectDelete}
                   className="h-full overflow-auto animate-fade-up [animation-delay:400ms]"
                 />
               </div>
@@ -72,6 +75,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   isLoading={isLoading}
                   onProjectSelect={onProjectSelect}
                   onProjectStatusChange={onProjectStatusChange}
+                  onProjectDelete={onProjectDelete}
                   className="h-full overflow-auto animate-fade-up [animation-delay:400ms]"
                 />
               </div>
@@ -87,6 +91,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   isLoading={isLoading}
                   onProjectSelect={onProjectSelect}
                   onProjectStatusChange={onProjectStatusChange}
+                  onProjectDelete={onProjectDelete}
                   className="h-full overflow-auto animate-fade-up [animation-delay:400ms]"
                 />
               </div>

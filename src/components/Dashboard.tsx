@@ -9,9 +9,10 @@ import SensorFolderEditor from "./admin/SensorFolderEditor";
 import { getMockCompanies } from "@/services/company/companyService";
 import DashboardNavigation from "./dashboard/DashboardNavigation";
 import ProjectsList from "./dashboard/ProjectsList";
+import TrackingSection from "./dashboard/TrackingSection";
 
 // View types for the dashboard
-type DashboardView = "dashboard" | "projects";
+type DashboardView = "dashboard" | "projects" | "tracking";
 
 const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
@@ -27,6 +28,7 @@ const Dashboard: React.FC = () => {
     handleAddNewProject,
     handleRefresh,
     handleProjectStatusChange,
+    handleProjectDelete,
     viewingSensorData,
     handleCloseGraphs
   } = useDashboardData();
@@ -70,7 +72,10 @@ const Dashboard: React.FC = () => {
             isLoading={isLoading}
             onProjectSelect={handleProjectSelect}
             onProjectStatusChange={handleProjectStatusChange}
+            onProjectDelete={handleProjectDelete}
           />
+        ) : currentView === "tracking" ? (
+          <TrackingSection className="w-full animate-fade-up [animation-delay:300ms]" />
         ) : (
           <div className="w-full animate-fade-up [animation-delay:300ms]">
             <h2 className="text-xl font-semibold mb-4">Projects</h2>
@@ -79,6 +84,7 @@ const Dashboard: React.FC = () => {
               isLoading={isLoading}
               onProjectSelect={handleProjectSelect}
               onProjectStatusChange={handleProjectStatusChange}
+              onProjectDelete={handleProjectDelete}
               className="h-auto w-full"
             />
           </div>

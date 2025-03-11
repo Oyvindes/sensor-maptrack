@@ -114,6 +114,8 @@ const Admin = () => {
               onSensorCancel={sensorHandlers.handleSensorCancel}
               onAddNewSensor={sensorHandlers.handleAddNewSensor}
               onImportSensors={sensorHandlers.handleImportSensors}
+              onDeleteByCsv={sensorHandlers.handleDeleteSensors}
+              setMode={setMode}
             />
           </TabsContent>
 

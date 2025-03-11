@@ -21,10 +21,14 @@ const DeviceMarker: React.FC<DeviceMarkerProps> = ({
       key={device.id}
       position={[device.location.lat, device.location.lng] as [number, number]}
       eventHandlers={{
+        mouseover: (e) => {
+          e.target.openPopup();
+        },
+        mouseout: (e) => {
+          e.target.closePopup();
+        },
         click: (e) => {
-          // Only trigger device click if not clicking on popup content
           if (!(e.originalEvent.target as Element).closest?.('.leaflet-popup-content-wrapper')) {
-            console.log("Marker clicked (not popup content):", device.id);
             onDeviceClick && onDeviceClick(device.id);
           }
         },

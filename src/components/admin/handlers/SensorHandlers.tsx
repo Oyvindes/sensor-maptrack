@@ -2,7 +2,7 @@
 import { SensorData } from "@/components/SensorCard";
 import { getCurrentUser } from "@/services/authService";
 import { toast } from "sonner";
-import { saveSensor } from "@/services/sensor/supabaseSensorService";
+import { saveSensor, deleteSensor } from "@/services/sensor/supabaseSensorService";
 
 export interface SensorHandlers {
   handleSensorSelect: (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }) => void;
@@ -10,6 +10,7 @@ export interface SensorHandlers {
   handleSensorCancel: () => void;
   handleAddNewSensor: () => void;
   handleImportSensors: (sensors: (SensorData & { folderId?: string; companyId?: string; imei?: string })[]) => void;
+  handleDeleteSensors: (sensorIdentifiers: { imei: string }[]) => void;
 }
 
 export function useSensorHandlers(
@@ -170,6 +171,72 @@ export function useSensorHandlers(
     
     setMode("listSensors");
   };
+
+  const handleDeleteSensors = async (sensorIdentifiers: { imei: string }[]) => {
+    if (!currentUser) {
+      toast.error("You must be logged in to delete sensors");
+      return;
+    }
+
+    if (sensorIdentifiers.length === 0) {
+      toast.error("No sensor IMEIs provided for deletion");
+      return;
+    }
+
+    // Find sensors matching the provided IMEIs
+    const sensorsToDelete = sensors.filter(sensor =>
+      sensor.imei && sensorIdentifiers.some(identifier => identifier.imei === sensor.imei)
+    );
+
+    if (sensorsToDelete.length === 0) {
+      toast.error("No sensors found matching the provided IMEIs");
+      return;
+    }
+
+    // Check permissions for all sensors
+    const unauthorizedSensors = sensorsToDelete.filter(sensor => !canEditSensor(sensor));
+    if (unauthorizedSensors.length > 0) {
+      toast.error(`You don't have permission to delete ${unauthorizedSensors.length} sensors`);
+      return;
+    }
+
+    // Delete each sensor
+    const deletedSensors = [];
+    const failedSensors = [];
+
+    for (const sensor of sensorsToDelete) {
+      try {
+        const result = await deleteSensor(sensor.id);
+        if (result.success) {
+          deletedSensors.push(sensor);
+        } else {
+          failedSensors.push(sensor);
+        }
+      } catch (error) {
+        console.error("Error deleting sensor:", error);
+        failedSensors.push(sensor);
+      }
+    }
+
+    // Update local state by removing deleted sensors
+    if (deletedSensors.length > 0) {
+      setSensors(prevSensors =>
+        prevSensors.filter(s => !deletedSensors.some(ds => ds.id === s.id))
+      );
+    }
+
+    // Show results
+    if (deletedSensors.length > 0) {
+      toast.success(
+        `Deleted ${deletedSensors.length} sensors successfully` +
+        (failedSensors.length > 0 ? ` (${failedSensors.length} failed)` : "")
+      );
+    } else if (failedSensors.length > 0) {
+      toast.error(`Failed to delete ${failedSensors.length} sensors`);
+    }
+
+    setMode("listSensors");
+  };
   
   // Helper function to check if user can edit a specific sensor
   const canEditSensor = (sensor: SensorData & { folderId?: string; companyId?: string; imei?: string }): boolean => {
@@ -190,6 +257,7 @@ export function useSensorHandlers(
     handleSensorSave,
     handleSensorCancel,
     handleAddNewSensor,
-    handleImportSensors
+    handleImportSensors,
+    handleDeleteSensors
   };
 }
