@@ -18,7 +18,8 @@ export function useDeviceHandlers(
   setTrackingObjects: React.Dispatch<React.SetStateAction<TrackingObject[]>>,
   setSelectedDevice: React.Dispatch<React.SetStateAction<Device | null>>,
   setMode: React.Dispatch<React.SetStateAction<string>>,
-  companies: { id: string }[]
+  companies: { id: string }[],
+  updateTrackingObject?: (updatedDevice: Device) => Promise<boolean>
 ): DeviceHandlers {
   const currentUser = getCurrentUser();
 
@@ -64,13 +65,26 @@ export function useDeviceHandlers(
     }
   };
 
-  const handleDeviceSave = (updatedDevice: Device) => {
+  const handleDeviceSave = async (updatedDevice: Device) => {
     // Check permissions again before saving
     if (!canEditDevice(updatedDevice)) {
       toast.error("You don't have permission to modify this device");
       return;
     }
     
+    // First, try to update in Supabase if the function is provided
+    if (updateTrackingObject) {
+      const success = await updateTrackingObject(updatedDevice);
+      if (success) {
+        // If successfully updated in Supabase, we don't need to update local state
+        // as the fetchData function called inside updateTrackingObject will have already done that
+        setMode("listDevices");
+        setSelectedDevice(null);
+        return;
+      }
+    }
+    
+    // Fallback to local state update if Supabase update fails or function not provided
     setDevices(devices.map(d => d.id === updatedDevice.id ? updatedDevice : d));
     
     // When updating tracking objects, preserve the folderId

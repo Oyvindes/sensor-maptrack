@@ -65,4 +65,10 @@ describe('useTrackingObjects hook', () => {
     expect(toast.info).toHaveBeenCalledWith(expect.stringContaining('Test Object selected'), 
       expect.objectContaining({ description: expect.stringContaining('Speed: 25mph, Battery: 85%') }));
   });
+  
+  it('should provide an updateTrackingObject function', () => {
+    const { result } = renderHook(() => useTrackingObjects());
+    
+    expect(typeof result.current.updateTrackingObject).toBe('function');
+  });
 });

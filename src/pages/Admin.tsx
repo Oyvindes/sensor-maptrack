@@ -9,6 +9,7 @@ import { useCompanyHandlers } from "@/components/admin/handlers/CompanyHandlers"
 import { useUserHandlers } from "@/components/admin/handlers/UserHandlers";
 import { useSensorHandlers } from "@/components/admin/handlers/SensorHandlers";
 import { useDeviceHandlers } from "@/components/admin/handlers/DeviceHandlers";
+import { useTrackingObjects } from "@/hooks/useTrackingObjects";
 import { Toaster } from "sonner";
 
 // Tab components
@@ -27,6 +28,9 @@ const Admin = () => {
     handleTabChange
   } = adminState;
 
+  // Get tracking functionality including the update function
+  const { updateTrackingObject } = useTrackingObjects();
+
   const companyHandlers = useCompanyHandlers(
     companies, setCompanies, setSelectedCompany, setMode
   );
@@ -41,7 +45,7 @@ const Admin = () => {
 
   const deviceHandlers = useDeviceHandlers(
     devices, trackingObjects, setDevices, setTrackingObjects, 
-    setSelectedDevice, setMode, companies
+    setSelectedDevice, setMode, companies, updateTrackingObject
   );
   
   const currentUser = getCurrentUser();
