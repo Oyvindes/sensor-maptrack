@@ -37,7 +37,7 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
           currentView={currentView}
           onViewChange={onViewChange}
           icon={<Radio className="w-4 h-4 mr-2" />}
-          label="Tracking"
+          label="Asset Tracking"
         />
       </div>
     </div>

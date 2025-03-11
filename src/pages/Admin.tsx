@@ -74,7 +74,7 @@ const Admin = () => {
             <TabsTrigger value="companies">Companies</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="sensors">Sensors</TabsTrigger>
-            <TabsTrigger value="devices">Devices</TabsTrigger>
+            <TabsTrigger value="devices">Asset Tracking</TabsTrigger>
           </TabsList>
           
           <TabsContent value="companies">
