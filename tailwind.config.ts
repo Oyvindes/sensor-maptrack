@@ -1,15 +1,14 @@
-
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 export default {
-	darkMode: ["class"],
+	darkMode: ['class'],
 	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
-		"./src/**/*.{ts,tsx}",
+		'./pages/**/*.{ts,tsx}',
+		'./components/**/*.{ts,tsx}',
+		'./app/**/*.{ts,tsx}',
+		'./src/**/*.{ts,tsx}'
 	],
-	prefix: "",
+	prefix: '',
 	theme: {
 		container: {
 			center: true,
@@ -20,55 +19,55 @@ export default {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				border: 'var(--border)',
+				input: 'var(--input)',
+				ring: 'var(--ring)',
+				background: 'var(--background)',
+				foreground: 'var(--foreground)',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: 'var(--primary)',
+					foreground: 'var(--primary-foreground)'
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					DEFAULT: 'var(--secondary)',
+					foreground: 'var(--secondary-foreground)'
 				},
 				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
+					DEFAULT: 'var(--destructive)',
+					foreground: 'var(--destructive-foreground)'
 				},
 				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
+					DEFAULT: 'var(--muted)',
+					foreground: 'var(--muted-foreground)'
 				},
 				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+					DEFAULT: 'var(--accent)',
+					foreground: 'var(--accent-foreground)'
 				},
 				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
+					DEFAULT: 'var(--popover)',
+					foreground: 'var(--popover-foreground)'
 				},
 				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
+					DEFAULT: 'var(--card)',
+					foreground: 'var(--card-foreground)'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+					DEFAULT: 'var(--sidebar-background)',
+					foreground: 'var(--sidebar-foreground)',
+					primary: 'var(--sidebar-primary)',
+					'primary-foreground': 'var(--sidebar-primary-foreground)',
+					accent: 'var(--sidebar-accent)',
+					'accent-foreground': 'var(--sidebar-accent-foreground)',
+					border: 'var(--sidebar-border)',
+					ring: 'var(--sidebar-ring)'
 				},
 				sensor: {
-					'temp': 'hsl(var(--sensor-temp))',
-					'humidity': 'hsl(var(--sensor-humidity))',
-					'battery': 'hsl(var(--sensor-battery))',
-					'proximity': 'hsl(var(--sensor-proximity))',
-					'signal': 'hsl(var(--sensor-signal))',
+					temp: 'var(--sensor-temp)',
+					humidity: 'var(--sensor-humidity)',
+					battery: 'var(--sensor-battery)',
+					proximity: 'var(--sensor-proximity)',
+					signal: 'var(--sensor-signal)'
 				}
 			},
 			borderRadius: {
@@ -98,11 +97,11 @@ export default {
 					to: { opacity: '1' }
 				},
 				'fade-up': {
-					from: { 
+					from: {
 						opacity: '0',
 						transform: 'translateY(10px)'
 					},
-					to: { 
+					to: {
 						opacity: '1',
 						transform: 'translateY(0)'
 					}
@@ -111,7 +110,7 @@ export default {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' }
 				},
-				'float': {
+				float: {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-5px)' }
 				},
@@ -128,13 +127,14 @@ export default {
 				'fade-in': 'fade-in 0.5s ease-out',
 				'fade-up': 'fade-up 0.7s ease-out',
 				'pulse-soft': 'pulse-soft 3s infinite ease-in-out',
-				'float': 'float 6s infinite ease-in-out',
-				'ping-subtle': 'ping-subtle 2s cubic-bezier(0, 0, 0.2, 1) infinite'
+				float: 'float 6s infinite ease-in-out',
+				'ping-subtle':
+					'ping-subtle 2s cubic-bezier(0, 0, 0.2, 1) infinite'
 			},
 			backdropBlur: {
-				'xs': '2px',
+				xs: '2px'
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [require('tailwindcss-animate')]
 } satisfies Config;
