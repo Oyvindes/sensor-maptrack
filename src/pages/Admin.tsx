@@ -29,7 +29,22 @@ const Admin = () => {
   } = adminState;
 
   // Get tracking functionality including the update and delete functions
-  const { updateTrackingObject, deleteTrackingObject } = useTrackingObjects();
+  const { updateTrackingObject, deleteTrackingObject, devices: trackedDevices, trackingObjects: trackedObjects, fetchData: fetchTrackingData } = useTrackingObjects();
+  
+  // Sync tracking objects from the database to the admin state
+  useEffect(() => {
+    if (trackedDevices.length > 0 || trackedObjects.length > 0) {
+      setDevices(trackedDevices);
+      setTrackingObjects(trackedObjects);
+    }
+  }, [trackedDevices, trackedObjects, setDevices, setTrackingObjects]);
+  
+  // Fetch tracking data when the devices tab is active
+  useEffect(() => {
+    if (activeTab === "devices") {
+      fetchTrackingData();
+    }
+  }, [activeTab, fetchTrackingData]);
 
   const companyHandlers = useCompanyHandlers(
     companies, setCompanies, setSelectedCompany, setMode
