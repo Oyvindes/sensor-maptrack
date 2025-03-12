@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TrackingObject } from "@/types/sensors";
-import { Plus, Pencil, Trash, Folder } from "lucide-react";
+import { Plus, Pencil, Trash, Folder, AlertOctagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import {
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DeviceListProps {
   devices: TrackingObject[];
@@ -29,10 +30,12 @@ const DeviceList: React.FC<DeviceListProps> = ({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
   const [deviceToDelete, setDeviceToDelete] = React.useState<{id: string, name: string} | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleDeleteClick = (deviceId: string, deviceName: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering other click handlers
     setDeviceToDelete({ id: deviceId, name: deviceName });
+    setError(null);
     setDeleteConfirmOpen(true);
   };
 
@@ -40,14 +43,31 @@ const DeviceList: React.FC<DeviceListProps> = ({
     if (!deviceToDelete || !onDelete) return;
     
     setIsDeleting(true);
+    setError(null);
+    
     try {
-      await onDelete(deviceToDelete.id);
+      // Check if the device ID is in UUID format
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deviceToDelete.id);
+      
+      if (!isUuid) {
+        setError(`Cannot delete: "${deviceToDelete.name}" has an invalid ID format. This may be a mock device from sample data.`);
+        return;
+      }
+      
+      const success = await onDelete(deviceToDelete.id);
+      
+      if (!success) {
+        setError(`Failed to delete "${deviceToDelete.name}". Please try again.`);
+      }
     } catch (error) {
       console.error("Error during delete:", error);
+      setError(`An unexpected error occurred: ${error.message}`);
     } finally {
       setIsDeleting(false);
-      setDeleteConfirmOpen(false);
-      setDeviceToDelete(null);
+      if (!error) {
+        setDeleteConfirmOpen(false);
+        setDeviceToDelete(null);
+      }
     }
   };
 
@@ -115,13 +135,19 @@ const DeviceList: React.FC<DeviceListProps> = ({
                   <div className="text-xs text-muted-foreground">
                     Speed: {device.speed} mph • Battery: {device.batteryLevel}%
                   </div>
-                  {(device as any).folderId && (
+                  {device.folderId && (
                     <div className="text-xs flex items-center gap-1">
                       <Folder className="h-3 w-3" />
                       <span>In folder</span>
                     </div>
                   )}
                 </div>
+                {!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(device.id) && (
+                  <div className="mt-2 text-xs text-amber-500 flex items-center gap-1">
+                    <AlertOctagon className="h-3 w-3" />
+                    <span>Mock data (cannot be deleted)</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -136,6 +162,16 @@ const DeviceList: React.FC<DeviceListProps> = ({
               Are you sure you want to delete "{deviceToDelete?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+          
+          {error && (
+            <Alert variant="destructive" className="my-2">
+              <AlertDescription className="flex items-center gap-2">
+                <AlertOctagon className="h-4 w-4" />
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>
               Cancel

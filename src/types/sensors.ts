@@ -1,3 +1,4 @@
+
 export interface Location {
   lat: number;
   lng: number;
@@ -30,7 +31,10 @@ export interface Sensor {
   id: string;
   name: string;
   type: string;
-  status: "active" | "inactive";
+  status: "active" | "inactive" | "offline" | "online";
   location?: Location;
   companyId: string;
+  // Optional properties for sensor value display
+  lastReading?: number;
+  unit?: string;
 }

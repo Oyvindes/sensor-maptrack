@@ -78,7 +78,7 @@ export function useDeviceHandlers(
     if (updateTrackingObject) {
       const success = await updateTrackingObject(updatedDevice);
       if (success) {
-        // If successfully updated in Supabase, we don't need to update local state
+        // If successfully updated in Supabase, don't update local state
         // as the fetchData function called inside updateTrackingObject will have already done that
         setMode("listDevices");
         setSelectedDevice(null);
@@ -112,8 +112,8 @@ export function useDeviceHandlers(
       return;
     }
     
-    // Generate a valid UUID for new devices to ensure compatibility with Supabase
-    const uuid = crypto.randomUUID();
+    // Generate a temporary ID for new device
+    const tempId = `temp-${Date.now()}`;
     
     // For new devices, set the company ID to the user's company
     const companyId = currentUser.role === 'master' 
@@ -121,11 +121,11 @@ export function useDeviceHandlers(
       : currentUser.companyId;
     
     setSelectedDevice({
-      id: uuid,
+      id: tempId,
       name: "",
-      type: "",
+      type: "tracker",
       status: "online",
-      location: { lat: 0, lng: 0 },
+      location: { lat: 63.4305, lng: 10.3951 }, // Default to Trondheim
       companyId: companyId
     });
     setMode("editDevice");

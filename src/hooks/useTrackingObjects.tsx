@@ -78,7 +78,7 @@ export const useTrackingObjects = () => {
         // If no data, set empty arrays
         setTrackingObjects([]);
         setDevices([]);
-        toast.info('No tracking objects found in database');
+        console.log('No tracking objects found in database');
       }
       setIsLoading(false);
     } catch (error) {
@@ -101,20 +101,43 @@ export const useTrackingObjects = () => {
         lng: updatedDevice.location?.lng || 0
       };
 
-      // Update in Supabase
-      const { error } = await supabase
-        .from('tracking_objects')
-        .update({
-          name: updatedDevice.name,
-          position: position,
-          last_updated: new Date().toISOString(),
-          company_id: updatedDevice.companyId,
-          folder_id: updatedDevice.folderId
-        })
-        .eq('id', updatedDevice.id);
+      // Check if we're creating a new device (UUID check)
+      const isNewDevice = !updatedDevice.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      
+      let result;
+      
+      if (isNewDevice) {
+        // Insert new tracking object
+        result = await supabase
+          .from('tracking_objects')
+          .insert({
+            name: updatedDevice.name,
+            position: position,
+            last_updated: new Date().toISOString(),
+            company_id: updatedDevice.companyId,
+            folder_id: updatedDevice.folderId,
+            battery_level: 100,
+            speed: 0,
+            direction: 0
+          })
+          .select('id')
+          .single();
+      } else {
+        // Update existing tracking object
+        result = await supabase
+          .from('tracking_objects')
+          .update({
+            name: updatedDevice.name,
+            position: position,
+            last_updated: new Date().toISOString(),
+            company_id: updatedDevice.companyId,
+            folder_id: updatedDevice.folderId
+          })
+          .eq('id', updatedDevice.id);
+      }
 
-      if (error) {
-        console.error('Error updating tracking object:', error);
+      if (result.error) {
+        console.error('Error updating tracking object:', result.error);
         toast.error('Failed to update tracking object');
         return false;
       }
