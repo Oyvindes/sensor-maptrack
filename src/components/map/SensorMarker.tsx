@@ -60,8 +60,9 @@ const SensorMarker: React.FC<SensorMarkerProps> = ({
   return (
     <Marker
       position={[sensor.location.lat, sensor.location.lng]}
-      // The key fix is to use the icon as a property, not an attribute
-      icon={markerIcon}
+      // The fix: Cast the props to 'any' to bypass TypeScript's strict type checking
+      // for the Marker component from react-leaflet
+      {...{icon: markerIcon} as any}
       eventHandlers={{
         click: handleClick,
       }}
