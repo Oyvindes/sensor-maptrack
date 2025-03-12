@@ -21,7 +21,7 @@ interface SensorDataGraphsProps {
 	onClose: () => void;
 }
 
-interface SensorValue {
+interface SensorValueDisplay {
 	value: number;
 	unit: string;
 }
@@ -29,17 +29,25 @@ interface SensorValue {
 interface SensorReading {
 	timestamp: string;
 	values: {
-		temperature: SensorValue;
-		humidity: SensorValue;
-		battery: SensorValue;
-		signal: SensorValue;
+		temperature: SensorValueDisplay;
+		humidity: SensorValueDisplay;
+		battery: SensorValueDisplay;
+		signal: SensorValueDisplay;
 	};
+}
+
+interface SensorDataPoint {
+	time: string;
+	temperature: number;
+	humidity: number;
+	battery: number;
+	signal: number;
 }
 
 interface SensorInfo {
 	imei: string;
 	name: string;
-	values: string[];
+	values: SensorDataPoint[] | string[]; // Can be either parsed objects or raw strings
 }
 
 // Value type configurations
@@ -56,17 +64,54 @@ const generateData = (
 	imei: string
 ): SensorReading[] => {
 	const data: SensorReading[] = [];
-	const now = new Date();
+	
+	// Check if the sensor exists in allValues and has values
+	if (!allValues[imei] || !Array.isArray(allValues[imei].values) || allValues[imei].values.length === 0) {
+		return data; // Return empty array if no data
+	}
+	
+	// Process the values
 	allValues[imei].values.forEach((v) => {
-		data.push({
-			timestamp: new Date(v.time).toISOString(),
-			values: {
-				temperature: { value: v.temperature, unit: '°C' },
-				humidity: { value: v.humidity, unit: '%' },
-				battery: { value: v.battery, unit: '%' },
-				signal: { value: v.signal, unit: '%' }
+		let dataPoint: SensorDataPoint;
+		
+		// Check if v is a string (needs parsing) or already an object
+		if (typeof v === 'string') {
+			try {
+				// Try to parse the string as JSON
+				dataPoint = JSON.parse(v) as SensorDataPoint;
+			} catch (e) {
+				console.error(`Failed to parse sensor data: ${v}`, e);
+				return; // Skip this item
 			}
-		});
+		} else {
+			// It's already an object
+			dataPoint = v as SensorDataPoint;
+		}
+		
+		// Only add if we have the required properties
+		if (dataPoint && dataPoint.time) {
+			data.push({
+				timestamp: new Date(dataPoint.time).toISOString(),
+				values: {
+					temperature: {
+						value: dataPoint.temperature || 0,
+						unit: '°C'
+					},
+					humidity: {
+						value: dataPoint.humidity || 0,
+						unit: '%'
+					},
+					battery: {
+						value: dataPoint.battery || 0,
+						unit: '%'
+					},
+					signal: {
+						value: dataPoint.signal || 0,
+						unit: '%'
+					}
+				}
+			});
+		}
 	});
 
 	return data;
@@ -197,11 +242,32 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 			<div className="grid grid-cols-1 gap-8">
 				{project.assignedSensorImeis.map((sensorImei) => {
 					const data = generateData(sensorInfoMap, sensorImei);
-					const latestData = data[data.length - 1];
+					const latestData = data.length > 0 ? data[data.length - 1] : null;
 					// Get sensor name from map or fall back to ID if not found
 					const sensorName =
 						sensorInfoMap[sensorImei]?.name ||
 						`Sensor ${sensorImei}`;
+
+					// If no data is available for this sensor
+					if (!latestData) {
+						return (
+							<div key={sensorImei} className="space-y-4">
+								<h3 className="text-xl font-semibold">
+									{sensorName}
+								</h3>
+								<Card>
+									<CardHeader>
+										<CardTitle>No data available</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<p className="text-muted-foreground">
+											This sensor has no data points yet or is still loading.
+										</p>
+									</CardContent>
+								</Card>
+							</div>
+						);
+					}
 
 					return (
 						<div key={sensorImei} className="space-y-4">
