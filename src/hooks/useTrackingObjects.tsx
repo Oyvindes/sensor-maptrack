@@ -4,6 +4,7 @@ import { Device, TrackingObject, Location } from '@/types/sensors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
+import { isValidUUID, mapCompanyIdToUUID } from '@/utils/uuidUtils';
 
 export const useTrackingObjects = () => {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -115,6 +116,20 @@ export const useTrackingObjects = () => {
       // Check if we're creating a new device (UUID check)
       const isNewDevice = !updatedDevice.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
       
+      // Convert company ID to UUID format if it's not already a UUID
+      // This is necessary because Supabase expects UUIDs for foreign keys
+      let companyId = updatedDevice.companyId;
+      
+      if (!isValidUUID(companyId)) {
+        const mappedId = mapCompanyIdToUUID(companyId);
+        if (mappedId) {
+          companyId = mappedId;
+        } else {
+          // If we can't map to a UUID, use a default system UUID
+          companyId = '00000000-0000-0000-0000-000000000000';
+        }
+      }
+      
       let result;
       
       if (isNewDevice) {
@@ -125,7 +140,7 @@ export const useTrackingObjects = () => {
             name: updatedDevice.name,
             position: position,
             last_updated: new Date().toISOString(),
-            company_id: updatedDevice.companyId,
+            company_id: companyId,
             folder_id: updatedDevice.folderId,
             battery_level: 100,
             speed: 0,
@@ -141,7 +156,7 @@ export const useTrackingObjects = () => {
             name: updatedDevice.name,
             position: position,
             last_updated: new Date().toISOString(),
-            company_id: updatedDevice.companyId,
+            company_id: companyId,
             folder_id: updatedDevice.folderId
           })
           .eq('id', updatedDevice.id);

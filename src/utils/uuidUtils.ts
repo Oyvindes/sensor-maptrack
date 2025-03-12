@@ -1,51 +1,24 @@
-
-// Utility functions for handling UUID conversions
-
-/**
- * Maps string-based company IDs to valid UUID format for database operations
- * This is needed because the mock data uses string IDs but Supabase expects valid UUIDs
- */
-export const mapCompanyIdToUUID = (companyId: string): string => {
-  // Return empty string for undefined or empty companyId
-  if (!companyId) {
-    console.warn('Empty company ID passed to mapCompanyIdToUUID');
-    return '';
-  }
-  
-  // Map of mock company IDs to valid UUIDs
-  // These UUIDs must exist in the companies table and match the seeded data
-  const companyMap: Record<string, string> = {
-    'system': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    'company-001': 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
-    'company-002': 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
-    'company-003': 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
-    'company-004': 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
-    'company-005': 'f0eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
-    'briks': 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', // Map 'briks' to Briks company UUID
-  };
-
-  // If we have a mapping for this company ID, return it
-  if (companyMap[companyId]) {
-    console.log(`Mapped company ID ${companyId} to UUID ${companyMap[companyId]}`);
-    return companyMap[companyId];
-  }
-
-  // If the companyId is already in UUID format, return it as is
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
-    console.log(`Company ID ${companyId} is already a valid UUID`);
-    return companyId;
-  }
-
-  console.warn(`No UUID mapping found for company ID: ${companyId}`);
-  
-  // Default fallback UUID - make sure this ID exists in the companies table
-  return 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'; // Using Acme Corporation's UUID as default
-};
-
 /**
  * Checks if a string is a valid UUID
  */
-export const isValidUUID = (id: string): boolean => {
-  if (!id) return false;
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+export const isValidUUID = (str: string): boolean => {
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidPattern.test(str);
+};
+
+/**
+ * Maps common company IDs to UUIDs
+ * This is needed because our mock data uses string IDs like "company-001"
+ * but the database expects UUIDs
+ */
+export const mapCompanyIdToUUID = (companyId: string): string | null => {
+  const companyMap: Record<string, string> = {
+    'company-001': '11111111-1111-1111-1111-111111111111',
+    'company-002': '22222222-2222-2222-2222-222222222222',
+    'company-003': '33333333-3333-3333-3333-333333333333',
+    'company-004': '44444444-4444-4444-4444-444444444444',
+    'system': '00000000-0000-0000-0000-000000000000'
+  };
+  
+  return companyMap[companyId] || null;
 };
