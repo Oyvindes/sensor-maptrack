@@ -1,8 +1,8 @@
-
-import { useState, useEffect } from "react";
-import { getMockCompanies } from "@/services/company/companyService";
+import { useState, useEffect, useCallback } from "react";
+import { companyService } from "@/services/company";
 import { getMockUsers } from "@/services/user/userService";
 import { getMockDevices, getMockSensors, getMockTrackingObjects } from "@/services/sensorService";
+import { toast } from "sonner";
 import { mapDeviceToTrackingObject } from "@/services/device/mockDeviceData";
 import { Company, User, SensorFolder } from "@/types/users";
 import { Device, Sensor, TrackingObject } from "@/types/sensors";
@@ -40,10 +40,26 @@ export function useAdminState() {
   const [sensorFolders, setSensorFolders] = useState<SensorFolder[]>([]);
 
   useEffect(() => {
-    // Get companies and users
-    setCompanies(getMockCompanies());
-    setUsers(getMockUsers());
+    // Fetch companies, users, and sensors
+    const fetchData = async () => {
+      try {
+        const [companiesData, usersData] = await Promise.all([
+          companyService.list(),
+          getMockUsers()
+        ]);
+        
+        setCompanies(companiesData);
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching companies/users:', error);
+        toast.error('Failed to load companies or users');
+        setCompanies([]);
+        setUsers([]);
+      }
+    };
     
+    fetchData();
+
     // Fetch sensors (async)
     const fetchSensors = async () => {
       try {
@@ -71,10 +87,9 @@ export function useAdminState() {
     
     fetchSensors();
     
-    // Get devices and tracking objects
-    const deviceData = getMockDevices();
-    setDevices(deviceData);
-    setTrackingObjects(deviceData.map(mapDeviceToTrackingObject));
+    // Initialize with empty arrays instead of mock data
+    setDevices([]);
+    setTrackingObjects([]);
   }, []);
 
   const handleTabChange = (value: string) => {

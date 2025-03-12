@@ -3,7 +3,8 @@ import { Device, TrackingObject, Location } from '@/types/sensors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
-import { isValidUUID, mapCompanyIdToUUID } from '@/utils/uuidUtils';
+import { isValidUUID } from '@/utils/uuidUtils';
+import { companyService } from '@/services/company';
 
 export const useTrackingObjects = () => {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -101,20 +102,41 @@ export const useTrackingObjects = () => {
       };
 
       const isNewDevice = !isValidUUID(updatedDevice.id);
-      
       let companyIdForDb = null;
-      
+
       if (updatedDevice.companyId) {
-        if (isValidUUID(updatedDevice.companyId)) {
-          companyIdForDb = updatedDevice.companyId;
-        } else {
+        try {
+          // Import the mapCompanyIdToUUID function
+          const { mapCompanyIdToUUID } = await import('@/utils/uuidUtils');
+          
+          // Try to map the company ID to a UUID
           const mappedId = mapCompanyIdToUUID(updatedDevice.companyId);
+          
           if (mappedId) {
-            companyIdForDb = mappedId;
+            // Verify the company exists
+            const exists = await companyService.exists(mappedId);
+            if (exists) {
+              companyIdForDb = mappedId;
+            } else {
+              toast.error('Invalid company ID - company does not exist');
+              return false;
+            }
+          } else if (isValidUUID(updatedDevice.companyId)) {
+            // If it's already a UUID but not in our mapping, verify it exists
+            const exists = await companyService.exists(updatedDevice.companyId);
+            if (exists) {
+              companyIdForDb = updatedDevice.companyId;
+            } else {
+              toast.error('Invalid company ID - company does not exist');
+              return false;
+            }
           }
+        } catch (error) {
+          console.error('Error validating company:', error);
+          toast.error('Failed to validate company');
+          return false;
         }
       }
-      
       console.log(`Processing company ID: ${updatedDevice.companyId} -> ${companyIdForDb}`);
       
       let result;
@@ -254,6 +276,7 @@ export const useTrackingObjects = () => {
     isLoading,
     updateTrackingObject,
     deleteTrackingObject,
-    handleObjectSelect
+    handleObjectSelect,
+    fetchData  // Export the fetchData function so it can be called from outside
   };
 };
