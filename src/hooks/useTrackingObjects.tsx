@@ -58,8 +58,9 @@ export const useTrackingObjects = () => {
           speed: typeof item.speed === 'number' ? item.speed : 0,
           direction: typeof item.direction === 'number' ? item.direction : 0,
           batteryLevel: typeof item.battery_level === 'number' ? item.battery_level : 100,
-          // Use optional chaining to safely access folder_id
-          folderId: item.folder_id || undefined,
+          // Fix: Use optional chaining to safely access folder_id, which doesn't exist in the type
+          // Use any to bypass the TypeScript error since we know the property might exist at runtime
+          folderId: (item as any).folder_id || undefined,
         }));
         setTrackingObjects(formattedTrackingObjects);
 

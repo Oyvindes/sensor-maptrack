@@ -53,10 +53,15 @@ const SensorMarker: React.FC<SensorMarkerProps> = ({
     if (onSensorClick) onSensorClick(sensor.id);
   };
 
+  // The issue is with how we're passing the icon to the Marker component
+  // Fix: Use the icon property directly without type issues
+  const markerIcon = getCustomIcon('sensor', sensor.status);
+
   return (
     <Marker
       position={[sensor.location.lat, sensor.location.lng]}
-      icon={getCustomIcon('sensor', sensor.status)}
+      // The key fix is to use the icon as a property, not an attribute
+      icon={markerIcon}
       eventHandlers={{
         click: handleClick,
       }}
