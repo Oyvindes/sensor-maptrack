@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Device, TrackingObject, Location } from '@/types/sensors';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,12 +10,10 @@ export const useTrackingObjects = () => {
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Convert Supabase position JSON to our Location type
   const parsePosition = (position: Json | null): Location => {
     if (!position) return { lat: 0, lng: 0 };
     
     try {
-      // Handle when position is an object with lat/lng properties
       if (typeof position === 'object' && position !== null && !Array.isArray(position)) {
         const posObj = position as Record<string, Json>;
         
@@ -39,7 +36,6 @@ export const useTrackingObjects = () => {
     try {
       setIsLoading(true);
       
-      // Fetch from Supabase
       const { data: trackingData, error } = await supabase
         .from('tracking_objects')
         .select('*');
@@ -50,7 +46,6 @@ export const useTrackingObjects = () => {
       }
 
       if (trackingData && trackingData.length > 0) {
-        // Convert Supabase data to TrackingObject format
         const formattedTrackingObjects = trackingData.map(item => ({
           id: item.id,
           name: item.name,
@@ -59,25 +54,21 @@ export const useTrackingObjects = () => {
           speed: typeof item.speed === 'number' ? item.speed : 0,
           direction: typeof item.direction === 'number' ? item.direction : 0,
           batteryLevel: typeof item.battery_level === 'number' ? item.battery_level : 100,
-          // Fix: Use optional chaining to safely access folder_id, which doesn't exist in the type
-          // Use any to bypass the TypeScript error since we know the property might exist at runtime
           folderId: (item as any).folder_id || undefined,
         }));
         setTrackingObjects(formattedTrackingObjects);
 
-        // Convert to device format for backwards compatibility
         const deviceData: Device[] = formattedTrackingObjects.map(obj => ({
           id: obj.id,
           name: obj.name,
           type: 'tracker',
-          status: 'online' as const, // Use const assertion to match the union type
+          status: 'online' as const,
           location: obj.position,
-          companyId: 'system', // Default value
+          companyId: 'system',
           lastUpdated: obj.lastUpdated,
           folderId: obj.folderId
         }));
         
-        // Update device company ID if available in tracking data
         deviceData.forEach((device, index) => {
           const trackingItem = trackingData[index];
           if (trackingItem && trackingItem.company_id) {
@@ -87,7 +78,6 @@ export const useTrackingObjects = () => {
         
         setDevices(deviceData);
       } else {
-        // If no data, set empty arrays
         setTrackingObjects([]);
         setDevices([]);
         console.log('No tracking objects found in database');
@@ -97,68 +87,79 @@ export const useTrackingObjects = () => {
       console.error('Error in fetchData:', error);
       toast.error('Failed to load tracking data');
       
-      // Set empty arrays on error
       setTrackingObjects([]);
       setDevices([]);
       setIsLoading(false);
     }
   }, []);
 
-  // Function to update a tracking object in the database
   const updateTrackingObject = useCallback(async (updatedDevice: Device) => {
     try {
-      // Create a properly formatted position object for Supabase
       const position: Record<string, number> = {
         lat: updatedDevice.location?.lat || 0,
         lng: updatedDevice.location?.lng || 0
       };
 
-      // Check if we're creating a new device (UUID check)
-      const isNewDevice = !updatedDevice.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      const isNewDevice = !isValidUUID(updatedDevice.id);
       
-      // Convert company ID to UUID format if it's not already a UUID
-      // This is necessary because Supabase expects UUIDs for foreign keys
-      let companyId = updatedDevice.companyId;
+      let companyIdForDb = null;
       
-      if (!isValidUUID(companyId)) {
-        const mappedId = mapCompanyIdToUUID(companyId);
-        if (mappedId) {
-          companyId = mappedId;
+      if (updatedDevice.companyId) {
+        if (isValidUUID(updatedDevice.companyId)) {
+          companyIdForDb = updatedDevice.companyId;
         } else {
-          // If we can't map to a UUID, use a default system UUID
-          companyId = '00000000-0000-0000-0000-000000000000';
+          const mappedId = mapCompanyIdToUUID(updatedDevice.companyId);
+          if (mappedId) {
+            companyIdForDb = mappedId;
+          }
         }
       }
+      
+      console.log(`Processing company ID: ${updatedDevice.companyId} -> ${companyIdForDb}`);
       
       let result;
       
       if (isNewDevice) {
-        // Insert new tracking object
+        const insertData: any = {
+          name: updatedDevice.name,
+          position: position,
+          last_updated: new Date().toISOString(),
+          battery_level: 100,
+          speed: 0,
+          direction: 0
+        };
+        
+        if (companyIdForDb) {
+          insertData.company_id = companyIdForDb;
+        }
+        
+        if (updatedDevice.folderId) {
+          insertData.folder_id = updatedDevice.folderId;
+        }
+        
         result = await supabase
           .from('tracking_objects')
-          .insert({
-            name: updatedDevice.name,
-            position: position,
-            last_updated: new Date().toISOString(),
-            company_id: companyId,
-            folder_id: updatedDevice.folderId,
-            battery_level: 100,
-            speed: 0,
-            direction: 0
-          })
+          .insert(insertData)
           .select('id')
           .single();
       } else {
-        // Update existing tracking object
+        const updateData: any = {
+          name: updatedDevice.name,
+          position: position,
+          last_updated: new Date().toISOString(),
+        };
+        
+        if (companyIdForDb) {
+          updateData.company_id = companyIdForDb;
+        }
+        
+        if (updatedDevice.folderId) {
+          updateData.folder_id = updatedDevice.folderId;
+        }
+        
         result = await supabase
           .from('tracking_objects')
-          .update({
-            name: updatedDevice.name,
-            position: position,
-            last_updated: new Date().toISOString(),
-            company_id: companyId,
-            folder_id: updatedDevice.folderId
-          })
+          .update(updateData)
           .eq('id', updatedDevice.id);
       }
 
@@ -168,7 +169,6 @@ export const useTrackingObjects = () => {
         return false;
       }
 
-      // Update local state
       await fetchData();
       toast.success('Tracking object updated successfully');
       return true;
@@ -179,10 +179,8 @@ export const useTrackingObjects = () => {
     }
   }, [fetchData]);
 
-  // Function to delete a tracking object
   const deleteTrackingObject = useCallback(async (deviceId: string) => {
     try {
-      // Check if deviceId is a valid UUID
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       
       if (!uuidPattern.test(deviceId)) {
@@ -202,7 +200,6 @@ export const useTrackingObjects = () => {
         return false;
       }
 
-      // Update local state after successful deletion
       await fetchData();
       toast.success('Tracking object deleted successfully');
       return true;
@@ -216,19 +213,17 @@ export const useTrackingObjects = () => {
   useEffect(() => {
     fetchData();
 
-    // Set up real-time subscription for tracking objects
     const channel = supabase
       .channel('tracking_objects_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'tracking_objects' }, 
         (payload) => {
           console.log('Real-time update received:', payload);
-          fetchData(); // Refresh data when changes occur
+          fetchData();
         }
       )
       .subscribe();
 
-    // Simulate real-time updates every 30 seconds for demo purposes
     const interval = setInterval(() => {
       setTrackingObjects(prev => 
         prev.map(obj => ({
@@ -246,7 +241,6 @@ export const useTrackingObjects = () => {
     };
   }, [fetchData]);
 
-  // Handle object selection (for display purposes)
   const handleObjectSelect = useCallback((object: TrackingObject) => {
     toast.info(`${object.name} selected`, {
       description: `Speed: ${object.speed}mph, Battery: ${object.batteryLevel}%`,
