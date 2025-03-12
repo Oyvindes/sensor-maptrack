@@ -28,8 +28,8 @@ const Admin = () => {
     handleTabChange
   } = adminState;
 
-  // Get tracking functionality including the update function
-  const { updateTrackingObject } = useTrackingObjects();
+  // Get tracking functionality including the update and delete functions
+  const { updateTrackingObject, deleteTrackingObject } = useTrackingObjects();
 
   const companyHandlers = useCompanyHandlers(
     companies, setCompanies, setSelectedCompany, setMode
@@ -45,7 +45,7 @@ const Admin = () => {
 
   const deviceHandlers = useDeviceHandlers(
     devices, trackingObjects, setDevices, setTrackingObjects, 
-    setSelectedDevice, setMode, companies, updateTrackingObject
+    setSelectedDevice, setMode, companies, updateTrackingObject, deleteTrackingObject
   );
   
   const currentUser = getCurrentUser();
@@ -133,6 +133,7 @@ const Admin = () => {
               onDeviceSave={deviceHandlers.handleDeviceSave}
               onDeviceCancel={deviceHandlers.handleDeviceCancel}
               onAddNewDevice={deviceHandlers.handleAddNewDevice}
+              onDeviceDelete={deviceHandlers.handleDeviceDelete}
             />
           </TabsContent>
         </Tabs>

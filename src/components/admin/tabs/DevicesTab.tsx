@@ -14,6 +14,7 @@ interface DevicesTabProps {
   onDeviceSave: (device: Device) => void;
   onDeviceCancel: () => void;
   onAddNewDevice: () => void;
+  onDeviceDelete?: (deviceId: string) => Promise<boolean>;
 }
 
 const DevicesTab: React.FC<DevicesTabProps> = ({
@@ -24,7 +25,8 @@ const DevicesTab: React.FC<DevicesTabProps> = ({
   onDeviceSelect,
   onDeviceSave,
   onDeviceCancel,
-  onAddNewDevice
+  onAddNewDevice,
+  onDeviceDelete
 }) => {
   return (
     <>
@@ -33,6 +35,7 @@ const DevicesTab: React.FC<DevicesTabProps> = ({
           devices={trackingObjects}
           onDeviceSelect={onDeviceSelect}
           onAddNew={onAddNewDevice}
+          onDelete={onDeviceDelete}
         />
       )}
       {mode === "editDevice" && selectedDevice && (
