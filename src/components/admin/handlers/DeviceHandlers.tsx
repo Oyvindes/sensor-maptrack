@@ -9,6 +9,7 @@ export interface DeviceHandlers {
   handleDeviceSave: (updatedDevice: Device) => void;
   handleDeviceCancel: () => void;
   handleAddNewDevice: () => void;
+  handleDeviceDelete: (deviceId: string) => Promise<boolean>;
 }
 
 export function useDeviceHandlers(
@@ -19,7 +20,8 @@ export function useDeviceHandlers(
   setSelectedDevice: React.Dispatch<React.SetStateAction<Device | null>>,
   setMode: React.Dispatch<React.SetStateAction<string>>,
   companies: { id: string }[],
-  updateTrackingObject?: (updatedDevice: Device) => Promise<boolean>
+  updateTrackingObject?: (updatedDevice: Device) => Promise<boolean>,
+  deleteTrackingObject?: (deviceId: string) => Promise<boolean>
 ): DeviceHandlers {
   const currentUser = getCurrentUser();
 
@@ -126,6 +128,32 @@ export function useDeviceHandlers(
     setMode("editDevice");
   };
   
+  const handleDeviceDelete = async (deviceId: string): Promise<boolean> => {
+    // Find the device by ID
+    const device = devices.find(d => d.id === deviceId);
+    if (!device) {
+      toast.error("Device not found");
+      return false;
+    }
+    
+    // Check if user has permissions to delete this device
+    if (!canEditDevice(device)) {
+      toast.error("You don't have permission to delete this device");
+      return false;
+    }
+    
+    // Use the provided deleteTrackingObject function if available
+    if (deleteTrackingObject) {
+      return await deleteTrackingObject(deviceId);
+    }
+    
+    // Fallback to local state update if delete function not provided
+    setDevices(devices.filter(d => d.id !== deviceId));
+    setTrackingObjects(trackingObjects.filter(obj => obj.id !== deviceId));
+    toast.success("Device deleted successfully");
+    return true;
+  };
+  
   // Helper function to check if user can edit a specific device
   const canEditDevice = (device: Device): boolean => {
     if (!currentUser) return false;
@@ -145,6 +173,7 @@ export function useDeviceHandlers(
     handleTrackingObjectSelect,
     handleDeviceSave,
     handleDeviceCancel,
-    handleAddNewDevice
+    handleAddNewDevice,
+    handleDeviceDelete
   };
 }

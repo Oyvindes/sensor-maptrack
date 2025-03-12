@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Device, TrackingObject, Location } from '@/types/sensors';
-import { getMockDevices } from '@/services/device/mockDeviceData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
@@ -18,11 +17,13 @@ export const useTrackingObjects = () => {
     try {
       // Handle when position is an object with lat/lng properties
       if (typeof position === 'object' && position !== null && !Array.isArray(position)) {
-        const lat = typeof position.lat === 'number' ? position.lat : 
-                   typeof position.lat === 'string' ? parseFloat(position.lat) : 0;
+        const posObj = position as Record<string, Json>;
         
-        const lng = typeof position.lng === 'number' ? position.lng : 
-                   typeof position.lng === 'string' ? parseFloat(position.lng) : 0;
+        const lat = typeof posObj.lat === 'number' ? posObj.lat : 
+                   typeof posObj.lat === 'string' ? parseFloat(posObj.lat) : 0;
+        
+        const lng = typeof posObj.lng === 'number' ? posObj.lng : 
+                   typeof posObj.lng === 'string' ? parseFloat(posObj.lng) : 0;
                    
         return { lat, lng };
       }
@@ -35,7 +36,7 @@ export const useTrackingObjects = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      // Try to fetch from Supabase first
+      // Fetch from Supabase
       const { data: trackingData, error } = await supabase
         .from('tracking_objects')
         .select('*');
@@ -70,44 +71,19 @@ export const useTrackingObjects = () => {
         }));
         setDevices(deviceData);
       } else {
-        // Fall back to mock data if no data in Supabase
-        console.log('No tracking objects found in database, using mock data');
-        const mockDevices = getMockDevices();
-        setDevices(mockDevices);
-        
-        // Convert mock devices to tracking objects
-        const mockTrackingObjects = mockDevices.map(device => ({
-          id: device.id,
-          name: device.name,
-          position: device.location || { lat: 0, lng: 0 },
-          lastUpdated: device.lastUpdated || new Date().toLocaleString(),
-          speed: 0,
-          direction: 0,
-          batteryLevel: 100
-        }));
-        setTrackingObjects(mockTrackingObjects);
+        // If no data, set empty arrays
+        setTrackingObjects([]);
+        setDevices([]);
+        toast.info('No tracking objects found in database');
       }
       setIsLoading(false);
     } catch (error) {
       console.error('Error in fetchData:', error);
-      toast.error('Failed to load tracking data. Using mock data instead.');
+      toast.error('Failed to load tracking data');
       
-      // Fall back to mock data
-      const mockDevices = getMockDevices();
-      setDevices(mockDevices);
-      
-      // Convert mock devices to tracking objects
-      const mockTrackingObjects = mockDevices.map(device => ({
-        id: device.id,
-        name: device.name,
-        position: device.location || { lat: 0, lng: 0 },
-        lastUpdated: device.lastUpdated || new Date().toLocaleString(),
-        speed: 0,
-        direction: 0,
-        batteryLevel: 100
-      }));
-      setTrackingObjects(mockTrackingObjects);
-      
+      // Set empty arrays instead of falling back to mock data
+      setTrackingObjects([]);
+      setDevices([]);
       setIsLoading(false);
     }
   }, []);
@@ -145,6 +121,31 @@ export const useTrackingObjects = () => {
     } catch (error) {
       console.error('Error in updateTrackingObject:', error);
       toast.error('Failed to update tracking object');
+      return false;
+    }
+  }, [fetchData]);
+
+  // Function to delete a tracking object
+  const deleteTrackingObject = useCallback(async (deviceId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tracking_objects')
+        .delete()
+        .eq('id', deviceId);
+
+      if (error) {
+        console.error('Error deleting tracking object:', error);
+        toast.error('Failed to delete tracking object');
+        return false;
+      }
+
+      // Update local state after successful deletion
+      await fetchData();
+      toast.success('Tracking object deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('Error in deleteTrackingObject:', error);
+      toast.error('Failed to delete tracking object');
       return false;
     }
   }, [fetchData]);
@@ -195,6 +196,7 @@ export const useTrackingObjects = () => {
     trackingObjects,
     isLoading,
     updateTrackingObject,
+    deleteTrackingObject,
     handleObjectSelect
   };
 };
