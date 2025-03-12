@@ -80,7 +80,7 @@ export function useAdminState() {
 		fetchData();
 
 		// Fetch sensors (async)
-		const fetchSensors = async () => {
+		const loadSensors = async () => {
 			try {
 				const sensorsData = await fetchSensors();
 				// Make sure all sensors have the values property properly set
@@ -91,13 +91,7 @@ export function useAdminState() {
 							// Convert old format to new format if needed
 							return {
 								...sensor,
-								values: [
-									{
-										type: 'temperature',
-										value: 0,
-										unit: '°C'
-									}
-								]
+								values: [''] // Use empty string array to match SensorData type
 							};
 						}
 						return sensor;
@@ -108,7 +102,7 @@ export function useAdminState() {
 			}
 		};
 
-		fetchSensors();
+		loadSensors();
 
 		// Initialize with empty arrays instead of mock data
 		setDevices([]);
