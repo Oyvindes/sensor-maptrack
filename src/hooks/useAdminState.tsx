@@ -91,7 +91,7 @@ export function useAdminState() {
 							// Convert old format to new format if needed
 							return {
 								...sensor,
-								values: [''] // Use empty string array to match SensorData type
+								values: [] // Use empty array of SensorDataValues type
 							};
 						}
 						return sensor;
