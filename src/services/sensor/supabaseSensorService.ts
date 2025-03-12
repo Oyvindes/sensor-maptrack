@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { SensorData } from '@/components/SensorCard';
+import { SensorData, SensorDataValues } from '@/components/SensorCard';
 import { toast } from 'sonner';
 import { mapCompanyIdToUUID } from '@/utils/uuidUtils';
 
@@ -33,14 +33,16 @@ export const fetchSensors = async (): Promise<SensorData[]> => {
 			// Find all values for this sensor
 			const values = sensorValues
 				.filter((value) => value.sensor_imei === sensor.imei)
-				.map((value) => value.payload);
+				.map((value) => {
+					return { ...value.payload, time: value.created_at };
+				});
 
 			return {
 				id: sensor.id,
 				name: sensor.name,
 				imei: sensor.imei || undefined,
 				status: sensor.status as 'online' | 'offline' | 'warning',
-				values: values.length > 0 ? values : [''],
+				values,
 				lastUpdated: new Date(sensor.updated_at).toLocaleString(),
 				folderId: sensor.folder_id || undefined,
 				companyId: sensor.company_id

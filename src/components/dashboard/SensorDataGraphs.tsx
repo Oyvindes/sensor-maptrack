@@ -64,16 +64,20 @@ const generateData = (
 	imei: string
 ): SensorReading[] => {
 	const data: SensorReading[] = [];
-	
+
 	// Check if the sensor exists in allValues and has values
-	if (!allValues[imei] || !Array.isArray(allValues[imei].values) || allValues[imei].values.length === 0) {
+	if (
+		!allValues[imei] ||
+		!Array.isArray(allValues[imei].values) ||
+		allValues[imei].values.length === 0
+	) {
 		return data; // Return empty array if no data
 	}
-	
+
 	// Process the values
 	allValues[imei].values.forEach((v) => {
 		let dataPoint: SensorDataPoint;
-		
+
 		// Check if v is a string (needs parsing) or already an object
 		if (typeof v === 'string') {
 			try {
@@ -87,7 +91,7 @@ const generateData = (
 			// It's already an object
 			dataPoint = v as SensorDataPoint;
 		}
-		
+
 		// Only add if we have the required properties
 		if (dataPoint && dataPoint.time) {
 			data.push({
@@ -102,11 +106,11 @@ const generateData = (
 						unit: '%'
 					},
 					battery: {
-						value: dataPoint.battery || 0,
+						value: ((dataPoint.battery - 2.5) / 1.1) * 100 || 0, // 2.5 -> 3.6
 						unit: '%'
 					},
 					signal: {
-						value: dataPoint.signal || 0,
+						value: dataPoint.signal * 3.33 || 0,
 						unit: '%'
 					}
 				}
@@ -242,7 +246,8 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 			<div className="grid grid-cols-1 gap-8">
 				{project.assignedSensorImeis.map((sensorImei) => {
 					const data = generateData(sensorInfoMap, sensorImei);
-					const latestData = data.length > 0 ? data[data.length - 1] : null;
+					const latestData =
+						data.length > 0 ? data[data.length - 1] : null;
 					// Get sensor name from map or fall back to ID if not found
 					const sensorName =
 						sensorInfoMap[sensorImei]?.name ||
@@ -261,7 +266,8 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 									</CardHeader>
 									<CardContent>
 										<p className="text-muted-foreground">
-											This sensor has no data points yet or is still loading.
+											This sensor has no data points yet
+											or is still loading.
 										</p>
 									</CardContent>
 								</Card>

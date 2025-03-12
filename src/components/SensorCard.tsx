@@ -13,11 +13,36 @@ export type SensorType =
 export type SensorData = {
 	id: string;
 	name: string;
-	values: string[];
+	values: SensorDataValues[];
 	status: 'online' | 'offline' | 'warning';
 	lastUpdated: string;
 	companyId?: string;
 	imei?: string;
+};
+
+export type SensorDataValues = {
+	1: any[];
+	2: any[];
+	3: any[];
+	4: any[];
+	5: any[];
+	6: any[];
+	7: any[];
+	8: any[];
+	DS18B20_Temp: number;
+	IMEI: string;
+	IMSI: string;
+	Model: string;
+	adc1: number;
+	battery: number;
+	digital_in: number;
+	humidity: number;
+	interrupt: number;
+	interrupt_level: number;
+	mod: number;
+	signal: number;
+	temperature: number;
+	time: string;
 };
 
 type SensorCardProps = {
