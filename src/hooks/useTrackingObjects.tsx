@@ -36,6 +36,8 @@ export const useTrackingObjects = () => {
 
   const fetchData = useCallback(async () => {
     try {
+      setIsLoading(true);
+      
       // Fetch from Supabase
       const { data: trackingData, error } = await supabase
         .from('tracking_objects')
@@ -56,6 +58,7 @@ export const useTrackingObjects = () => {
           speed: typeof item.speed === 'number' ? item.speed : 0,
           direction: typeof item.direction === 'number' ? item.direction : 0,
           batteryLevel: typeof item.battery_level === 'number' ? item.battery_level : 100,
+          folderId: item.folder_id || undefined,
         }));
         setTrackingObjects(formattedTrackingObjects);
 
@@ -67,7 +70,8 @@ export const useTrackingObjects = () => {
           status: 'online' as const, // Use const assertion to match the union type
           location: obj.position,
           companyId: trackingData.find(item => item.id === obj.id)?.company_id || 'system',
-          lastUpdated: obj.lastUpdated
+          lastUpdated: obj.lastUpdated,
+          folderId: obj.folderId
         }));
         setDevices(deviceData);
       } else {
@@ -81,7 +85,7 @@ export const useTrackingObjects = () => {
       console.error('Error in fetchData:', error);
       toast.error('Failed to load tracking data');
       
-      // Set empty arrays instead of falling back to mock data
+      // Set empty arrays on error
       setTrackingObjects([]);
       setDevices([]);
       setIsLoading(false);
@@ -104,7 +108,8 @@ export const useTrackingObjects = () => {
           name: updatedDevice.name,
           position: position,
           last_updated: new Date().toISOString(),
-          company_id: updatedDevice.companyId
+          company_id: updatedDevice.companyId,
+          folder_id: updatedDevice.folderId
         })
         .eq('id', updatedDevice.id);
 
@@ -128,6 +133,15 @@ export const useTrackingObjects = () => {
   // Function to delete a tracking object
   const deleteTrackingObject = useCallback(async (deviceId: string) => {
     try {
+      // Check if deviceId is a valid UUID
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      if (!uuidPattern.test(deviceId)) {
+        console.error('Invalid UUID format for deviceId:', deviceId);
+        toast.error('Cannot delete: Invalid device ID format');
+        return false;
+      }
+      
       const { error } = await supabase
         .from('tracking_objects')
         .delete()

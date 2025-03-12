@@ -112,13 +112,16 @@ export function useDeviceHandlers(
       return;
     }
     
+    // Generate a valid UUID for new devices to ensure compatibility with Supabase
+    const uuid = crypto.randomUUID();
+    
     // For new devices, set the company ID to the user's company
     const companyId = currentUser.role === 'master' 
       ? (companies[0]?.id || "system") 
       : currentUser.companyId;
     
     setSelectedDevice({
-      id: `device-${Date.now().toString().slice(-3)}`,
+      id: uuid,
       name: "",
       type: "",
       status: "online",
