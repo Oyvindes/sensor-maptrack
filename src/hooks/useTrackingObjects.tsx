@@ -58,6 +58,7 @@ export const useTrackingObjects = () => {
           speed: typeof item.speed === 'number' ? item.speed : 0,
           direction: typeof item.direction === 'number' ? item.direction : 0,
           batteryLevel: typeof item.battery_level === 'number' ? item.battery_level : 100,
+          // Use optional chaining to safely access folder_id
           folderId: item.folder_id || undefined,
         }));
         setTrackingObjects(formattedTrackingObjects);
@@ -69,10 +70,19 @@ export const useTrackingObjects = () => {
           type: 'tracker',
           status: 'online' as const, // Use const assertion to match the union type
           location: obj.position,
-          companyId: trackingData.find(item => item.id === obj.id)?.company_id || 'system',
+          companyId: 'system', // Default value
           lastUpdated: obj.lastUpdated,
           folderId: obj.folderId
         }));
+        
+        // Update device company ID if available in tracking data
+        deviceData.forEach((device, index) => {
+          const trackingItem = trackingData[index];
+          if (trackingItem && trackingItem.company_id) {
+            device.companyId = trackingItem.company_id;
+          }
+        });
+        
         setDevices(deviceData);
       } else {
         // If no data, set empty arrays

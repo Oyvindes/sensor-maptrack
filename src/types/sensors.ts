@@ -37,4 +37,5 @@ export interface Sensor {
   // Optional properties for sensor value display
   lastReading?: number;
   unit?: string;
+  folderId?: string;
 }

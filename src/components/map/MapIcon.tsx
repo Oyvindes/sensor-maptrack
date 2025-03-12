@@ -1,3 +1,4 @@
+
 import L from "leaflet";
 
 // Use local marker icon images to prevent Vite URL normalization issues
@@ -14,5 +15,20 @@ const defaultIcon = L.icon({
 
 // Set the default icon for all markers
 L.Marker.prototype.options.icon = defaultIcon;
+
+// Function to create a custom icon based on type and status
+export const createMapIcon = (type: string, status: string) => {
+  // Create different icons based on type and status
+  let className = 'bg-green-500 border-white';
+  if (status === 'offline') className = 'bg-gray-500 border-white';
+  if (status === 'inactive') className = 'bg-amber-500 border-white';
+  
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div class="marker-pin ${className}"></div>`,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42]
+  });
+};
 
 export default defaultIcon;
