@@ -1,3 +1,5 @@
+import { SensorDataValues } from '@/components/SensorCard';
+
 export type Json =
 	| string
 	| number
@@ -159,19 +161,19 @@ export type Database = {
 					created_at: string | null;
 					id: string;
 					sensor_imei: string;
-					payload: string;
+					payload: SensorDataValues;
 				};
 				Insert: {
 					created_at?: string | null;
 					id?: string;
 					sensor_imei: string;
-					payload: string;
+					payload: SensorDataValues;
 				};
 				Update: {
 					created_at?: string | null;
 					id?: string;
 					sensor_imei: string;
-					payload: string;
+					payload: SensorDataValues;
 				};
 				Relationships: [
 					{
