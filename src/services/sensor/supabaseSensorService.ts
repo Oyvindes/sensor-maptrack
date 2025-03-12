@@ -9,24 +9,40 @@ import { mapCompanyIdToUUID } from '@/utils/uuidUtils';
 export const fetchSensors = async (): Promise<SensorData[]> => {
 	try {
 		// Get sensors with their latest values
-		const { data: sensors, error } = await supabase.from('sensors').select(`
-        id, 
-        name, 
-        imei, 
-        status,
-        folder_id,
-        company_id,
-        updated_at
-      `);
+		const { data: sensors, error } = await supabase
+			.from('sensors')
+			.select(`
+				id,
+				name,
+				imei,
+				status,
+				folder_id,
+				company_id,
+				updated_at
+			`);
 
 		if (error) throw error;
 
 		// Get values for all sensors
 		const { data: sensorValues, error: valuesError } = await supabase
 			.from('sensor_values')
-			.select('*');
+			.select('*')
+			.order('created_at', { ascending: false });
 
 		if (valuesError) throw valuesError;
+
+		// Get all sensor folders to map folder_id to project name
+		const { data: folders, error: foldersError } = await supabase
+			.from('sensor_folders')
+			.select('id, name, project_number');
+
+		if (foldersError) throw foldersError;
+
+		// Create a map of folder IDs to folder names for quick lookup
+		const folderMap = new Map();
+		folders.forEach(folder => {
+			folderMap.set(folder.id, folder.name);
+		});
 
 		// Map the database results to SensorData format
 		const formattedSensors: SensorData[] = sensors.map((sensor) => {
@@ -37,6 +53,13 @@ export const fetchSensors = async (): Promise<SensorData[]> => {
 					return { ...value.payload, time: value.created_at };
 				});
 
+			// Get the project name if available
+			const projectName = sensor.folder_id ? folderMap.get(sensor.folder_id) : null;
+
+			// Get the last seen timestamp from the most recent sensor value
+			const lastSensorValue = sensorValues.find(value => value.sensor_imei === sensor.imei);
+			const lastSeenTimestamp = lastSensorValue ? new Date(lastSensorValue.created_at).toLocaleString() : null;
+
 			return {
 				id: sensor.id,
 				name: sensor.name,
@@ -45,7 +68,8 @@ export const fetchSensors = async (): Promise<SensorData[]> => {
 				values,
 				lastUpdated: new Date(sensor.updated_at).toLocaleString(),
 				folderId: sensor.folder_id || undefined,
-				companyId: sensor.company_id
+				companyId: sensor.company_id,
+				projectName: projectName
 			};
 		});
 

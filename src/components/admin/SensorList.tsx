@@ -20,15 +20,12 @@ const SensorList: React.FC<SensorListProps> = ({
 	onImport,
 	onDelete
 }) => {
-	// Get folder/project names
-	const getFolderName = (folderId?: string) => {
-		// This could be improved to fetch actual folder names from a service
-		// For now, we'll extract a name from the ID for demonstration
-		if (!folderId) return '';
-
-		// Extract a readable name from the folder ID (e.g., "folder-001" -> "Project 001")
-		const folderNumber = folderId.replace('folder-', '');
-		return `Project ${folderNumber}`;
+	// Get the last seen timestamp for a sensor
+	const getLastSeenTime = (sensor: SensorData) => {
+		if (sensor.values && sensor.values.length > 0) {
+			return new Date(sensor.values[0].time).toLocaleString();
+		}
+		return sensor.lastUpdated || 'Unknown';
 	};
 
 	return (
@@ -68,7 +65,7 @@ const SensorList: React.FC<SensorListProps> = ({
 							? sensor.values[0]
 							: null;
 					const IconComponent = getSensorIconComponent('temperature');
-					const projectName = getFolderName(sensor.folderId);
+					const lastSeen = getLastSeenTime(sensor);
 
 					return (
 						<div
@@ -100,16 +97,26 @@ const SensorList: React.FC<SensorListProps> = ({
 								{sensor.values.length} sensor value
 								{sensor.values.length !== 1 ? 's' : ''}
 							</div>
-							<div className="flex justify-between mt-2">
-								<div className="text-xs text-muted-foreground">
-									Status: {sensor.status}
-								</div>
-								{sensor.folderId && (
-									<div className="text-xs flex items-center gap-1">
-										<Folder className="h-3 w-3" />
-										<span>{projectName}</span>
+							<div className="flex flex-col gap-1 mt-2">
+								<div className="flex justify-between">
+									<div className="text-xs text-muted-foreground">
+										Status: {sensor.status}
 									</div>
-								)}
+									{sensor.projectName ? (
+										<div className="text-xs flex items-center gap-1">
+											<Folder className="h-3 w-3" />
+											<span>{sensor.projectName}</span>
+										</div>
+									) : sensor.folderId ? (
+										<div className="text-xs flex items-center gap-1">
+											<Folder className="h-3 w-3" />
+											<span>Project {sensor.folderId.substring(0, 8)}...</span>
+										</div>
+									) : null}
+								</div>
+								<div className="text-xs text-muted-foreground">
+									Last seen: {lastSeen}
+								</div>
 							</div>
 						</div>
 					);

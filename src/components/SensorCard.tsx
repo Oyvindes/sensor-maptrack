@@ -18,6 +18,8 @@ export type SensorData = {
 	lastUpdated: string;
 	companyId?: string;
 	imei?: string;
+	folderId?: string;
+	projectName?: string;
 };
 
 export type SensorDataValues = {
@@ -64,6 +66,11 @@ const SensorCard: React.FC<SensorCardProps> = ({
 		if (onClick) onClick();
 	};
 
+	// Get the most recent sensor value timestamp if available
+	const lastSeenTimestamp = values && values.length > 0
+		? new Date(values[0].time).toLocaleString()
+		: lastUpdated;
+
 	return (
 		<div
 			className={cn(
@@ -91,8 +98,14 @@ const SensorCard: React.FC<SensorCardProps> = ({
 				</div>
 			)}
 
-			<div className="mt-4 text-xs text-muted-foreground">
-				Last updated: {lastUpdated}
+			<div className="mt-4 flex flex-col gap-1 text-xs text-muted-foreground">
+				{sensor.projectName && (
+					<div className="flex items-center gap-1">
+						<span className="font-medium">Project:</span> {sensor.projectName}
+					</div>
+				)}
+				<div>Last updated: {lastUpdated}</div>
+				<div>Last seen: {lastSeenTimestamp}</div>
 			</div>
 		</div>
 	);
