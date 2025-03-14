@@ -1,4 +1,3 @@
-
 import { Company } from '@/types/users';
 import { CompanyDB, CompanyInsert, CompanyUpdate, CompanyCreateInput, CompanyUpdateInput } from './types';
 
@@ -9,19 +8,15 @@ export function mapToCompany(dbCompany: CompanyDB): Company {
     industry: dbCompany.industry || '',
     status: (dbCompany.status || 'inactive') as 'active' | 'inactive',
     createdAt: dbCompany.created_at || new Date().toISOString(),
-    updatedAt: dbCompany.created_at || new Date().toISOString(), // Use created_at as fallback for updatedAt
   };
 }
 
 export function mapToCompanyInsert(input: CompanyCreateInput): CompanyInsert {
-  const now = new Date().toISOString();
-  
   return {
     name: input.name,
     industry: input.industry,
     status: input.status,
-    created_at: now,
-    // Note: updated_at isn't included because it's not in the CompanyInsert type
+    created_at: new Date().toISOString(),
   };
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import SensorDataGraphs from "./dashboard/SensorDataGraphs";
 import { PageContainer, ContentContainer } from "./Layout";
@@ -11,11 +10,10 @@ import { Company } from "@/types/users";
 import DashboardNavigation from "./dashboard/DashboardNavigation";
 import ProjectsList from "./dashboard/ProjectsList";
 import TrackingSection from "./dashboard/TrackingSection";
-import HelpSection from "./dashboard/HelpSection";
 import { toast } from "sonner";
 
 // View types for the dashboard
-type DashboardView = "dashboard" | "projects" | "tracking" | "help";
+type DashboardView = "dashboard" | "projects" | "tracking";
 
 const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
@@ -103,8 +101,6 @@ const Dashboard: React.FC = () => {
           />
         ) : currentView === "tracking" ? (
           <TrackingSection className="w-full animate-fade-up [animation-delay:300ms]" />
-        ) : currentView === "help" ? (
-          <HelpSection className="w-full animate-fade-up [animation-delay:300ms]" />
         ) : (
           <div className="w-full animate-fade-up [animation-delay:300ms]">
             <h2 className="text-xl font-semibold mb-4">Projects</h2>

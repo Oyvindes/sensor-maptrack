@@ -50,7 +50,6 @@ export function useCompanyHandlers(
       name: "",
       industry: "",
       createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0], // Added updatedAt property
       status: "active"
     });
     setMode("editCompany");

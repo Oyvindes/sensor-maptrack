@@ -1,4 +1,3 @@
-
 import { Company, CompanyCreateInput, CompanyFilters, CompanyUpdateInput, ValidationResult } from './types';
 
 export interface CompanyService {
@@ -37,6 +36,3 @@ export interface CompanyService {
    */
   exists(id: string): Promise<boolean>;
 }
-
-// Re-export functions from the mock service to maintain compatibility
-export { getMockCompanies } from './mockCompanyService';

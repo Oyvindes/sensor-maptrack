@@ -4,7 +4,6 @@ export interface Company {
   name: string;
   industry: string;
   createdAt: string;
-  updatedAt: string; // Added this field to match what's used in the mock service
   status: "active" | "inactive";
 }
 

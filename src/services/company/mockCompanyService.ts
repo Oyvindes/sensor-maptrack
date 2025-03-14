@@ -1,4 +1,3 @@
-
 import { Company, CompanyCreateInput, CompanyFilters, CompanyUpdateInput, ValidationResult } from './types';
 import { CompanyService } from './companyService';
 
@@ -9,8 +8,8 @@ const mockCompanies: Company[] = [
     name: 'System Company',
     industry: 'System',
     status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString() // Changed from updated_at to updatedAt
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 ];
 
@@ -21,8 +20,8 @@ export class MockCompanyService implements CompanyService {
     const newCompany: Company = {
       ...input,
       id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString() // Changed from updated_at to updatedAt
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     mockCompanies.push(newCompany);
     return newCompany;
@@ -37,7 +36,7 @@ export class MockCompanyService implements CompanyService {
     const updatedCompany = {
       ...mockCompanies[index],
       ...input,
-      updatedAt: new Date().toISOString() // Changed from updated_at to updatedAt
+      updated_at: new Date().toISOString()
     };
     mockCompanies[index] = updatedCompany;
     return updatedCompany;

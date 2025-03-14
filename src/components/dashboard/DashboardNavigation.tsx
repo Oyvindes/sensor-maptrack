@@ -1,10 +1,10 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Map, Radio, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Map, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type DashboardView = "dashboard" | "projects" | "tracking" | "help";
+type DashboardView = "dashboard" | "projects" | "tracking";
 
 interface DashboardNavigationProps {
   currentView: DashboardView;
@@ -38,13 +38,6 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
           onViewChange={onViewChange}
           icon={<Radio className="w-4 h-4 mr-2" />}
           label="Asset Tracking"
-        />
-        <NavigationButton
-          view="help"
-          currentView={currentView}
-          onViewChange={onViewChange}
-          icon={<HelpCircle className="w-4 h-4 mr-2" />}
-          label="Help"
         />
       </div>
     </div>

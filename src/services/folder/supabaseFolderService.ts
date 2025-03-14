@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
@@ -29,7 +30,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
     // Fetch folder-sensor relationships
     const { data: folderSensors, error: relError } = await supabase
       .from('folder_sensors')
-      .select('folder_id, sensor_imei');
+      .select('folder_id, sensor_id');
 
     if (relError) throw relError;
 
@@ -38,7 +39,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
       // Find all sensors assigned to this folder
       const assignedSensorIds = folderSensors
         .filter(fs => fs.folder_id === folder.id)
-        .map(fs => fs.sensor_imei);
+        .map(fs => fs.sensor_id);
 
       // Parse location if it's stored as a string or as JSON data
       let parsedLocation: { lat: number; lng: number } | string | undefined = undefined;
