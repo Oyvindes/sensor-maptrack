@@ -228,7 +228,8 @@ const drawGraph = (
   x: number,
   y: number,
   width: number,
-  height: number
+  height: number,
+  sensorImei: string
 ): void => {
   const config = valueConfigs[valueType];
   const values = data.map((d) => d.values[valueType].value);
@@ -265,13 +266,13 @@ const drawGraph = (
     pdf.line(xPos, graphY, xPos, graphY + graphHeight);
 
     // Format time and date
-    const timeStr = time.toLocaleTimeString([], { 
+    const timeStr = time.toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
     });
 
-    const dateStr = time.toLocaleDateString('en-US', { 
+    const dateStr = time.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'numeric',
       day: 'numeric'
@@ -319,12 +320,21 @@ const drawGraph = (
   // Draw title and Y-axis labels
   pdf.setFontSize(8);
   pdf.setTextColor(0);
-  pdf.text(`${config.label} over Time`, x, y);
+  pdf.text(`Sensor ${sensorImei} - ${config.label} over Time`, x, y);
 
   for (let i = 0; i <= 4; i++) {
     const value = config.min + ((config.max - config.min) * i) / 4;
     const labelY = graphY + graphHeight - (graphHeight * i) / 4;
     pdf.text(value.toFixed(0), graphX - 20, labelY + 2);
+  }
+  
+  // Add latest value below the graph title
+  if (values.length > 0) {
+    const latestValue = values[values.length - 1];
+    const unit = data[data.length - 1].values[valueType].unit;
+    pdf.setFontSize(8);
+    pdf.setTextColor(config.color[0], config.color[1], config.color[2]);
+    pdf.text(`Last ${config.label}: ${latestValue.toFixed(1)}${unit}`, x, y + 5);
   }
 };
 
@@ -424,12 +434,9 @@ const generateProjectReport = async (
       yOffset += 90; // Space for map + margin
     }
 
-    // Add sensor data header
+    // Start graphs on a new page (second page)
     if (project.assignedSensorImeis?.length) {
-      pdf.text('Sensor Data', 20, yOffset);
-      yOffset += 6;
-
-      // Always start sensor data on a new page
+      // Skip the "Sensor Data" header and go directly to graphs on a new page
       addNewPageWithBriksStyle(pdf);
       yOffset = 25;
 
@@ -450,18 +457,7 @@ const generateProjectReport = async (
         if (data.length > 0) {
           const latestData = data[data.length - 1];
 
-          pdf.text(`Sensor ${sensorImei}`, 20, yOffset);
-          yOffset += 6;
-
-          Object.entries(latestData.values).forEach(([key, value]) => {
-            pdf.text(
-              `Latest ${key.charAt(0).toUpperCase() + key.slice(1)}: ${value.value.toFixed(1)}${value.unit}`,
-              30,
-              yOffset
-            );
-            yOffset += 5;
-          });
-          yOffset += 3;
+          // Skip displaying the sensor IMEI before graphs
 
           // Check if we need a new page before adding graphs
           if (yOffset > pdf.internal.pageSize.getHeight() - 180) {
@@ -478,15 +474,15 @@ const generateProjectReport = async (
           let graphsOnCurrentPage = 0;
           
           for (const valueType of dataTypesToInclude as Array<keyof SensorReading['values']>) {
-            // Start a new page if we've already added 3 graphs to the current page
+            // Start a new page if we've already added 2 graphs to the current page
             // or if there's not enough space
-            if (graphsOnCurrentPage >= 3 || yOffset > pdf.internal.pageSize.getHeight() - 80) {
+            if (graphsOnCurrentPage >= 2 || yOffset > pdf.internal.pageSize.getHeight() - 80) {
               addNewPageWithBriksStyle(pdf);
               yOffset = 25;
               graphsOnCurrentPage = 0;
             }
 
-            drawGraph(pdf, data, valueType, 20, yOffset, pdf.internal.pageSize.getWidth() - 40, 80); // Increased height
+            drawGraph(pdf, data, valueType, 20, yOffset, pdf.internal.pageSize.getWidth() - 40, 80, sensorImei); // Increased height
             yOffset += 90; // Increased spacing
             graphsOnCurrentPage++;
           }
