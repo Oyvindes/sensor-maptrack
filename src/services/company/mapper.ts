@@ -9,24 +9,24 @@ export function mapToCompany(dbCompany: CompanyDB): Company {
     industry: dbCompany.industry || '',
     status: (dbCompany.status || 'inactive') as 'active' | 'inactive',
     createdAt: dbCompany.created_at || new Date().toISOString(),
-    updatedAt: dbCompany.updated_at || new Date().toISOString(), // Added updatedAt property
+    updatedAt: dbCompany.created_at || new Date().toISOString(), // Use created_at as fallback for updatedAt
   };
 }
 
 export function mapToCompanyInsert(input: CompanyCreateInput): CompanyInsert {
+  const now = new Date().toISOString();
+  
   return {
     name: input.name,
     industry: input.industry,
     status: input.status,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(), // Added updated_at property to match DB schema
+    created_at: now,
+    // Note: updated_at isn't included because it's not in the CompanyInsert type
   };
 }
 
 export function mapToCompanyUpdate(input: CompanyUpdateInput): CompanyUpdate {
-  const update: CompanyUpdate = {
-    updated_at: new Date().toISOString(), // Always update the updated_at timestamp
-  };
+  const update: CompanyUpdate = {};
   
   if ('name' in input) {
     update.name = input.name;
