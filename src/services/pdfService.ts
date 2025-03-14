@@ -3,14 +3,7 @@ import { PdfRecord, SensorFolder } from '@/types/users';
 import { getCurrentUser } from '@/services/authService';
 import { supabase } from '@/integrations/supabase/client';
 import { savePdfRecord, getPdfContent } from './pdf/supabasePdfService';
-
-const addNewPageWithBriksStyle = (pdf: jsPDF): void => {
-  pdf.addPage();
-  pdf.setFillColor(235, 240, 255);
-  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), 'F');
-  pdf.setFillColor(108, 92, 231);
-  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
-};
+import { getAddressCoordinates } from '@/services/geocodingService';
 
 interface SensorReading {
   timestamp: string;
@@ -29,6 +22,162 @@ const valueConfigs = {
   signal: { color: [255, 68, 255], label: 'Signal', min: 0, max: 100 }
 };
 
+const addNewPageWithBriksStyle = (pdf: jsPDF): void => {
+  pdf.addPage();
+  pdf.setFillColor(235, 240, 255);
+  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), 'F');
+  pdf.setFillColor(108, 92, 231);
+  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
+};
+
+/**
+ * Adds a static map image to the PDF based on coordinates
+ * @param pdf The PDF document
+ * @param lat Latitude
+ * @param lng Longitude
+ * @param x X position on the page
+ * @param y Y position on the page
+ * @param width Width of the map image
+ * @param height Height of the map image
+ * @returns Promise that resolves when the image is added
+ */
+/**
+ * Draws a fallback map placeholder when actual map image can't be loaded
+ */
+const drawMapFallback = (
+  pdf: jsPDF,
+  lat: number,
+  lng: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): void => {
+  // Create a better-looking placeholder with coordinates
+  pdf.setDrawColor(200, 200, 200);
+  pdf.setFillColor(245, 245, 250);
+  pdf.roundedRect(x, y, width, height, 3, 3, 'FD');
+  
+  // Add grid lines to make it look map-like
+  pdf.setDrawColor(220, 220, 230);
+  pdf.setLineWidth(0.2);
+  
+  // Horizontal grid lines
+  for (let i = 1; i < 8; i++) {
+    pdf.line(x, y + (height / 8) * i, x + width, y + (height / 8) * i);
+  }
+  
+  // Vertical grid lines
+  for (let i = 1; i < 8; i++) {
+    pdf.line(x + (width / 8) * i, y, x + (width / 8) * i, y + height);
+  }
+  
+  // Add a marker in the center
+  pdf.setFillColor(255, 0, 0);
+  const markerX = x + width/2;
+  const markerY = y + height/2;
+  pdf.circle(markerX, markerY, 3, 'F');
+  
+  // Add coordinates text
+  pdf.setTextColor(50, 50, 100);
+  pdf.setFontSize(10);
+  pdf.text(`Location: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, x + 10, y + height - 10);
+  
+  // Add unavailable text
+  pdf.setTextColor(100, 100, 100);
+  pdf.setFontSize(12);
+  pdf.text('Map image unavailable', x + width/2 - 40, y + 20);
+};
+
+const addMapImage = async (
+  pdf: jsPDF,
+  lat: number,
+  lng: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): Promise<void> => {
+  try {
+    // Try multiple map services in case one fails
+    const mapServices = [
+      // OpenStreetMap via MapQuest (no API key required)
+      `https://open.mapquestapi.com/staticmap/v5/map?key=open-source-client&center=${lat},${lng}&zoom=14&size=600,400&type=map&locations=${lat},${lng}`,
+      
+      // Fallback to a different service
+      `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=600&height=400&center=lonlat:${lng},${lat}&zoom=14&marker=lonlat:${lng},${lat};color:%23ff0000;size:medium&apiKey=15e7c8c184d94478a1d655b3edb40450`,
+      
+      // Third option
+      `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+f00(${lng},${lat})/${lng},${lat},14,0/600x400?access_token=pk.eyJ1IjoiZGVtby1hY2NvdW50IiwiYSI6ImNrZHhjNHl3ejE5aHYycm83eTlzMm1jemMifQ.gIkM3PwGGsz7ennJLnb0nw`
+    ];
+    
+    // Try each service until one works
+    let blob = null;
+    for (const mapUrl of mapServices) {
+      try {
+        console.log(`Trying map service: ${mapUrl.substring(0, 50)}...`);
+        const response = await fetch(mapUrl);
+        if (response.ok) {
+          blob = await response.blob();
+          if (blob.size > 1000) { // Make sure it's not an error image
+            break;
+          }
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch from map service: ${err.message}`);
+      }
+    }
+    
+    if (!blob || blob.size < 1000) {
+      console.warn('Could not retrieve a valid map image from any service, using fallback');
+      // Instead of throwing an error, we'll use the fallback
+      drawMapFallback(pdf, lat, lng, x, y, width, height);
+      return;
+    }
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function() {
+        try {
+          const imgData = reader.result as string;
+          pdf.addImage(imgData, 'PNG', x, y, width, height);
+          resolve();
+        } catch (error) {
+          console.error('Error adding map image to PDF:', error);
+          reject(error);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error fetching map image:', error);
+    // Use the fallback function instead of duplicating code
+    drawMapFallback(pdf, lat, lng, x, y, width, height);
+  }
+};
+
+const calculateTimePoints = (timestamps: Date[], count: number = 12): Date[] => { // Default to 12 points
+  if (timestamps.length <= count) return timestamps;
+  
+  const totalMinutes = (timestamps[timestamps.length - 1].getTime() - timestamps[0].getTime()) / (1000 * 60);
+  const interval = Math.floor(totalMinutes / (count - 1));
+  const points: Date[] = [timestamps[0]];
+
+  for (let i = 1; i < count - 1; i++) {
+    const targetTime = new Date(timestamps[0].getTime() + interval * i * 60 * 1000);
+    const closestIndex = timestamps.reduce((prev, curr, index) => {
+      return Math.abs(curr.getTime() - targetTime.getTime()) < Math.abs(timestamps[prev].getTime() - targetTime.getTime())
+        ? index
+        : prev;
+    }, 0);
+    points.push(timestamps[closestIndex]);
+  }
+
+  points.push(timestamps[timestamps.length - 1]);
+  return points;
+};
+
 const fetchSensorData = async (sensorImei: string, startDate: Date, endDate: Date): Promise<SensorReading[]> => {
   const { data, error } = await supabase
     .from('sensor_values')
@@ -45,7 +194,6 @@ const fetchSensorData = async (sensorImei: string, startDate: Date, endDate: Dat
 
   return data.map(record => {
     const payload = record.payload as any;
-    // Apply the same calculations as in SensorDataGraphs.tsx
     const batteryValue = payload.battery ? ((payload.battery - 2.5) / 1.1) * 100 : 0;
     const signalValue = payload.signal ? payload.signal * 3.33 : 0;
 
@@ -61,11 +209,11 @@ const fetchSensorData = async (sensorImei: string, startDate: Date, endDate: Dat
           unit: '%'
         },
         battery: {
-          value: Math.min(Math.max(batteryValue, 0), 100), // Ensure value is between 0-100
+          value: Math.min(Math.max(batteryValue, 0), 100),
           unit: '%'
         },
         signal: {
-          value: Math.min(Math.max(signalValue, 0), 100), // Ensure value is between 0-100
+          value: Math.min(Math.max(signalValue, 0), 100),
           unit: '%'
         }
       }
@@ -81,33 +229,69 @@ const drawGraph = (
   y: number,
   width: number,
   height: number
-) => {
+): void => {
   const config = valueConfigs[valueType];
   const values = data.map((d) => d.values[valueType].value);
   const timestamps = data.map((d) => new Date(d.timestamp));
 
   const graphMarginTop = 10;
-  const graphMarginBottom = 15;
-  const graphMarginLeft = 15;
+  const graphMarginBottom = 25; // Increased for date labels
+  const graphMarginLeft = 30; // Increased for value labels
 
   const graphX = x + graphMarginLeft;
   const graphY = y + graphMarginTop;
-  const graphWidth = width - graphMarginLeft;
+  const graphWidth = width - (graphMarginLeft + 15);
   const graphHeight = height - (graphMarginTop + graphMarginBottom);
 
-  // Draw axes
+  // Draw background grid
+  pdf.setDrawColor(200);
+  pdf.setLineWidth(0.1);
+
+  // Draw horizontal grid lines
+  for (let i = 0; i <= 4; i++) {
+    const gridY = graphY + graphHeight - (graphHeight * i) / 4;
+    pdf.line(graphX, gridY, graphX + graphWidth, gridY);
+  }
+
+  // Calculate time points for vertical grid lines
+  const timeLabels = calculateTimePoints(timestamps, 12); // 12 vertical lines
+  const xStep = graphWidth / (timeLabels.length - 1);
+
+  // Draw vertical grid lines and time labels
+  timeLabels.forEach((time, i) => {
+    const xPos = graphX + (xStep * i);
+    
+    // Draw vertical grid line
+    pdf.line(xPos, graphY, xPos, graphY + graphHeight);
+
+    // Format time and date
+    const timeStr = time.toLocaleTimeString([], { 
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    const dateStr = time.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      month: 'numeric',
+      day: 'numeric'
+    });
+
+    // Center and draw the labels with smaller font for better fit
+    pdf.setFontSize(6); // Reduced font size for dates
+    const dateWidth = pdf.getStringUnitWidth(dateStr) * 6 / (72 / 25.6);
+    pdf.text(dateStr, xPos - (dateWidth / 2), graphY + graphHeight + 15);
+
+    pdf.setFontSize(7); // Slightly larger for time
+    const timeWidth = pdf.getStringUnitWidth(timeStr) * 7 / (72 / 25.6);
+    pdf.text(timeStr, xPos - (timeWidth / 2), graphY + graphHeight + 8);
+  });
+
+  // Draw main axes
   pdf.setDrawColor(0);
   pdf.setLineWidth(0.2);
   pdf.line(graphX, graphY + graphHeight, graphX + graphWidth, graphY + graphHeight);
   pdf.line(graphX, graphY, graphX, graphY + graphHeight);
-
-  // Draw grid
-  pdf.setDrawColor(200);
-  pdf.setLineWidth(0.1);
-  for (let i = 1; i < 5; i++) {
-    const gridY = graphY + graphHeight - (graphHeight * i) / 4;
-    pdf.line(graphX, gridY, graphX + graphWidth, gridY);
-  }
 
   if (values.length === 0) {
     pdf.setTextColor(100);
@@ -132,40 +316,27 @@ const drawGraph = (
     pdf.line(x1, y1, x2, y2);
   }
 
-  // Add labels
+  // Draw title and Y-axis labels
   pdf.setFontSize(8);
   pdf.setTextColor(0);
   pdf.text(`${config.label} over Time`, x, y);
 
-  // Y-axis labels
   for (let i = 0; i <= 4; i++) {
     const value = config.min + ((config.max - config.min) * i) / 4;
     const labelY = graphY + graphHeight - (graphHeight * i) / 4;
-    pdf.text(value.toFixed(0), graphX - 10, labelY + 2);
+    pdf.text(value.toFixed(0), graphX - 20, labelY + 2);
   }
-
-  // X-axis labels (start, middle, end)
-  const timeLabels = [timestamps[0], timestamps[Math.floor(timestamps.length / 2)], timestamps[timestamps.length - 1]];
-  const xPositions = [graphX, graphX + graphWidth / 2, graphX + graphWidth];
-
-  timeLabels.forEach((time, i) => {
-    try {
-      pdf.text(time.toLocaleTimeString(), xPositions[i] - 10, graphY + graphHeight + 10);
-    } catch (error) {
-      pdf.text(time.toString().split(' ')[4] || '00:00:00', xPositions[i] - 10, graphY + graphHeight + 10);
-    }
-  });
 };
 
-export const generateProjectReport = async (
+const generateProjectReport = async (
   project: SensorFolder,
   selectedDataTypes?: string[]
 ): Promise<Blob> => {
   try {
     console.log('Starting PDF generation with jsPDF v3...');
 
-    let pdf = new jsPDF({
-      orientation: 'portrait',
+    const pdf = new jsPDF({
+      orientation: 'landscape',
       unit: 'mm',
       format: 'a4'
     });
@@ -205,12 +376,71 @@ export const generateProjectReport = async (
     pdf.text(`Description: ${project.description || 'N/A'}`, 20, yOffset);
     yOffset += 12;
 
-    // Add sensor data
+    // Always add a map section
+    pdf.text('Project Location:', 20, yOffset);
+    yOffset += 8;
+    
+    try {
+      // Get coordinates for the address or use default coordinates
+      let coordinates;
+      if (project.address) {
+        try {
+          coordinates = await getAddressCoordinates(project.address);
+        } catch (geoError) {
+          console.warn('Error geocoding address:', geoError);
+          // Use default coordinates for Norway if geocoding fails
+          coordinates = { lat: 63.4305, lng: 10.3951 }; // Default to Trondheim
+        }
+      } else {
+        // No address provided, use default coordinates
+        coordinates = { lat: 63.4305, lng: 10.3951 }; // Default to Trondheim
+        console.log('No address provided, using default coordinates');
+      }
+      
+      // Add map image
+      await addMapImage(
+        pdf,
+        coordinates.lat,
+        coordinates.lng,
+        20,
+        yOffset,
+        pdf.internal.pageSize.getWidth() - 40,
+        80
+      );
+      
+      yOffset += 90; // Space for map + margin
+    } catch (error) {
+      console.error('Error adding map to PDF:', error);
+      // Use fallback with default coordinates if all else fails
+      drawMapFallback(
+        pdf,
+        63.4305,
+        10.3951,
+        20,
+        yOffset,
+        pdf.internal.pageSize.getWidth() - 40,
+        80
+      );
+      yOffset += 90; // Space for map + margin
+    }
+
+    // Add sensor data header
     if (project.assignedSensorImeis?.length) {
       pdf.text('Sensor Data', 20, yOffset);
       yOffset += 6;
 
+      // Always start sensor data on a new page
+      addNewPageWithBriksStyle(pdf);
+      yOffset = 25;
+
       for (const sensorImei of project.assignedSensorImeis) {
+        // For second and subsequent sensors, check if we need a new page
+        if (sensorImei !== project.assignedSensorImeis[0] &&
+            yOffset > pdf.internal.pageSize.getHeight() - 40) {
+          addNewPageWithBriksStyle(pdf);
+          yOffset = 25;
+        }
+        
         const endDate = project.stoppedAt ? new Date(project.stoppedAt) : new Date();
         const startDate = project.startedAt
           ? new Date(project.startedAt)
@@ -233,6 +463,7 @@ export const generateProjectReport = async (
           });
           yOffset += 3;
 
+          // Check if we need a new page before adding graphs
           if (yOffset > pdf.internal.pageSize.getHeight() - 180) {
             addNewPageWithBriksStyle(pdf);
             yOffset = 25;
@@ -243,19 +474,21 @@ export const generateProjectReport = async (
               ? Object.keys(valueConfigs).filter((key) => selectedDataTypes.includes(key))
               : Object.keys(valueConfigs);
 
+          // Track how many graphs we've added to the current page
+          let graphsOnCurrentPage = 0;
+          
           for (const valueType of dataTypesToInclude as Array<keyof SensorReading['values']>) {
-            if (yOffset > pdf.internal.pageSize.getHeight() - 60) {
+            // Start a new page if we've already added 3 graphs to the current page
+            // or if there's not enough space
+            if (graphsOnCurrentPage >= 3 || yOffset > pdf.internal.pageSize.getHeight() - 80) {
               addNewPageWithBriksStyle(pdf);
               yOffset = 25;
+              graphsOnCurrentPage = 0;
             }
 
-            drawGraph(pdf, data, valueType, 20, yOffset, 170, 50);
-            yOffset += 55;
-          }
-
-          if (yOffset > pdf.internal.pageSize.getHeight() - 100) {
-            addNewPageWithBriksStyle(pdf);
-            yOffset = 30;
+            drawGraph(pdf, data, valueType, 20, yOffset, pdf.internal.pageSize.getWidth() - 40, 80); // Increased height
+            yOffset += 90; // Increased spacing
+            graphsOnCurrentPage++;
           }
         } else {
           pdf.text(`No data available for sensor ${sensorImei}`, 20, yOffset);
@@ -280,7 +513,7 @@ export const generateProjectReport = async (
   }
 };
 
-export const downloadProjectReport = async (
+const downloadProjectReport = async (
   project: SensorFolder,
   selectedDataTypes?: string[]
 ): Promise<SensorFolder> => {
@@ -306,7 +539,6 @@ export const downloadProjectReport = async (
       throw new Error(`PDF generation failed: ${genError.message || 'Unknown error'}`);
     }
 
-    // Create URL from the blob
     let url;
     try {
       console.log('Creating URL from blob...');
@@ -321,7 +553,6 @@ export const downloadProjectReport = async (
       throw new Error(`Failed to create URL from PDF: ${urlError.message || 'Unknown error'}`);
     }
 
-    // Create download link
     try {
       console.log('Creating download link...');
       const link = document.createElement('a');
@@ -342,7 +573,6 @@ export const downloadProjectReport = async (
       throw new Error(`Failed to initiate download: ${linkError.message || 'Unknown error'}`);
     }
 
-    // Save record to database with PDF blob
     const pdfRecord = {
       filename: filename,
       createdAt: timestamp.toISOString(),
@@ -357,7 +587,6 @@ export const downloadProjectReport = async (
       throw new Error(`Failed to save PDF record: ${message}`);
     }
 
-    // Update project with the new PDF record using the real ID from the database
     const updatedProject = {
       ...project,
       pdfHistory: [
@@ -380,7 +609,7 @@ export const downloadProjectReport = async (
   }
 };
 
-export const viewPdfFromHistory = async (pdfRecord: PdfRecord): Promise<boolean> => {
+const viewPdfFromHistory = async (pdfRecord: PdfRecord): Promise<boolean> => {
   try {
     const content = await getPdfContent(pdfRecord.id);
     if (!content) {
@@ -391,11 +620,16 @@ export const viewPdfFromHistory = async (pdfRecord: PdfRecord): Promise<boolean>
     const url = URL.createObjectURL(content.blob);
     window.open(url, '_blank');
 
-    // Clean up URL after a delay
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     return true;
   } catch (error) {
     console.error('Error viewing PDF:', error);
     return false;
   }
+};
+
+export {
+  generateProjectReport,
+  downloadProjectReport,
+  viewPdfFromHistory
 };
