@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { SensorFolder } from '@/types/users';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-	LineChart,
-	Line,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer
+LineChart,
+Line,
+XAxis,
+YAxis,
+CartesianGrid,
+Tooltip,
+ResponsiveContainer,
+ReferenceLine,
+Brush
 } from 'recharts';
 import ProjectPdfHistory from './ProjectPdfHistory';
 import PdfDataSelectionDialog from './PdfDataSelectionDialog';
@@ -245,7 +247,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 
 			<div className="grid grid-cols-1 gap-8">
 				{project.assignedSensorImeis.map((sensorImei) => {
-					const data = generateData(sensorInfoMap, sensorImei);
+					const data = generateData(sensorInfoMap, sensorImei).reverse();
 					const latestData =
 						data.length > 0 ? data[data.length - 1] : null;
 					// Get sensor name from map or fall back to ID if not found
@@ -315,18 +317,41 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 															height="100%"
 														>
 															<LineChart
-																data={data}
+															  data={data}
 															>
-																<CartesianGrid strokeDasharray="3 3" />
+															  <CartesianGrid strokeDasharray="3 3" />
+															  {data.map((entry, index) => {
+															    const date = new Date(entry.timestamp);
+															    const prevDate = index > 0 ? new Date(data[index - 1].timestamp) : null;
+															    
+															    if (prevDate && date.getDate() !== prevDate.getDate()) {
+															      const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'numeric' });
+															      return (
+															        <ReferenceLine
+															          key={entry.timestamp}
+															          x={entry.timestamp}
+															          stroke="#ff0000"
+															          label={{
+															            value: dateStr,
+															            position: 'insideTopLeft',
+															            fill: '#ffffff',
+															            fontSize: 13,
+															            dy: 20
+															          }}
+															        />
+															      );
+															    }
+															    return null;
+															  })}
 																<XAxis
-																	dataKey="timestamp"
-																	tickFormatter={(
-																		value
-																	) =>
-																		new Date(
-																			value
-																		).toLocaleTimeString()
-																	}
+																  dataKey="timestamp"
+																  height={30}
+																  tickFormatter={(value) => {
+																    const date = new Date(value);
+																    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+																  }}
+																  interval={4}
+																  padding={{ left: 20, right: 20 }}
 																/>
 																<YAxis />
 																<Tooltip
