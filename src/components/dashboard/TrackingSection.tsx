@@ -1,8 +1,9 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import TrackingMap from "@/components/map/TrackingMap";
 import { useTrackingObjects } from "@/hooks/useTrackingObjects";
 import { Device, TrackingObject } from "@/types/sensors";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface TrackingSectionProps {
   className?: string;
@@ -10,6 +11,23 @@ interface TrackingSectionProps {
 
 const TrackingSection: React.FC<TrackingSectionProps> = ({ className }) => {
   const { devices, trackingObjects, isLoading } = useTrackingObjects();
+  const [shouldResetView, setShouldResetView] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  // Handle initial load to fit all markers once
+  useEffect(() => {
+    if (!isLoading && initialLoad) {
+      // Set initialLoad to false after a short delay to allow the map to load
+      setTimeout(() => setInitialLoad(false), 1000);
+    }
+  }, [isLoading, initialLoad]);
+
+  // Handle reset view button click
+  const handleResetView = () => {
+    setShouldResetView(true);
+    // Reset the state after a short delay to allow the map to reset
+    setTimeout(() => setShouldResetView(false), 1000);
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96">Loading...</div>;
@@ -22,7 +40,8 @@ const TrackingSection: React.FC<TrackingSectionProps> = ({ className }) => {
         <TrackingMap
           devices={devices}
           objects={trackingObjects}
-          fitAllMarkers={true}
+          fitAllMarkers={initialLoad || shouldResetView}
+          autoFitMarkers={false} // Ensure map doesn't auto-fit after initial load
           className="h-[600px] w-full"
           onDeviceClick={(deviceId) => {
             console.log('Device clicked:', deviceId);

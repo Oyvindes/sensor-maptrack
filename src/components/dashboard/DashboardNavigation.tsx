@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Map, Radio } from "lucide-react";
+import { LayoutDashboard, Map, Radio, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type DashboardView = "dashboard" | "projects" | "tracking";
+type DashboardView = "dashboard" | "projects" | "tracking" | "help";
 
 interface DashboardNavigationProps {
   currentView: DashboardView;
@@ -16,8 +15,8 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
   onViewChange
 }) => {
   return (
-    <div className="mb-6 animate-fade-up [animation-delay:150ms]">
-      <div className="flex space-x-2 border-b">
+    <div className="sticky top-[60px] z-10 bg-background mb-6 shadow-sm animate-fade-up [animation-delay:150ms]">
+      <div className="flex space-x-2 border-b px-4 py-2">
         <NavigationButton 
           view="dashboard"
           currentView={currentView}
@@ -38,6 +37,13 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
           onViewChange={onViewChange}
           icon={<Radio className="w-4 h-4 mr-2" />}
           label="Asset Tracking"
+        />
+        <NavigationButton
+          view="help"
+          currentView={currentView}
+          onViewChange={onViewChange}
+          icon={<HelpCircle className="w-4 h-4 mr-2" />}
+          label="Help"
         />
       </div>
     </div>

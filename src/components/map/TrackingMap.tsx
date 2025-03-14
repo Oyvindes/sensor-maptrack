@@ -55,10 +55,12 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 	// State to track if we should fit bounds (for reset button)
 	const [shouldFitBounds, setShouldFitBounds] = useState(fitAllMarkers);
 
-	// Reset when bounds change
+	// Reset when fitAllMarkers changes
 	useEffect(() => {
 		if (fitAllMarkers) {
 			setShouldFitBounds(true);
+			// Reset after fitting bounds
+			setTimeout(() => setShouldFitBounds(false), 1000);
 		}
 	}, [fitAllMarkers]);
 
@@ -73,24 +75,37 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 
 	// Handler for reset zoom button
 	const handleResetZoom = () => {
-		setShouldFitBounds(true);
-		// Reset after fitting bounds
-		setTimeout(() => setShouldFitBounds(false), 1000);
+		if (allMarkersBounds) {
+			// If we have valid bounds, fit to them
+			setShouldFitBounds(true);
+			// Reset after fitting bounds
+			setTimeout(() => setShouldFitBounds(false), 1000);
+		} else if (devices.length > 0 || sensors.length > 0 || objects.length > 0) {
+			// If we have markers but no valid bounds, try to recalculate
+			console.log('Attempting to recalculate bounds for reset view');
+			// This will trigger a re-render which might recalculate bounds
+			setShouldFitBounds(true);
+			setTimeout(() => setShouldFitBounds(false), 1000);
+		} else {
+			// If no markers at all, just reset to default view
+			console.log('No markers to fit, resetting to default view');
+			// Could add a default view reset here if needed
+		}
 	};
 
 	return (
-		<div className={className}>
-			{/* Reset zoom button */}
-			{allMarkersBounds && (
+		<div className={`${className} relative`}>
+			{/* Reset zoom button - always visible */}
+			<div className="absolute top-3 right-3 z-[9999]">
 				<Button
-					variant="outline"
+					variant="default"
 					size="sm"
-					className="absolute top-3 right-3 z-[1000] bg-background/80 backdrop-blur-sm"
+					className="bg-black/80 hover:bg-black/90 text-white border-none shadow-md"
 					onClick={handleResetZoom}
 				>
 					<RefreshCw className="w-4 h-4 mr-1" /> Reset View
 				</Button>
-			)}
+			</div>
 
 			<MapContainer
 				style={{ height: '100%', width: '100%' }}
@@ -116,8 +131,13 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 				)}
 
 				{/* Add FitBoundsToMarkers component to fit bounds to all markers - only when shouldFitBounds is true */}
-				{(shouldFitBounds || autoFitMarkers) && allMarkersBounds && (
-					<FitBoundsToMarkers bounds={allMarkersBounds} />
+				{(shouldFitBounds || autoFitMarkers) && (
+					<FitBoundsToMarkers
+						bounds={allMarkersBounds || [
+							[63.4205, 10.3851], // Default bounds centered on Trondheim
+							[63.4405, 10.4051]  // with a small area
+						]}
+					/>
 				)}
 
 				{/* Display devices */}

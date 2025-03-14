@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SensorFolder } from '@/types/users';
-import { MapPin, ArrowRight } from 'lucide-react';
-import TrackingMap from '@/components/TrackingMap';
+import { MapPin, ArrowRight, RefreshCw } from 'lucide-react';
+import TrackingMap from '@/components/map/TrackingMap';
 import { cn } from '@/lib/utils';
 import { Location } from '@/types/sensors';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,23 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 		[]
 	);
 	const [isGeocodingComplete, setIsGeocodingComplete] = useState(false);
+	const [shouldResetView, setShouldResetView] = useState(false);
+	const [initialLoad, setInitialLoad] = useState(true);
+
+	// Handle initial load to fit all markers once
+	useEffect(() => {
+		if (isGeocodingComplete && initialLoad) {
+			// Set initialLoad to false after a short delay to allow the map to load
+			setTimeout(() => setInitialLoad(false), 1000);
+		}
+	}, [isGeocodingComplete, initialLoad]);
+
+	// Handle reset view button click
+	const handleResetView = () => {
+		setShouldResetView(true);
+		// Reset the state after a short delay to allow the map to reset
+		setTimeout(() => setShouldResetView(false), 1000);
+	};
 
 	// Process projects to add location data where needed
 	useEffect(() => {
@@ -225,13 +242,13 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 			</div>
 		);
 	}
-
-	return (
-		<div className={cn('rounded-xl overflow-hidden', className)}>
+return (
+	<div className={cn('rounded-xl overflow-hidden', className)}>
+			
 			<TrackingMap
 				devices={devices}
 				className="h-full w-full"
-				fitAllMarkers={true} // Initial fit to all markers
+				fitAllMarkers={initialLoad || shouldResetView} // Only fit on initial load or reset
 				autoFitMarkers={false} // Don't automatically fit to markers when zooming
 				onDeviceClick={(deviceId) => {
 					console.log('Device clicked:', deviceId);
