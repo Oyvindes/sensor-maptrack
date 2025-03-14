@@ -38,19 +38,19 @@ export type Database = {
           created_at: string | null
           folder_id: string | null
           id: string
-          sensor_id: string | null
+          sensor_imei: string
         }
         Insert: {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          sensor_id?: string | null
+          sensor_imei?: string
         }
         Update: {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          sensor_id?: string | null
+          sensor_imei?: string
         }
         Relationships: [
           {
@@ -61,11 +61,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "folder_sensors_sensor_id_fkey"
-            columns: ["sensor_id"]
+            foreignKeyName: "folder_sensors_sensor_imei_fkey"
+            columns: ["sensor_imei"]
             isOneToOne: false
             referencedRelation: "sensors"
-            referencedColumns: ["id"]
+            referencedColumns: ["imei"]
           },
         ]
       }
@@ -158,34 +158,28 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          sensor_id: string | null
-          type: string
-          unit: string
-          value: number
+          payload: Json
+          sensor_imei: string
         }
         Insert: {
           created_at?: string | null
           id?: string
-          sensor_id?: string | null
-          type: string
-          unit: string
-          value: number
+          payload: Json
+          sensor_imei: string
         }
         Update: {
           created_at?: string | null
           id?: string
-          sensor_id?: string | null
-          type?: string
-          unit?: string
-          value?: number
+          payload?: Json
+          sensor_imei?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sensor_values_sensor_id_fkey"
-            columns: ["sensor_id"]
+            foreignKeyName: "sensor_values_sensor_imei_fkey"
+            columns: ["sensor_imei"]
             isOneToOne: false
             referencedRelation: "sensors"
-            referencedColumns: ["id"]
+            referencedColumns: ["imei"]
           },
         ]
       }
@@ -195,7 +189,7 @@ export type Database = {
           created_at: string | null
           folder_id: string | null
           id: string
-          imei: string | null
+          imei: string
           name: string
           status: string | null
           updated_at: string | null
@@ -205,7 +199,7 @@ export type Database = {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          imei?: string | null
+          imei: string
           name: string
           status?: string | null
           updated_at?: string | null
@@ -215,7 +209,7 @@ export type Database = {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          imei?: string | null
+          imei?: string
           name?: string
           status?: string | null
           updated_at?: string | null
