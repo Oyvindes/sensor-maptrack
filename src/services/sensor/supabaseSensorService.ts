@@ -1,7 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { SensorData } from "@/components/SensorCard";
 import { toast } from "sonner";
 import { mapCompanyIdToUUID } from "@/utils/uuidUtils";
+import { Json } from "@/integrations/supabase/types";
 
 /**
  * Get all sensors from the database
@@ -34,12 +36,16 @@ export const fetchSensors = async (): Promise<SensorData[]> => {
     const formattedSensors: SensorData[] = sensors.map(sensor => {
       // Find all values for this sensor
       const values = sensorValues
-        .filter(value => value.sensor_id === sensor.id)
-        .map(value => ({
-          type: value.type as any, // Cast to match SensorData type
-          value: Number(value.value),
-          unit: value.unit
-        }));
+        .filter(value => value.sensor_imei === sensor.imei)
+        .map(value => {
+          // Extract data from the JSON payload
+          const payload = value.payload as Record<string, any>;
+          return {
+            type: payload.type as any, // Cast to match SensorData type
+            value: Number(payload.value),
+            unit: payload.unit || ''
+          };
+        });
 
       return {
         id: sensor.id,
@@ -85,6 +91,7 @@ export const saveSensor = async (
     };
 
     let sensorId = sensor.id;
+    let sensorImei = sensor.imei || `temp-${Date.now()}`; // Use a temporary IMEI if none provided
 
     // Handle sensor record (insert or update)
     if (isNewSensor) {
@@ -92,11 +99,12 @@ export const saveSensor = async (
       const { data, error } = await supabase
         .from('sensors')
         .insert(sensorData)
-        .select('id')
+        .select('id, imei')
         .single();
 
       if (error) throw error;
       sensorId = data.id;
+      sensorImei = data.imei;
     } else {
       // Update existing sensor
       const { error } = await supabase
@@ -113,31 +121,37 @@ export const saveSensor = async (
       const { error: deleteError } = await supabase
         .from('sensor_values')
         .delete()
-        .eq('sensor_id', sensorId);
+        .eq('sensor_imei', sensorImei);
 
       if (deleteError) throw deleteError;
     }
 
     // Insert new values
-    const valueInserts = sensor.values.map(value => ({
-      sensor_id: sensorId,
-      type: value.type,
-      value: value.value,
-      unit: value.unit
-    }));
+    if (sensor.values && sensor.values.length > 0) {
+      // Convert values to proper payload format for Supabase
+      const sensorValueInserts = sensor.values.map(value => ({
+        sensor_imei: sensorImei,
+        payload: {
+          type: value.type,
+          value: value.value,
+          unit: value.unit
+        }
+      }));
 
-    const { error: insertError } = await supabase
-      .from('sensor_values')
-      .insert(valueInserts);
+      const { error: insertError } = await supabase
+        .from('sensor_values')
+        .insert(sensorValueInserts);
 
-    if (insertError) throw insertError;
+      if (insertError) throw insertError;
+    }
 
     // Return the updated sensor with the real ID
     return {
       success: true,
       data: {
         ...sensor,
-        id: sensorId
+        id: sensorId,
+        imei: sensorImei
       },
       message: isNewSensor 
         ? "Sensor created successfully" 
@@ -157,11 +171,20 @@ export const saveSensor = async (
  */
 export const deleteSensor = async (sensorId: string): Promise<{ success: boolean; message: string }> => {
   try {
+    // Get the sensor to get its IMEI
+    const { data: sensor, error: getSensorError } = await supabase
+      .from('sensors')
+      .select('imei')
+      .eq('id', sensorId)
+      .single();
+
+    if (getSensorError) throw getSensorError;
+
     // First delete sensor values
     const { error: valuesError } = await supabase
       .from('sensor_values')
       .delete()
-      .eq('sensor_id', sensorId);
+      .eq('sensor_imei', sensor.imei);
 
     if (valuesError) throw valuesError;
 
