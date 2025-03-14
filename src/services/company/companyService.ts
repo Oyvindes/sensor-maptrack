@@ -40,4 +40,3 @@ export interface CompanyService {
 
 // Re-export functions from the mock service to maintain compatibility
 export { getMockCompanies } from './mockCompanyService';
-export { updateCompany } from './index';

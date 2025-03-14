@@ -10,7 +10,7 @@ const mockCompanies: Company[] = [
     industry: 'System',
     status: 'active',
     createdAt: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updatedAt: new Date().toISOString() // Changed from updated_at to updatedAt
   }
 ];
 
@@ -22,7 +22,7 @@ export class MockCompanyService implements CompanyService {
       ...input,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updatedAt: new Date().toISOString() // Changed from updated_at to updatedAt
     };
     mockCompanies.push(newCompany);
     return newCompany;
@@ -37,7 +37,7 @@ export class MockCompanyService implements CompanyService {
     const updatedCompany = {
       ...mockCompanies[index],
       ...input,
-      updated_at: new Date().toISOString()
+      updatedAt: new Date().toISOString() // Changed from updated_at to updatedAt
     };
     mockCompanies[index] = updatedCompany;
     return updatedCompany;

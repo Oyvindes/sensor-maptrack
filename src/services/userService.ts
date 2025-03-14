@@ -8,7 +8,7 @@ export {
 } from './company/mockCompanyService';
 
 export {
-  updateCompany 
+  companyService 
 } from './company/index';
 
 // User services
