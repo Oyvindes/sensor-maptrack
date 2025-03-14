@@ -1,534 +1,401 @@
 import { jsPDF } from 'jspdf';
 import { PdfRecord, SensorFolder } from '@/types/users';
 import { getCurrentUser } from '@/services/authService';
+import { supabase } from '@/integrations/supabase/client';
+import { savePdfRecord, getPdfContent } from './pdf/supabasePdfService';
 
-/**
- * Helper function to add a new page with Briks styling
- * Ensures consistent appearance across all pages of the PDF
- */
 const addNewPageWithBriksStyle = (pdf: jsPDF): void => {
-	pdf.addPage();
-
-	// Apply consistent styling to the new page
-	pdf.setFillColor(235, 240, 255); // Light blue/indigo background
-	pdf.rect(
-		0,
-		0,
-		pdf.internal.pageSize.getWidth(),
-		pdf.internal.pageSize.getHeight(),
-		'F'
-	);
-
-	// Add purple header bar
-	pdf.setFillColor(108, 92, 231); // Purple color from Briks logo (#6c5ce7)
-	pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
-
-	// Logo removed as requested
+  pdf.addPage();
+  pdf.setFillColor(235, 240, 255);
+  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), 'F');
+  pdf.setFillColor(108, 92, 231);
+  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
 };
 
 interface SensorReading {
-	timestamp: string;
-	values: {
-		temperature: { value: number; unit: string };
-		humidity: { value: number; unit: string };
-		battery: { value: number; unit: string };
-		signal: { value: number; unit: string };
-	};
+  timestamp: string;
+  values: {
+    temperature: { value: number; unit: string };
+    humidity: { value: number; unit: string };
+    battery: { value: number; unit: string };
+    signal: { value: number; unit: string };
+  };
 }
 
 const valueConfigs = {
-	temperature: {
-		color: [255, 68, 68],
-		label: 'Temperature',
-		min: 0,
-		max: 40
-	},
-	humidity: { color: [68, 68, 255], label: 'Humidity', min: 0, max: 100 },
-	battery: { color: [68, 255, 68], label: 'Battery', min: 0, max: 100 },
-	signal: { color: [255, 68, 255], label: 'Signal', min: 0, max: 100 }
+  temperature: { color: [255, 68, 68], label: 'Temperature', min: 0, max: 40 },
+  humidity: { color: [68, 68, 255], label: 'Humidity', min: 0, max: 100 },
+  battery: { color: [68, 255, 68], label: 'Battery', min: 0, max: 100 },
+  signal: { color: [255, 68, 255], label: 'Signal', min: 0, max: 100 }
 };
 
-const generateProjectData = (
-	startDate: Date,
-	endDate: Date
-): SensorReading[] => {
-	const data: SensorReading[] = [];
-	const duration = endDate.getTime() - startDate.getTime();
-	const intervals = 20; // Number of data points
+const fetchSensorData = async (sensorImei: string, startDate: Date, endDate: Date): Promise<SensorReading[]> => {
+  const { data, error } = await supabase
+    .from('sensor_values')
+    .select('created_at, payload')
+    .eq('sensor_imei', sensorImei)
+    .gte('created_at', startDate.toISOString())
+    .lte('created_at', endDate.toISOString())
+    .order('created_at', { ascending: true });
 
-	for (let i = 0; i <= intervals; i++) {
-		const timestamp = new Date(
-			startDate.getTime() + (duration * i) / intervals
-		);
-		data.push({
-			timestamp: timestamp.toISOString(),
-			values: {
-				temperature: {
-					value: 20 + Math.sin(i / 2) * 5 + Math.random() * 2,
-					unit: '°C'
-				},
-				humidity: {
-					value: 40 + Math.cos(i / 2) * 15 + Math.random() * 5,
-					unit: '%'
-				},
-				battery: { value: 100 - i / 2, unit: '%' },
-				signal: { value: 80 + Math.sin(i) * 10, unit: '%' }
-			}
-		});
-	}
+  if (error) {
+    console.error('Error fetching sensor data:', error);
+    return [];
+  }
 
-	return data;
+  return data.map(record => {
+    const payload = record.payload as any;
+    // Apply the same calculations as in SensorDataGraphs.tsx
+    const batteryValue = payload.battery ? ((payload.battery - 2.5) / 1.1) * 100 : 0;
+    const signalValue = payload.signal ? payload.signal * 3.33 : 0;
+
+    return {
+      timestamp: record.created_at,
+      values: {
+        temperature: {
+          value: payload.temperature || 0,
+          unit: '°C'
+        },
+        humidity: {
+          value: payload.humidity || 0,
+          unit: '%'
+        },
+        battery: {
+          value: Math.min(Math.max(batteryValue, 0), 100), // Ensure value is between 0-100
+          unit: '%'
+        },
+        signal: {
+          value: Math.min(Math.max(signalValue, 0), 100), // Ensure value is between 0-100
+          unit: '%'
+        }
+      }
+    };
+  });
 };
 
 const drawGraph = (
-	pdf: jsPDF,
-	data: SensorReading[],
-	valueType: keyof SensorReading['values'],
-	x: number,
-	y: number,
-	width: number,
-	height: number
+  pdf: jsPDF,
+  data: SensorReading[],
+  valueType: keyof SensorReading['values'],
+  x: number,
+  y: number,
+  width: number,
+  height: number
 ) => {
-	const config = valueConfigs[valueType];
-	const values = data.map((d) => d.values[valueType].value);
-	const timestamps = data.map((d) => new Date(d.timestamp));
+  const config = valueConfigs[valueType];
+  const values = data.map((d) => d.values[valueType].value);
+  const timestamps = data.map((d) => new Date(d.timestamp));
 
-	// Ensure we have margin for labels
-	const graphMarginTop = 10; // Space for title
-	const graphMarginBottom = 15; // Space for x-axis labels
-	const graphMarginLeft = 15; // Space for y-axis labels
+  const graphMarginTop = 10;
+  const graphMarginBottom = 15;
+  const graphMarginLeft = 15;
 
-	// Adjusted coordinates for the actual graph area
-	const graphX = x + graphMarginLeft;
-	const graphY = y + graphMarginTop;
-	const graphWidth = width - graphMarginLeft;
-	const graphHeight = height - (graphMarginTop + graphMarginBottom);
+  const graphX = x + graphMarginLeft;
+  const graphY = y + graphMarginTop;
+  const graphWidth = width - graphMarginLeft;
+  const graphHeight = height - (graphMarginTop + graphMarginBottom);
 
-	// Draw axes
-	pdf.setDrawColor(0);
-	pdf.setLineWidth(0.2);
-	pdf.line(
-		graphX,
-		graphY + graphHeight,
-		graphX + graphWidth,
-		graphY + graphHeight
-	); // X axis
-	pdf.line(graphX, graphY, graphX, graphY + graphHeight); // Y axis
+  // Draw axes
+  pdf.setDrawColor(0);
+  pdf.setLineWidth(0.2);
+  pdf.line(graphX, graphY + graphHeight, graphX + graphWidth, graphY + graphHeight);
+  pdf.line(graphX, graphY, graphX, graphY + graphHeight);
 
-	// Draw grid
-	pdf.setDrawColor(200);
-	pdf.setLineWidth(0.1);
-	for (let i = 1; i < 5; i++) {
-		const gridY = graphY + graphHeight - (graphHeight * i) / 4;
-		pdf.line(graphX, gridY, graphX + graphWidth, gridY);
-	}
+  // Draw grid
+  pdf.setDrawColor(200);
+  pdf.setLineWidth(0.1);
+  for (let i = 1; i < 5; i++) {
+    const gridY = graphY + graphHeight - (graphHeight * i) / 4;
+    pdf.line(graphX, gridY, graphX + graphWidth, gridY);
+  }
 
-	// Draw data line
-	pdf.setDrawColor(config.color[0], config.color[1], config.color[2]);
-	pdf.setLineWidth(0.3);
+  if (values.length === 0) {
+    pdf.setTextColor(100);
+    pdf.setFontSize(10);
+    pdf.text('No data available', x + width / 2 - 20, y + height / 2);
+    return;
+  }
 
-	// Ensure values are within the min-max range to prevent graph overflow
-	const clampedValues = values.map((val) =>
-		Math.min(Math.max(val, config.min), config.max)
-	);
+  // Draw data line
+  pdf.setDrawColor(config.color[0], config.color[1], config.color[2]);
+  pdf.setLineWidth(0.3);
 
-	for (let i = 1; i < clampedValues.length; i++) {
-		const x1 = graphX + (graphWidth * (i - 1)) / (clampedValues.length - 1);
-		const x2 = graphX + (graphWidth * i) / (clampedValues.length - 1);
+  const clampedValues = values.map((val) =>
+    Math.min(Math.max(val, config.min), config.max)
+  );
 
-		// Calculate y position ensuring it's properly scaled within the graph height
-		const y1 =
-			graphY +
-			graphHeight -
-			(graphHeight * (clampedValues[i - 1] - config.min)) /
-				(config.max - config.min);
-		const y2 =
-			graphY +
-			graphHeight -
-			(graphHeight * (clampedValues[i] - config.min)) /
-				(config.max - config.min);
+  for (let i = 1; i < clampedValues.length; i++) {
+    const x1 = graphX + (graphWidth * (i - 1)) / (clampedValues.length - 1);
+    const x2 = graphX + (graphWidth * i) / (clampedValues.length - 1);
+    const y1 = graphY + graphHeight - (graphHeight * (clampedValues[i - 1] - config.min)) / (config.max - config.min);
+    const y2 = graphY + graphHeight - (graphHeight * (clampedValues[i] - config.min)) / (config.max - config.min);
+    pdf.line(x1, y1, x2, y2);
+  }
 
-		pdf.line(x1, y1, x2, y2);
-	}
+  // Add labels
+  pdf.setFontSize(8);
+  pdf.setTextColor(0);
+  pdf.text(`${config.label} over Time`, x, y);
 
-	// Add labels
-	pdf.setFontSize(8);
-	pdf.setTextColor(0);
+  // Y-axis labels
+  for (let i = 0; i <= 4; i++) {
+    const value = config.min + ((config.max - config.min) * i) / 4;
+    const labelY = graphY + graphHeight - (graphHeight * i) / 4;
+    pdf.text(value.toFixed(0), graphX - 10, labelY + 2);
+  }
 
-	// Title
-	pdf.text(`${config.label} over Time`, x, y);
+  // X-axis labels (start, middle, end)
+  const timeLabels = [timestamps[0], timestamps[Math.floor(timestamps.length / 2)], timestamps[timestamps.length - 1]];
+  const xPositions = [graphX, graphX + graphWidth / 2, graphX + graphWidth];
 
-	// Y-axis labels
-	for (let i = 0; i <= 4; i++) {
-		const value = config.min + ((config.max - config.min) * i) / 4;
-		const labelY = graphY + graphHeight - (graphHeight * i) / 4;
-		pdf.text(value.toFixed(0), graphX - 10, labelY + 2); // +2 to center text vertically
-	}
-
-	// X-axis labels (start, middle, end)
-	const timeLabels = [
-		timestamps[0],
-		timestamps[Math.floor(timestamps.length / 2)],
-		timestamps[timestamps.length - 1]
-	];
-	const xPositions = [graphX, graphX + graphWidth / 2, graphX + graphWidth];
-
-	timeLabels.forEach((time, i) => {
-		try {
-			pdf.text(
-				time.toLocaleTimeString(),
-				xPositions[i] - 10,
-				graphY + graphHeight + 10
-			);
-		} catch (error) {
-			// Fallback for time formatting issues
-			pdf.text(
-				time.toString().split(' ')[4] || '00:00:00',
-				xPositions[i] - 10,
-				graphY + graphHeight + 10
-			);
-		}
-	});
+  timeLabels.forEach((time, i) => {
+    try {
+      pdf.text(time.toLocaleTimeString(), xPositions[i] - 10, graphY + graphHeight + 10);
+    } catch (error) {
+      pdf.text(time.toString().split(' ')[4] || '00:00:00', xPositions[i] - 10, graphY + graphHeight + 10);
+    }
+  });
 };
 
 export const generateProjectReport = async (
-	project: SensorFolder,
-	selectedDataTypes?: string[]
+  project: SensorFolder,
+  selectedDataTypes?: string[]
 ): Promise<Blob> => {
-	try {
-		console.log('Starting PDF generation with jsPDF v3...');
+  try {
+    console.log('Starting PDF generation with jsPDF v3...');
 
-		// Create the jsPDF instance with safe defaults
-		let pdf;
-		try {
-			pdf = new jsPDF({
-				orientation: 'portrait',
-				unit: 'mm',
-				format: 'a4'
-			});
-			console.log('jsPDF instance created successfully');
-		} catch (pdfError) {
-			console.error('Error creating jsPDF instance:', pdfError);
-			throw new Error(
-				`Failed to initialize PDF document: ${
-					pdfError.message || 'Unknown error'
-				}`
-			);
-		}
+    let pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-		let yOffset = 20;
+    let yOffset = 20;
 
-		// Add background color similar to login page's gradient
-		pdf.setFillColor(235, 240, 255); // Light blue/indigo similar to the gradient start
-		pdf.rect(
-			0,
-			0,
-			pdf.internal.pageSize.getWidth(),
-			pdf.internal.pageSize.getHeight(),
-			'F'
-		);
+    // Add background and header
+    pdf.setFillColor(235, 240, 255);
+    pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), 'F');
+    pdf.setFillColor(108, 92, 231);
+    pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
 
-		// Add header with gradient-like decoration
-		pdf.setFillColor(108, 92, 231); // Purple color from Briks logo (#6c5ce7)
-		pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
+    // Add project information
+    yOffset = 30;
+    pdf.setTextColor(50, 50, 100);
+    pdf.setFontSize(20);
+    pdf.text('Project Report', 20, yOffset);
 
-		// Logo removed as requested
+    pdf.setFontSize(12);
+    yOffset += 15;
+    pdf.text(`Project Name: ${project.name}`, 20, yOffset);
+    yOffset += 6;
+    pdf.text(`Project Number: ${project.projectNumber}`, 20, yOffset);
+    yOffset += 6;
+    pdf.text(`Created At: ${new Date(project.createdAt).toLocaleDateString()}`, 20, yOffset);
+    yOffset += 6;
+    if (project.startedAt) {
+      pdf.text(`Started At: ${new Date(project.startedAt).toLocaleString()}`, 20, yOffset);
+      yOffset += 6;
+    }
+    if (project.stoppedAt) {
+      pdf.text(`Stopped At: ${new Date(project.stoppedAt).toLocaleString()}`, 20, yOffset);
+      yOffset += 6;
+    }
+    pdf.text(`Address: ${project.address || 'N/A'}`, 20, yOffset);
+    yOffset += 6;
+    pdf.text(`Description: ${project.description || 'N/A'}`, 20, yOffset);
+    yOffset += 12;
 
-		// Add project information
-		yOffset = 30; // Reduced since there's no logo to move past
+    // Add sensor data
+    if (project.assignedSensorImeis?.length) {
+      pdf.text('Sensor Data', 20, yOffset);
+      yOffset += 6;
 
-		pdf.setTextColor(50, 50, 100); // Dark blue/indigo text
-		pdf.setFontSize(20);
-		pdf.text('Project Report', 20, yOffset);
+      for (const sensorImei of project.assignedSensorImeis) {
+        const endDate = project.stoppedAt ? new Date(project.stoppedAt) : new Date();
+        const startDate = project.startedAt
+          ? new Date(project.startedAt)
+          : new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
 
-		pdf.setFontSize(12);
-		yOffset += 15; // Reduced from 20
-		pdf.text(`Project Name: ${project.name}`, 20, yOffset);
-		yOffset += 6; // Reduced from 10
-		pdf.text(`Project Number: ${project.projectNumber}`, 20, yOffset);
-		yOffset += 6; // Reduced from 10
-		pdf.text(`Created By: ${project.creatorName}`, 20, yOffset);
-		yOffset += 6; // Reduced from 10
-		pdf.text(
-			`Created At: ${new Date(project.createdAt).toLocaleDateString()}`,
-			20,
-			yOffset
-		);
-		yOffset += 6; // Reduced from 10
-		if (project.startedAt) {
-			pdf.text(
-				`Started At: ${new Date(project.startedAt).toLocaleString()}`,
-				20,
-				yOffset
-			);
-			yOffset += 6; // Reduced from 10
-		}
-		if (project.stoppedAt) {
-			pdf.text(
-				`Stopped At: ${new Date(project.stoppedAt).toLocaleString()}`,
-				20,
-				yOffset
-			);
-			yOffset += 6; // Reduced from 10
-		}
-		pdf.text(`Address: ${project.address || 'N/A'}`, 20, yOffset);
-		yOffset += 6; // Reduced from 10
-		pdf.text(`Description: ${project.description || 'N/A'}`, 20, yOffset);
-		yOffset += 12; // Reduced from 20
+        const data = await fetchSensorData(sensorImei, startDate, endDate);
+        if (data.length > 0) {
+          const latestData = data[data.length - 1];
 
-		// Add sensor data
-		if (project.assignedSensorImeis?.length) {
-			pdf.text('Sensor Data', 20, yOffset);
-			yOffset += 6; // Reduced from 10
+          pdf.text(`Sensor ${sensorImei}`, 20, yOffset);
+          yOffset += 6;
 
-			for (const sensorImei of project.assignedSensorImeis) {
-				// Use default time range if project hasn't been started/stopped
-				const endDate = project.stoppedAt
-					? new Date(project.stoppedAt)
-					: new Date();
-				const startDate = project.startedAt
-					? new Date(project.startedAt)
-					: new Date(endDate.getTime() - 24 * 60 * 60 * 1000); // Default to last 24 hours
-				const data = generateProjectData(startDate, endDate);
-				const latestData = data[data.length - 1];
+          Object.entries(latestData.values).forEach(([key, value]) => {
+            pdf.text(
+              `Latest ${key.charAt(0).toUpperCase() + key.slice(1)}: ${value.value.toFixed(1)}${value.unit}`,
+              30,
+              yOffset
+            );
+            yOffset += 5;
+          });
+          yOffset += 3;
 
-				pdf.text(`Sensor ${sensorImei}`, 20, yOffset);
-				yOffset += 6; // Reduced from 10
+          if (yOffset > pdf.internal.pageSize.getHeight() - 180) {
+            addNewPageWithBriksStyle(pdf);
+            yOffset = 25;
+          }
 
-				// Add latest sensor readings - with reduced spacing
-				Object.entries(latestData.values).forEach(([key, value]) => {
-					pdf.text(
-						`Latest ${
-							key.charAt(0).toUpperCase() + key.slice(1)
-						}: ${value.value.toFixed(1)}${value.unit}`,
-						30,
-						yOffset
-					);
-					yOffset += 5; // Reduced from 7
-				});
-				yOffset += 3; // Reduced from 5
+          const dataTypesToInclude =
+            selectedDataTypes && selectedDataTypes.length > 0
+              ? Object.keys(valueConfigs).filter((key) => selectedDataTypes.includes(key))
+              : Object.keys(valueConfigs);
 
-				// Check if we need a new page before drawing graphs - with reduced space requirement
-				if (yOffset > pdf.internal.pageSize.getHeight() - 180) {
-					// Reduced from 220
-					addNewPageWithBriksStyle(pdf);
-					yOffset = 25; // Reduced from 30 - Start content a bit closer to the header
-				}
+          for (const valueType of dataTypesToInclude as Array<keyof SensorReading['values']>) {
+            if (yOffset > pdf.internal.pageSize.getHeight() - 60) {
+              addNewPageWithBriksStyle(pdf);
+              yOffset = 25;
+            }
 
-				// Filter data types if selectedDataTypes is provided
-				const dataTypesToInclude =
-					selectedDataTypes && selectedDataTypes.length > 0
-						? Object.keys(valueConfigs).filter((key) =>
-								selectedDataTypes.includes(key)
-						  )
-						: Object.keys(valueConfigs);
+            drawGraph(pdf, data, valueType, 20, yOffset, 170, 50);
+            yOffset += 55;
+          }
 
-				// Add graphs for selected sensor value types
-				for (const valueType of dataTypesToInclude as Array<
-					keyof SensorReading['values']
-				>) {
-					// Check if we have enough space for this graph - reduced space requirement
-					if (yOffset > pdf.internal.pageSize.getHeight() - 60) {
-						// Reduced from 70
-						addNewPageWithBriksStyle(pdf);
-						yOffset = 25; // Reduced from 30 - Start content a bit closer to the header
-					}
+          if (yOffset > pdf.internal.pageSize.getHeight() - 100) {
+            addNewPageWithBriksStyle(pdf);
+            yOffset = 30;
+          }
+        } else {
+          pdf.text(`No data available for sensor ${sensorImei}`, 20, yOffset);
+          yOffset += 8;
+        }
+      }
+    } else {
+      pdf.text('No sensors assigned to this project', 20, yOffset);
+    }
 
-					// Draw the graph with better height ratio (reduced from 60mm)
-					drawGraph(pdf, data, valueType, 20, yOffset, 170, 50);
-					yOffset += 55; // Reduced from 75mm to make the document more compact
-				}
+    yOffset = pdf.internal.pageSize.getHeight() - 20;
+    pdf.setFontSize(10);
+    pdf.text(`Report generated on ${new Date().toLocaleString()}`, 20, yOffset);
 
-				// Add new page if needed for next sensor
-				if (yOffset > pdf.internal.pageSize.getHeight() - 100) {
-					addNewPageWithBriksStyle(pdf);
-					yOffset = 30; // Start content below the header
-				}
-			}
-		} else {
-			pdf.text('No sensors assigned to this project', 20, yOffset);
-		}
+    const blob = pdf.output('blob');
+    if (!blob) throw new Error('PDF output returned null or undefined');
 
-		// Add timestamp
-		yOffset = pdf.internal.pageSize.getHeight() - 20;
-		pdf.setFontSize(10);
-		pdf.text(
-			`Report generated on ${new Date().toLocaleString()}`,
-			20,
-			yOffset
-		);
-
-		// Safely generate the blob with proper error handling
-		try {
-			console.log('Generating PDF blob...');
-			const blob = pdf.output('blob');
-
-			if (!blob) {
-				throw new Error('PDF output returned null or undefined');
-			}
-
-			console.log('PDF blob generated successfully');
-			return blob;
-		} catch (outputError) {
-			console.error('Error generating PDF output:', outputError);
-			throw new Error(
-				`Failed to generate PDF output: ${
-					outputError.message || 'Unknown error'
-				}`
-			);
-		}
-	} catch (error) {
-		console.error('Error in PDF generation:', error);
-		throw new Error(
-			`Failed to generate PDF: ${error.message || 'Unknown error'}`
-		);
-	}
+    return blob;
+  } catch (error) {
+    console.error('Error in PDF generation:', error);
+    throw new Error(`Failed to generate PDF: ${error.message || 'Unknown error'}`);
+  }
 };
 
-/**
- * Gets PDF history for a project
- */
-export const getProjectPdfHistory = (project: SensorFolder): PdfRecord[] => {
-	return project.pdfHistory || [];
-};
-
-/**
- * Generates and downloads a PDF report for a project, and adds it to the project's PDF history
- * @param project The project to generate a report for
- * @param selectedDataTypes Optional array of data types to include in the report
- * @returns The updated project with the new PDF record added to history
- */
 export const downloadProjectReport = async (
-	project: SensorFolder,
-	selectedDataTypes?: string[]
+  project: SensorFolder,
+  selectedDataTypes?: string[]
 ): Promise<SensorFolder> => {
-	try {
-		console.log('Starting PDF generation for project:', project.name);
-		console.log('Selected data types:', selectedDataTypes);
+  try {
+    console.log('Starting PDF generation for project:', project.name);
+    console.log('Selected data types:', selectedDataTypes);
 
-		const currentUser = getCurrentUser();
-		const timestamp = new Date();
-		const filename = `${project.name}-report-${
-			timestamp.toISOString().split('T')[0]
-		}.pdf`;
+    const currentUser = getCurrentUser();
+    const timestamp = new Date();
+    const filename = `${project.name}-report-${timestamp.toISOString().split('T')[0]}.pdf`;
 
-		// Use a try-catch block with more specific error handling
-		let pdfBlob;
-		try {
-			// Ensure jsPDF is properly imported and initialized with default params
-			console.log('Initializing PDF generation with jsPDF v3');
-			pdfBlob = await generateProjectReport(project, selectedDataTypes);
-			console.log('PDF blob generated successfully, size:', pdfBlob.size);
+    let pdfBlob;
+    try {
+      console.log('Initializing PDF generation with jsPDF v3');
+      pdfBlob = await generateProjectReport(project, selectedDataTypes);
+      console.log('PDF blob generated successfully, size:', pdfBlob.size);
 
-			if (!pdfBlob || pdfBlob.size === 0) {
-				throw new Error('Generated PDF blob is empty or invalid');
-			}
-		} catch (genError) {
-			console.error('Error in generateProjectReport:', genError);
-			throw new Error(
-				`PDF generation failed: ${genError.message || 'Unknown error'}`
-			);
-		}
+      if (!pdfBlob || pdfBlob.size === 0) {
+        throw new Error('Generated PDF blob is empty or invalid');
+      }
+    } catch (genError) {
+      console.error('Error in generateProjectReport:', genError);
+      throw new Error(`PDF generation failed: ${genError.message || 'Unknown error'}`);
+    }
 
-		// Create URL from the blob with safer error handling
-		let url;
-		try {
-			console.log('Creating URL from blob...');
-			url = URL.createObjectURL(pdfBlob);
+    // Create URL from the blob
+    let url;
+    try {
+      console.log('Creating URL from blob...');
+      url = URL.createObjectURL(pdfBlob);
 
-			if (!url) {
-				throw new Error('URL creation returned empty result');
-			}
-			console.log(
-				'URL created successfully:',
-				url.substring(0, 30) + '...'
-			);
-		} catch (urlError) {
-			console.error('Error creating URL from blob:', urlError);
-			throw new Error(
-				`Failed to create URL from PDF: ${
-					urlError.message || 'Unknown error'
-				}`
-			);
-		}
+      if (!url) {
+        throw new Error('URL creation returned empty result');
+      }
+      console.log('URL created successfully:', url.substring(0, 30) + '...');
+    } catch (urlError) {
+      console.error('Error creating URL from blob:', urlError);
+      throw new Error(`Failed to create URL from PDF: ${urlError.message || 'Unknown error'}`);
+    }
 
-		// Create download link with more reliable implementation
-		try {
-			console.log('Creating download link...');
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = filename;
-			link.style.display = 'none';
-			document.body.appendChild(link);
+    // Create download link
+    try {
+      console.log('Creating download link...');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
 
-			// Using a small timeout to ensure the browser has time to process
-			setTimeout(() => {
-				link.click();
-				setTimeout(() => {
-					document.body.removeChild(link);
-					console.log('Download initiated and link cleaned up');
-				}, 100);
-			}, 100);
-		} catch (linkError) {
-			console.error('Error in download process:', linkError);
-			throw new Error(
-				`Failed to initiate download: ${
-					linkError.message || 'Unknown error'
-				}`
-			);
-		}
+      setTimeout(() => {
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          console.log('Download initiated and link cleaned up');
+        }, 100);
+      }, 100);
+    } catch (linkError) {
+      console.error('Error in download process:', linkError);
+      throw new Error(`Failed to initiate download: ${linkError.message || 'Unknown error'}`);
+    }
 
-		// Create a new PDF record
-		const pdfRecord: PdfRecord = {
-			id: `pdf-${Date.now()}`,
-			filename: filename,
-			createdAt: timestamp.toISOString(),
-			createdBy: currentUser?.id,
-			creatorName: currentUser?.name,
-			blobUrl: url // Store temporarily for viewing
-		};
+    // Save record to database with PDF blob
+    const pdfRecord = {
+      filename: filename,
+      createdAt: timestamp.toISOString(),
+      createdBy: currentUser?.id,
+      creatorName: currentUser?.name,
+      pdfBlob
+    };
 
-		// Add to project history
-		const updatedProject = {
-			...project,
-			pdfHistory: [...(project.pdfHistory || []), pdfRecord]
-		};
+    const { success, data, message } = await savePdfRecord(project.id, pdfRecord);
+    if (!success || !data) {
+      console.error('Error saving PDF record:', message);
+      throw new Error(`Failed to save PDF record: ${message}`);
+    }
 
-		// Clean up the URL after 30 minutes to avoid memory leaks
-		setTimeout(() => {
-			URL.revokeObjectURL(url);
-			if (updatedProject.pdfHistory) {
-				const index = updatedProject.pdfHistory.findIndex(
-					(pdf) => pdf.id === pdfRecord.id
-				);
-				if (index !== -1) {
-					updatedProject.pdfHistory[index] = {
-						...updatedProject.pdfHistory[index],
-						blobUrl: undefined
-					};
-				}
-			}
-		}, 30 * 60 * 1000);
+    // Update project with the new PDF record using the real ID from the database
+    const updatedProject = {
+      ...project,
+      pdfHistory: [
+        ...project.pdfHistory || [],
+        {
+          id: data.id,
+          filename: data.filename,
+          createdAt: data.createdAt,
+          creatorName: data.creatorName,
+          blobUrl: data.blobUrl
+        }
+      ]
+    };
 
-		console.log('PDF report generation completed successfully');
-		return updatedProject;
-	} catch (error) {
-		console.error('Error generating PDF:', error);
-		throw error;
-	}
+    console.log('PDF report generation completed successfully');
+    return updatedProject;
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw error;
+  }
 };
 
-/**
- * Opens a PDF from history for viewing
- */
-export const viewPdfFromHistory = (pdfRecord: PdfRecord) => {
-	if (pdfRecord.blobUrl) {
-		// URL is still cached, open it directly
-		window.open(pdfRecord.blobUrl, '_blank');
-	} else {
-		// URL expired, notify the user
-		console.log('PDF URL has expired. Please regenerate the PDF.');
-		return false;
-	}
-	return true;
+export const viewPdfFromHistory = async (pdfRecord: PdfRecord): Promise<boolean> => {
+  try {
+    const content = await getPdfContent(pdfRecord.id);
+    if (!content) {
+      console.log('PDF URL has expired. Please regenerate the PDF.');
+      return false;
+    }
+
+    const url = URL.createObjectURL(content.blob);
+    window.open(url, '_blank');
+
+    // Clean up URL after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch (error) {
+    console.error('Error viewing PDF:', error);
+    return false;
+  }
 };
