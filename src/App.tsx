@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import SensorHealthCheck from "./pages/SensorHealthCheck";
 import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "./services/authService";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { hasAdminAccess } from "./utils/authUtils";
@@ -80,6 +81,14 @@ const App = () => {
                   <AdminRoute>
                     <Admin />
                   </AdminRoute>
+                }
+              />
+              <Route
+                path="/sensor-health-check"
+                element={
+                  <ProtectedRoute>
+                    <SensorHealthCheck />
+                  </ProtectedRoute>
                 }
               />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

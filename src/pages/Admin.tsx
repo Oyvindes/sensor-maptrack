@@ -91,18 +91,18 @@ const Admin = () => {
       <AdminHeader />
       <Toaster position="top-right" />
 
-      <div className="container mx-auto p-4 pb-20">
+      <div className="container mx-auto p-2 sm:p-4 pb-20">
         <SectionContainer>
-          <SectionTitle>Admin Controls</SectionTitle>
-          <p>Manage your system's data and settings.</p>
+          <SectionTitle className="text-lg sm:text-xl md:text-2xl">Admin Controls</SectionTitle>
+          <p className="text-sm sm:text-base">Manage your system's data and settings.</p>
         </SectionContainer>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="mb-4">
-            {isMaster && <TabsTrigger value="companies">Companies</TabsTrigger>}
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="sensors">Sensors</TabsTrigger>
-            <TabsTrigger value="devices">Asset Tracking</TabsTrigger>
+          <TabsList className="mb-2 sm:mb-4 h-8 sm:h-10 overflow-x-auto flex-wrap">
+            {isMaster && <TabsTrigger value="companies" className="text-xs sm:text-sm h-7 sm:h-9">Companies</TabsTrigger>}
+            <TabsTrigger value="users" className="text-xs sm:text-sm h-7 sm:h-9">Users</TabsTrigger>
+            <TabsTrigger value="sensors" className="text-xs sm:text-sm h-7 sm:h-9">Sensors</TabsTrigger>
+            <TabsTrigger value="devices" className="text-xs sm:text-sm h-7 sm:h-9">Asset Tracking</TabsTrigger>
           </TabsList>
           
           <TabsContent value="companies">

@@ -127,12 +127,31 @@
 		@apply transition-all duration-300 ease-in-out;
 	}
 
+	/* Custom responsive utilities */
+	@screen xs {
+		.xs\:grid-cols-2 {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
 	.map-container {
 		@apply rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ease-out;
-		height: 500px;
+		height: 300px;
+	}
+
+	@media (min-width: 640px) {
+		.map-container {
+			height: 400px;
+		}
+	}
+
+	@media (min-width: 768px) {
+		.map-container {
+			height: 500px;
+		}
 	}
 
 	.sensor-grid {
-		@apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+		@apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6;
 	}
 }

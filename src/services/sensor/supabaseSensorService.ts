@@ -274,6 +274,110 @@ export const saveSensor = async (
 };
 
 /**
+ * Fetch a sensor by its IMEI
+ * @param imei The IMEI of the sensor to fetch
+ * @returns Promise with the sensor data or null if not found
+ */
+export const fetchSensorByImei = async (imei: string): Promise<SensorData | null> => {
+  try {
+    // Clean the IMEI
+    const cleanedImei = imei.replace(/\D/g, '');
+    
+    const result = await safeQuery<SensorData>(
+      async () => {
+        // Get the sensor with the specified IMEI
+        const sensorResult = await supabase
+          .from('sensors')
+          .select(`
+            id,
+            name,
+            imei,
+            status,
+            folder_id,
+            company_id,
+            updated_at
+          `)
+          .eq('imei', cleanedImei)
+          .single();
+
+        if (sensorResult.error) {
+          console.error('Error fetching sensor by IMEI:', sensorResult.error);
+          return { data: null, error: sensorResult.error };
+        }
+
+        // Get the latest values for this sensor
+        const valuesQuery = supabase
+          .from('sensor_values')
+          .select('*')
+          .eq('sensor_imei', cleanedImei)
+          .limit(10); // Limit to the 10 most recent values
+        
+        const valuesResult = await databaseHelpers
+          .orderBy(valuesQuery, 'created_at', false);
+
+        let sensorValues: any[] = [];
+        if (!valuesResult.error) {
+          sensorValues = valuesResult.data || [];
+        } else {
+          console.error('Error fetching sensor values:', valuesResult.error);
+        }
+
+        // Get folder information if needed
+        let projectName = null;
+        if (sensorResult.data.folder_id) {
+          const folderResult = await supabase
+            .from('sensor_folders')
+            .select('name')
+            .eq('id', sensorResult.data.folder_id)
+            .single();
+          
+          if (!folderResult.error) {
+            projectName = folderResult.data.name;
+          }
+        }
+
+        // Format the values
+        const values = sensorValues.map((value) => ({
+          ...value.payload,
+          time: value.created_at
+        }));
+
+        // Get the last seen timestamp from the most recent sensor value
+        const lastSeenTimestamp = sensorValues.length > 0
+          ? new Date(sensorValues[0].created_at).toLocaleString()
+          : null;
+
+        // Format the sensor data
+        const formattedSensor: SensorData = {
+          id: sensorResult.data.id,
+          name: sensorResult.data.name,
+          imei: sensorResult.data.imei || undefined,
+          status: sensorResult.data.status as 'online' | 'offline' | 'warning',
+          values: values,
+          lastUpdated: new Date(sensorResult.data.updated_at).toLocaleString(),
+          folderId: sensorResult.data.folder_id || undefined,
+          companyId: mapCompanyUUIDToId(sensorResult.data.company_id),
+          projectName
+        };
+
+        return { data: formattedSensor, error: null };
+      },
+      'fetchSensorByImei'
+    );
+
+    if (result.error || !result.data) {
+      console.error('Error fetching sensor by IMEI:', result.error);
+      return null;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Unexpected error in fetchSensorByImei:', error);
+    return null;
+  }
+};
+
+/**
  * Delete a sensor and its values from the database
  */
 export const deleteSensor = async (

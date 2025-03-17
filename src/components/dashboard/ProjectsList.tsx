@@ -81,12 +81,12 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 
 	if (isLoading) {
 		return (
-			<div className={cn('space-y-2', className)}>
+			<div className={cn('space-y-1 sm:space-y-2', className)}>
 				{[1, 2, 3].map((_, index) => (
 					<Card key={index} className="animate-pulse-soft">
-						<CardContent className="p-3">
-							<div className="h-5 bg-secondary rounded w-2/3 mb-2"></div>
-							<div className="h-4 bg-secondary rounded-full w-full opacity-50"></div>
+						<CardContent className="p-2 sm:p-3">
+							<div className="h-4 sm:h-5 bg-secondary rounded w-2/3 mb-1 sm:mb-2"></div>
+							<div className="h-3 sm:h-4 bg-secondary rounded-full w-full opacity-50"></div>
 						</CardContent>
 					</Card>
 				))}
@@ -96,10 +96,10 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 
 	if (projects.length === 0) {
 		return (
-			<div className={cn('p-4', className)}>
-				<div className="h-full flex flex-col items-center justify-center space-y-2">
-					<p className="text-muted-foreground">No started projects</p>
-					<p className="text-xs text-muted-foreground">
+			<div className={cn('p-2 sm:p-4', className)}>
+				<div className="h-full flex flex-col items-center justify-center space-y-1 sm:space-y-2">
+					<p className="text-sm sm:text-base text-muted-foreground">No started projects</p>
+					<p className="text-[10px] sm:text-xs text-muted-foreground">
 						Projects will appear here when started
 					</p>
 				</div>
@@ -108,38 +108,38 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 	}
 
 	return (
-		<div className={cn('space-y-2', className)}>
+		<div className={cn('space-y-1 sm:space-y-2', className)}>
 			{projects.map((project) => (
 				<Card
 					key={project.id}
 					className="hover:bg-accent/50 transition-colors cursor-pointer"
 					onClick={() => onProjectSelect(project)}
 				>
-					<CardContent className="p-3">
+					<CardContent className="p-2 sm:p-3">
 						<div className="flex justify-between items-start">
-							<div>
-								<h3 className="font-medium text-sm">
+							<div className="min-w-0 flex-1 mr-2">
+								<h3 className="font-medium text-xs sm:text-sm">
 									{project.name}
 								</h3>
-								<p className="text-xs text-muted-foreground truncate max-w-[200px]">
+								<p className="text-[10px] sm:text-xs text-muted-foreground truncate">
 									{project.address ||
 										project.description ||
 										project.projectNumber}
 								</p>
 							</div>
-							<div className="flex items-center space-x-2">
-								<div className="flex items-center space-x-2 text-xs text-muted-foreground">
+							<div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+								<div className="hidden xs:flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-xs text-muted-foreground">
 									{project.location && (
-										<MapPin className="h-3 w-3" />
+										<MapPin className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
 									)}
-									<span className="flex items-center gap-1">
-										<Cpu className="h-3 w-3" />
+									<span className="flex items-center gap-0.5 sm:gap-1">
+										<Cpu className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
 										{project.assignedSensorImeis?.length ||
 											0}
 									</span>
 									<span
 										className={cn(
-											'flex items-center gap-1',
+											'flex items-center',
 											project.status === 'running'
 												? 'text-green-500'
 												: 'text-muted-foreground'
@@ -148,31 +148,31 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 										•
 									</span>
 								</div>
-								<div className="flex items-center gap-1">
+								<div className="flex items-center gap-0.5 sm:gap-1">
 									<Button
 										variant="ghost"
 										size="icon"
-										className="h-6 w-6"
+										className="h-5 w-5 sm:h-6 sm:w-6"
 										onClick={(e) =>
 											handleStatusChange(e, project)
 										}
 									>
 										{project.status === 'running' ? (
-											<Square className="h-3 w-3 text-red-500" />
+											<Square className="h-2.5 sm:h-3 w-2.5 sm:w-3 text-red-500" />
 										) : (
-											<Play className="h-3 w-3 text-green-500" />
+											<Play className="h-2.5 sm:h-3 w-2.5 sm:w-3 text-green-500" />
 										)}
 									</Button>
 									{onProjectDelete && (
 										<Button
 											variant="ghost"
 											size="icon"
-											className="h-6 w-6"
+											className="h-5 w-5 sm:h-6 sm:w-6"
 											onClick={(e) =>
 												handleDelete(e, project)
 											}
 										>
-											<Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+											<Trash2 className="h-2.5 sm:h-3 w-2.5 sm:w-3 text-muted-foreground hover:text-destructive" />
 										</Button>
 									)}
 								</div>

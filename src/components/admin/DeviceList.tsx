@@ -76,77 +76,78 @@ const DeviceList: React.FC<DeviceListProps> = ({
   return (
     <>
       <SectionContainer>
-        <div className="flex justify-between items-center mb-4">
-          <SectionTitle>Manage Tracking Devices</SectionTitle>
-          <Button 
-            onClick={onAddNew} 
-            size="sm" 
-            className="gap-2"
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-2 sm:mb-4">
+          <SectionTitle className="text-lg sm:text-xl md:text-2xl">Manage Tracking Devices</SectionTitle>
+          <Button
+            onClick={onAddNew}
+            size="sm"
+            className="gap-1 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm self-end sm:self-auto"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>Add Device</span>
           </Button>
         </div>
         
         {devices.length === 0 ? (
-          <div className="p-8 text-center border border-dashed rounded-lg">
-            <p className="text-muted-foreground mb-4">No tracking objects found in the database.</p>
-            <Button onClick={onAddNew} variant="outline" className="gap-2">
-              <Plus className="h-4 w-4" />
+          <div className="p-4 sm:p-8 text-center border border-dashed rounded-lg">
+            <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4">No tracking objects found in the database.</p>
+            <Button onClick={onAddNew} variant="outline" className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9">
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Add your first device</span>
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             {devices.map(device => (
-              <div 
+              <div
                 key={device.id}
                 onClick={() => onDeviceSelect(device)}
-                className="glass-card p-4 rounded-lg hover:shadow-md transition-all-ease cursor-pointer"
+                className="glass-card p-3 sm:p-4 rounded-lg hover:shadow-md transition-all-ease cursor-pointer"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">{device.name}</h3>
-                  <div className="flex space-x-1">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <h3 className="font-medium text-sm sm:text-base truncate max-w-[70%]">{device.name}</h3>
+                  <div className="flex space-x-0.5 sm:space-x-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeviceSelect(device);
                       }}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                     
                     {onDelete && (
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 sm:h-8 sm:w-8 p-0"
                         onClick={(e) => handleDeleteClick(device.id, device.name, e)}
                       >
-                        <Trash className="h-4 w-4" />
+                        <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     )}
                   </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   Position: {device.position.lat.toFixed(4)}, {device.position.lng.toFixed(4)}
                 </div>
-                <div className="flex justify-between mt-2">
-                  <div className="text-xs text-muted-foreground">
+                <div className="flex flex-col xs:flex-row xs:justify-between mt-1 sm:mt-2 gap-1">
+                  <div className="text-[10px] sm:text-xs text-muted-foreground">
                     Speed: {device.speed} mph • Battery: {device.batteryLevel}%
                   </div>
                   {device.folderId && (
-                    <div className="text-xs flex items-center gap-1">
-                      <Folder className="h-3 w-3" />
+                    <div className="text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1">
+                      <Folder className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       <span>In folder</span>
                     </div>
                   )}
                 </div>
                 {!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(device.id) && (
-                  <div className="mt-2 text-xs text-amber-500 flex items-center gap-1">
-                    <AlertOctagon className="h-3 w-3" />
+                  <div className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-amber-500 flex items-center gap-0.5 sm:gap-1">
+                    <AlertOctagon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     <span>Mock data (cannot be deleted)</span>
                   </div>
                 )}

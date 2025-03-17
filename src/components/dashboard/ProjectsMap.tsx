@@ -69,10 +69,6 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 						const parsed = JSON.parse(project.location);
 						if (parsed && 'lat' in parsed && 'lng' in parsed) {
 							processed[i].location = parsed;
-							console.log(
-								`Parsed location for project ${project.id}:`,
-								parsed
-							);
 							continue;
 						}
 					} catch (e) {
@@ -87,15 +83,8 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 				if (project.address && !project.location) {
 					needsGeocoding = true;
 					try {
-						console.log(
-							`Geocoding address for project ${project.id}: ${project.address}`
-						);
 						const coords = await getAddressCoordinates(
 							project.address
-						);
-						console.log(
-							`Received coordinates for project ${project.id}:`,
-							coords
 						);
 						processed[i].location = coords;
 					} catch (e) {
@@ -133,10 +122,6 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 		if (typeof project.location === 'string') {
 			try {
 				locationData = JSON.parse(project.location);
-				console.log(
-					`Parsed string location for project ${project.id}:`,
-					locationData
-				);
 			} catch (e) {
 				console.error(
 					`Using default location for project ${project.id}, parsing error:`,
@@ -152,10 +137,6 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 		) {
 			// Already in the correct format
 			locationData = project.location as Location;
-			console.log(
-				`Using object location for project ${project.id}:`,
-				locationData
-			);
 		} else {
 			console.error(
 				`Invalid location format for project ${project.id}:`,
@@ -199,10 +180,6 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 					onClick={(e) => {
 						e.stopPropagation(); // Prevent event bubbling
 						if (project) {
-							console.log(
-								'Project select button clicked:',
-								project.id
-							);
 							onProjectSelect(project);
 						}
 					}}
@@ -251,7 +228,6 @@ return (
 				fitAllMarkers={initialLoad || shouldResetView} // Only fit on initial load or reset
 				autoFitMarkers={false} // Don't automatically fit to markers when zooming
 				onDeviceClick={(deviceId) => {
-					console.log('Device clicked:', deviceId);
 					const project = projects.find((p) => p.id === deviceId);
 					if (project) {
 						onProjectSelect(project);
