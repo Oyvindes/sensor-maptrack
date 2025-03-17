@@ -1,22 +1,40 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Plus, Settings } from "lucide-react";
-import { getCurrentUser } from "@/services/authService";
-import { Link } from "react-router-dom";
+import { RefreshCcw, Plus, Settings, LogOut } from "lucide-react";
+import { getCurrentUser, logout } from "@/services/authService";
+import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import PdfSettingsButton from "./PdfSettingsButton";
+import { toast } from "sonner";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
   onAddNewProject?: () => void;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onRefresh,
   onAddNewProject
 }) => {
+  const navigate = useNavigate();
   const currentUser = getCurrentUser();
-  const isAdmin = currentUser?.role === "admin" || currentUser?.role === "master";
+  const isAdmin = hasAdminAccess();
+  
+  const handleLogout = async () => {
+    try {
+      const result = await logout();
+      if (result.success) {
+        toast.success(result.message);
+        navigate('/login');
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('An error occurred during logout');
+      console.error(error);
+    }
+  };
   
   return (
     <div className="sticky top-0 z-10 w-full backdrop-blur-md bg-background/80">
@@ -40,8 +58,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </Button>
           )}
           {isAdmin && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               asChild
             >
@@ -50,6 +68,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               </Link>
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="gap-1"
+          >
+            <LogOut className="w-4 h-4" /> Logout
+          </Button>
           <Button 
             variant="outline" 
             size="icon"

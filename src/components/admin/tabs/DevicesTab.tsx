@@ -1,9 +1,9 @@
-
-import React from "react";
+import React, { useMemo } from "react";
 import { TrackingObject, Device } from "@/types/sensors";
 import DeviceList from "@/components/admin/DeviceList";
 import DeviceEditor from "@/components/DeviceEditor";
-import { Company } from "@/types/users";
+import { Company, User } from "@/types/users";
+import { filterTrackingObjectsByCompany } from "@/utils/authUtils";
 
 interface DevicesTabProps {
   mode: string;
@@ -15,6 +15,7 @@ interface DevicesTabProps {
   onDeviceCancel: () => void;
   onAddNewDevice: () => void;
   onDeviceDelete?: (deviceId: string) => Promise<boolean>;
+  currentUser: User | null;
 }
 
 const DevicesTab: React.FC<DevicesTabProps> = ({
@@ -26,13 +27,18 @@ const DevicesTab: React.FC<DevicesTabProps> = ({
   onDeviceSave,
   onDeviceCancel,
   onAddNewDevice,
-  onDeviceDelete
+  onDeviceDelete,
+  currentUser
 }) => {
+  // Filter tracking objects by company for non-master users
+  const filteredTrackingObjects = useMemo(() => {
+    return filterTrackingObjectsByCompany(trackingObjects, currentUser);
+  }, [trackingObjects, currentUser]);
   return (
     <>
       {mode === "listDevices" && (
         <DeviceList
-          devices={trackingObjects}
+          devices={filteredTrackingObjects}
           onDeviceSelect={onDeviceSelect}
           onAddNew={onAddNewDevice}
           onDelete={onDeviceDelete}

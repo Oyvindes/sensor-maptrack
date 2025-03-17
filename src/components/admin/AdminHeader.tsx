@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { LogOut, User, LayoutDashboard } from "lucide-react";
+import { LogOut, User, LayoutDashboard, Database } from "lucide-react";
 import { logout, getCurrentUser } from '@/services/authService';
 import { toast } from 'sonner';
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -43,6 +43,12 @@ const AdminHeader: React.FC = () => {
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <Button variant="ghost" size="sm" asChild className="gap-2">
+          <Link to="/admin/database-status">
+            <Database className="h-4 w-4" />
+            Database Status
+          </Link>
+        </Button>
         <Button variant="ghost" size="sm" asChild className="gap-2">
           <Link to="/index">
             <LayoutDashboard className="h-4 w-4" />

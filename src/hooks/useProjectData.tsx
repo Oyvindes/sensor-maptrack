@@ -3,8 +3,9 @@ import { toast } from 'sonner';
 import { SensorData } from '@/components/SensorCard';
 import { SensorFolder } from '@/types/users';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
-import { getMockSensorFolders } from '@/services/folder/folderService';
+import { getSensorFolders } from '@/services/folder/folderService';
 import { getCurrentUser } from '@/services/authService';
+import { mapCompanyUUIDToId } from '@/utils/uuidUtils';
 
 export function useProjectData() {
 	const [sensors, setSensors] = useState<SensorData[]>([]);
@@ -25,21 +26,37 @@ export function useProjectData() {
 			setIsLoading(true);
 			try {
 				const sensorsData = await fetchSensors();
-				const projectsData = await getMockSensorFolders();
+				const projectsData = await getSensorFolders();
 
-				// Filter out sensors that don't have a folderId property or it's undefined
-				const filteredSensors = sensorsData.filter(
-					(sensor) =>
-						'folderId' in sensor && sensor.folderId !== undefined
-				);
+				// Filter sensors based on user's company and role
+				const filteredSensors = currentUser?.role === 'master'
+					? sensorsData
+					: sensorsData.filter(
+						(sensor) => {
+							if (!sensor.companyId) return false;
+							
+							// Convert any UUID company IDs to the format used in the application
+							const normalizedSensorCompanyId = mapCompanyUUIDToId(sensor.companyId);
+							
+							// Compare with the user's company ID
+							return normalizedSensorCompanyId === currentUser?.companyId;
+						}
+					);
 
 				// Filter projects based on user's company if not master admin
 				const filteredProjects =
 					currentUser?.role === 'master'
 						? projectsData
 						: projectsData.filter(
-								(project) =>
-									project.companyId === currentUser?.companyId
+								(project) => {
+									if (!project.companyId) return false;
+									
+									// Convert any UUID company IDs to the format used in the application
+									const normalizedProjectCompanyId = mapCompanyUUIDToId(project.companyId);
+									
+									// Compare with the user's company ID
+									return normalizedProjectCompanyId === currentUser?.companyId;
+								}
 						  );
 
 				setSensors(filteredSensors);
@@ -61,35 +78,18 @@ export function useProjectData() {
 					...sensor,
 					values: sensor.values.map((value) => ({
 						...value,
-						value:
-							value.type === 'temperature'
-								? parseFloat(
-										(
-											value.value +
-											(Math.random() * 0.4 - 0.2)
-										).toFixed(1)
-								  )
-								: value.type === 'humidity'
-								? parseFloat(
-										(
-											value.value +
-											(Math.random() * 2 - 1)
-										).toFixed(1)
-								  )
-								: value.type === 'battery'
-								? Math.max(
-										0,
-										Math.min(
-											100,
-											value.value - Math.random() * 0.5
-										)
-								  )
-								: parseFloat(
-										(
-											value.value +
-											(Math.random() * 2 - 1)
-										).toFixed(1)
-								  )
+						temperature: value.temperature !== undefined
+							? parseFloat((value.temperature + (Math.random() * 0.4 - 0.2)).toFixed(1))
+							: value.temperature,
+						humidity: value.humidity !== undefined
+							? parseFloat((value.humidity + (Math.random() * 2 - 1)).toFixed(1))
+							: value.humidity,
+						battery: value.battery !== undefined
+							? Math.max(0, Math.min(100, value.battery - Math.random() * 0.5))
+							: value.battery,
+						signal: value.signal !== undefined
+							? parseFloat((value.signal + (Math.random() * 2 - 1)).toFixed(1))
+							: value.signal
 					})),
 					lastUpdated: new Date().toLocaleTimeString()
 				}))

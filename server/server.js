@@ -8,10 +8,16 @@ const port = 3001;
 // Enable CORS for all routes
 app.use(cors());
 
-// Initialize the Notion client with the API key
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Initialize the Notion client with the API key from .env
 const notion = new Client({
-  auth: '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',
+  auth: process.env.VITE_NOTION_TOKEN || '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',
 });
+
+console.log('Using Notion token:', process.env.VITE_NOTION_TOKEN ? 'From .env file' : 'Hardcoded fallback');
 
 // Middleware to parse JSON bodies
 app.use(express.json());

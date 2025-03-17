@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/services/authService";
 import AdminHeader from "@/components/admin/AdminHeader";
@@ -11,6 +10,7 @@ import { useSensorHandlers } from "@/components/admin/handlers/SensorHandlers";
 import { useDeviceHandlers } from "@/components/admin/handlers/DeviceHandlers";
 import { useTrackingObjects } from "@/hooks/useTrackingObjects";
 import { Toaster } from "sonner";
+import { isMasterAdmin, filterSensorsByCompany, filterTrackingObjectsByCompany } from "@/utils/authUtils";
 
 // Tab components
 import CompaniesTab from "@/components/admin/tabs/CompaniesTab";
@@ -64,14 +64,22 @@ const Admin = () => {
   );
   
   const currentUser = getCurrentUser();
+  const isMaster = isMasterAdmin();
+
+  // We'll move the filtering logic to the SensorsTab component
 
   useEffect(() => {
     // If the tab was set to folders, change it to companies
     // Using as AdminTab to ensure type safety
     if (activeTab === "folders" as any) {
-      handleTabChange('companies');
+      handleTabChange(isMaster ? 'companies' : 'sensors');
     }
-  }, [activeTab, handleTabChange]);
+    
+    // If user is not a master admin and tries to access companies tab, redirect to sensors tab
+    if (!isMaster && activeTab === 'companies') {
+      handleTabChange('sensors');
+    }
+  }, [activeTab, handleTabChange, isMaster]);
 
   if (!currentUser) {
     return <div>Not authenticated</div>;
@@ -90,7 +98,7 @@ const Admin = () => {
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="companies">Companies</TabsTrigger>
+            {isMaster && <TabsTrigger value="companies">Companies</TabsTrigger>}
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="sensors">Sensors</TabsTrigger>
             <TabsTrigger value="devices">Asset Tracking</TabsTrigger>
@@ -135,6 +143,7 @@ const Admin = () => {
               onImportSensors={sensorHandlers.handleImportSensors}
               onDeleteByCsv={sensorHandlers.handleDeleteSensors}
               setMode={setMode}
+              currentUser={currentUser}
             />
           </TabsContent>
 
@@ -149,6 +158,7 @@ const Admin = () => {
               onDeviceCancel={deviceHandlers.handleDeviceCancel}
               onAddNewDevice={deviceHandlers.handleAddNewDevice}
               onDeviceDelete={deviceHandlers.handleDeviceDelete}
+              currentUser={currentUser}
             />
           </TabsContent>
         </Tabs>

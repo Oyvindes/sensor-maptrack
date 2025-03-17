@@ -449,9 +449,12 @@ const generateProjectReport = async (
         }
         
         const endDate = project.stoppedAt ? new Date(project.stoppedAt) : new Date();
+        
+        // Use the project's creation date as the default start date to include all data
+        // This ensures we use the entire project period rather than just the last day
         const startDate = project.startedAt
           ? new Date(project.startedAt)
-          : new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
+          : new Date(project.createdAt);
 
         const data = await fetchSensorData(sensorImei, startDate, endDate);
         if (data.length > 0) {

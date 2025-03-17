@@ -1,8 +1,9 @@
 import { toast } from 'sonner';
-import { getMockTrackingObjects } from '@/services/sensorService';
+import { fetchTrackingObjects } from '@/services/sensorService';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
-import { getMockSensorFolders } from '@/services/folder/folderService';
+import { getSensorFolders } from '@/services/folder/folderService';
 import { getCurrentUser } from '@/services/authService';
+import { mapCompanyUUIDToId } from '@/utils/uuidUtils';
 import { SensorData } from '@/components/SensorCard';
 import { TrackingObject } from '@/types/sensors';
 import { SensorFolder } from '@/types/users';
@@ -23,21 +24,38 @@ export function useDashboardActions() {
 			try {
 				// Fetch data asynchronously
 				const sensorsData = await fetchSensors();
-				const trackingObjectsData = getMockTrackingObjects();
-				const projectsData = await getMockSensorFolders();
+				const trackingObjectsData = await fetchTrackingObjects();
+				const projectsData = await getSensorFolders();
 
-				// Filter sensors that have a folderId
-				const filteredSensors = sensorsData.filter(
-					(sensor) => 'folderId' in sensor && sensor.folderId
-				);
+				// Filter sensors based on user's company and role
+				const filteredSensors = currentUser?.role === 'master'
+					? sensorsData
+					: sensorsData.filter(
+						(sensor) => {
+							if (!sensor.companyId) return false;
+							
+							// Convert any UUID company IDs to the format used in the application
+							const normalizedSensorCompanyId = mapCompanyUUIDToId(sensor.companyId);
+							
+							// Compare with the user's company ID
+							return normalizedSensorCompanyId === currentUser?.companyId;
+						}
+					);
 
 				// Filter projects based on user company
 				const filteredProjects =
 					currentUser?.role === 'master'
 						? projectsData
 						: projectsData.filter(
-								(project) =>
-									project.companyId === currentUser?.companyId
+								(project) => {
+									if (!project.companyId) return false;
+									
+									// Convert any UUID company IDs to the format used in the application
+									const normalizedProjectCompanyId = mapCompanyUUIDToId(project.companyId);
+									
+									// Compare with the user's company ID
+									return normalizedProjectCompanyId === currentUser?.companyId;
+								}
 						  );
 
 				setSensors(filteredSensors);

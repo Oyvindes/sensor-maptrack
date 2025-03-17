@@ -1,188 +1,239 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SensorData, SensorDataValues } from '@/components/SensorCard';
 import { toast } from 'sonner';
-import { mapCompanyIdToUUID } from '@/utils/uuidUtils';
+import { mapCompanyIdToUUID, mapCompanyIdToUUIDSync, mapCompanyUUIDToId } from '@/utils/uuidUtils';
+import { safeQuery, databaseHelpers } from '@/utils/databaseUtils';
 
 /**
  * Get all sensors from the database
  */
 export const fetchSensors = async (): Promise<SensorData[]> => {
-	try {
-		// Get sensors with their latest values
-		const { data: sensors, error } = await supabase
-			.from('sensors')
-			.select(`
-				id,
-				name,
-				imei,
-				status,
-				folder_id,
-				company_id,
-				updated_at
-			`);
+  try {
+    const result = await safeQuery<SensorData[]>(
+      async () => {
+        // Get sensors with their latest values
+        const sensorsResult = await supabase
+          .from('sensors')
+          .select(`
+            id,
+            name,
+            imei,
+            status,
+            folder_id,
+            company_id,
+            updated_at
+          `);
 
-		if (error) throw error;
+        if (sensorsResult.error) {
+          console.error('Error fetching sensors:', sensorsResult.error);
+          return { data: [] as SensorData[], error: sensorsResult.error };
+        }
 
-		// Get values for all sensors
-		const { data: sensorValues, error: valuesError } = await supabase
-			.from('sensor_values')
-			.select('*')
-			.order('created_at', { ascending: false });
+        // Get sensor values ordered by creation date
+        let sensorValues: any[] = [];
+        try {
+          const valuesQuery = supabase
+            .from('sensor_values')
+            .select('*');
+          
+          const sensorValuesResult = await databaseHelpers
+            .orderBy(valuesQuery, 'created_at', false);
 
-		if (valuesError) throw valuesError;
+          if (!sensorValuesResult.error) {
+            sensorValues = sensorValuesResult.data || [];
+          } else {
+            console.error('Error fetching sensor values:', sensorValuesResult.error);
+          }
+        } catch (error) {
+          console.error('Error fetching sensor values:', error);
+        }
 
-		// Get all sensor folders to map folder_id to project name
-		const { data: folders, error: foldersError } = await supabase
-			.from('sensor_folders')
-			.select('id, name, project_number');
+        // Get folder information
+        let folders: any[] = [];
+        try {
+          const foldersResult = await supabase
+            .from('sensor_folders')
+            .select('id, name, project_number');
 
-		if (foldersError) throw foldersError;
+          if (!foldersResult.error) {
+            folders = foldersResult.data || [];
+          } else {
+            console.error('Error fetching folders:', foldersResult.error);
+          }
+        } catch (error) {
+          console.error('Error fetching folders:', error);
+        }
 
-		// Create a map of folder IDs to folder names for quick lookup
-		const folderMap = new Map();
-		folders.forEach(folder => {
-			folderMap.set(folder.id, folder.name);
-		});
+        // Process the data
+        const sensors = sensorsResult.data || [];
 
-		// Map the database results to SensorData format
-		const formattedSensors: SensorData[] = sensors.map((sensor) => {
-			// Find all values for this sensor
-			const values = sensorValues
-				.filter((value) => value.sensor_imei === sensor.imei)
-				.map((value) => {
-					return { ...value.payload, time: value.created_at };
-				});
+        // Create a map of folder IDs to folder names for quick lookup
+        const folderMap = new Map();
+        folders.forEach(folder => {
+          folderMap.set(folder.id, folder.name);
+        });
 
-			// Get the project name if available
-			const projectName = sensor.folder_id ? folderMap.get(sensor.folder_id) : null;
+        // Map the database results to SensorData format
+        const formattedSensors: SensorData[] = sensors.map((sensor) => {
+          // Find all values for this sensor
+          const values = sensorValues
+            .filter((value) => value.sensor_imei === sensor.imei)
+            .map((value) => ({
+              ...value.payload,
+              time: value.created_at
+            }));
 
-			// Get the last seen timestamp from the most recent sensor value
-			const lastSensorValue = sensorValues.find(value => value.sensor_imei === sensor.imei);
-			const lastSeenTimestamp = lastSensorValue ? new Date(lastSensorValue.created_at).toLocaleString() : null;
+          // Get the project name if available
+          const projectName = sensor.folder_id ? folderMap.get(sensor.folder_id) : null;
 
-			return {
-				id: sensor.id,
-				name: sensor.name,
-				imei: sensor.imei || undefined,
-				status: sensor.status as 'online' | 'offline' | 'warning',
-				values,
-				lastUpdated: new Date(sensor.updated_at).toLocaleString(),
-				folderId: sensor.folder_id || undefined,
-				companyId: sensor.company_id,
-				projectName: projectName
-			};
-		});
+          // Get the last seen timestamp from the most recent sensor value
+          const lastSensorValue = sensorValues.find(value => value.sensor_imei === sensor.imei);
+          const lastSeenTimestamp = lastSensorValue
+            ? new Date(lastSensorValue.created_at).toLocaleString()
+            : null;
 
-		return formattedSensors;
-	} catch (error) {
-		console.error('Error fetching sensors:', error);
-		toast.error('Failed to load sensors from database');
-		return [];
-	}
+          return {
+            id: sensor.id,
+            name: sensor.name,
+            imei: sensor.imei || undefined,
+            status: sensor.status as 'online' | 'offline' | 'warning',
+            values: values || [],
+            lastUpdated: new Date(sensor.updated_at).toLocaleString(),
+            folderId: sensor.folder_id || undefined,
+            companyId: mapCompanyUUIDToId(sensor.company_id),
+            projectName
+          };
+        });
+
+        return { data: formattedSensors, error: null };
+      },
+      'fetchSensors'
+    );
+
+    if (result.error || !result.data) {
+      console.error('Error fetching sensors:', result.error);
+      toast.error('Failed to load sensors from database');
+      return [];
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Unexpected error in fetchSensors:', error);
+    toast.error('Failed to load sensors from database');
+    return [];
+  }
 };
 
 /**
- * Create or update a sensor in the database
+ * Save a sensor to the database
  */
 export const saveSensor = async (
-	sensor: SensorData & {
-		folderId?: string;
-		companyId?: string;
-		imei?: string;
-	}
+  sensor: SensorData & {
+    folderId?: string;
+    companyId?: string;
+    imei?: string;
+  }
 ): Promise<{ success: boolean; data?: SensorData; message: string }> => {
-	try {
-		// Check if sensor exists
-		const isNewSensor =
-			sensor.id.startsWith('sensor-') || sensor.id.startsWith('temp-');
+  try {
+    const isNewSensor = sensor.id.startsWith('sensor-') || sensor.id.startsWith('temp-');
 
-		// Prepare sensor data for insert/update
-		const sensorData = {
-			name: sensor.name,
-			status: sensor.status,
-			imei: sensor.imei || null,
-			company_id: sensor.companyId
-				? mapCompanyIdToUUID(sensor.companyId)
-				: null,
-			folder_id: sensor.folderId || null,
-			updated_at: new Date().toISOString()
-		};
+    // Prepare sensor data
+    const sensorData = {
+      name: sensor.name,
+      status: sensor.status,
+      imei: sensor.imei || null,
+      company_id: sensor.companyId ? mapCompanyIdToUUIDSync(sensor.companyId) : null,
+      folder_id: sensor.folderId || null,
+      updated_at: new Date().toISOString()
+    };
 
-		let sensorId = sensor.id;
+    const result = await safeQuery<{ id: string }>(
+      async () => {
+        if (isNewSensor) {
+          return await supabase
+            .from('sensors')
+            .insert(sensorData)
+            .select('id')
+            .single();
+        } else {
+          const updateResult = await supabase
+            .from('sensors')
+            .update(sensorData)
+            .eq('id', sensor.id);
+          
+          return {
+            data: { id: sensor.id },
+            error: updateResult.error
+          };
+        }
+      },
+      `${isNewSensor ? 'create' : 'update'}Sensor`
+    );
 
-		// Handle sensor record (insert or update)
-		if (isNewSensor) {
-			// Create new sensor
-			const { data, error } = await supabase
-				.from('sensors')
-				.insert(sensorData)
-				.select('id')
-				.single();
+    if (result.error) {
+      return {
+        success: false,
+        message: `Failed to save sensor: ${result.error}`
+      };
+    }
 
-			if (error) throw error;
-			sensorId = data.id;
-		} else {
-			// Update existing sensor
-			const { error } = await supabase
-				.from('sensors')
-				.update(sensorData)
-				.eq('id', sensor.id);
-
-			if (error) throw error;
-		}
-
-		// Return the updated sensor with the real ID
-		return {
-			success: true,
-			data: {
-				...sensor,
-				id: sensor.id
-			},
-			message: isNewSensor
-				? 'Sensor created successfully'
-				: 'Sensor updated successfully'
-		};
-	} catch (error) {
-		console.error('Error saving sensor:', error);
-		return {
-			success: false,
-			message: `Failed to save sensor: ${error.message}`
-		};
-	}
+    return {
+      success: true,
+      data: {
+        ...sensor,
+        id: result.data.id
+      },
+      message: isNewSensor ? 'Sensor created successfully' : 'Sensor updated successfully'
+    };
+  } catch (error) {
+    console.error('Unexpected error in saveSensor:', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred while saving the sensor'
+    };
+  }
 };
 
 /**
- * Delete a sensor from the database
+ * Delete a sensor and its values from the database
  */
 export const deleteSensor = async (
-	sensorImei: string
+  sensorImei: string
 ): Promise<{ success: boolean; message: string }> => {
-	try {
-		// First delete sensor values
-		const { error: valuesError } = await supabase
-			.from('sensor_values')
-			.delete()
-			.eq('sensor_imei', sensorImei);
+  try {
+    const result = await safeQuery(
+      async () => {
+        // First delete sensor values
+        const valuesResult = await supabase
+          .from('sensor_values')
+          .delete()
+          .eq('sensor_imei', sensorImei);
 
-		if (valuesError) throw valuesError;
+        if (valuesResult.error) {
+          console.error('Error deleting sensor values:', valuesResult.error);
+          return valuesResult;
+        }
 
-		// Then delete the sensor
-		const { error } = await supabase
-			.from('sensors')
-			.delete()
-			.eq('imei', sensorImei);
+        // Then delete the sensor
+        return await supabase
+          .from('sensors')
+          .delete()
+          .eq('imei', sensorImei);
+      },
+      'deleteSensor'
+    );
 
-		if (error) throw error;
-
-		return {
-			success: true,
-			message: 'Sensor deleted successfully'
-		};
-	} catch (error) {
-		console.error('Error deleting sensor:', error);
-		return {
-			success: false,
-			message: `Failed to delete sensor: ${error.message}`
-		};
-	}
+    return {
+      success: !result.error,
+      message: result.error
+        ? `Failed to delete sensor: ${result.error}`
+        : 'Sensor deleted successfully'
+    };
+  } catch (error) {
+    console.error('Unexpected error in deleteSensor:', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred while deleting the sensor'
+    };
+  }
 };

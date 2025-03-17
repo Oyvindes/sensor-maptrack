@@ -187,6 +187,50 @@ export interface Database {
           sensor_imei: "sensors"
         }
       }
+      users: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          password_hash: string
+          role: string
+          company_id: string | null
+          last_login: string | null
+          status: string
+          is_company_admin: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          password_hash: string
+          role: string
+          company_id?: string | null
+          last_login?: string | null
+          status?: string
+          is_company_admin?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          password_hash?: string
+          role?: string
+          company_id?: string | null
+          last_login?: string | null
+          status?: string
+          is_company_admin?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: {
+          company_id: "companies"
+        }
+      }
     }
     Views: {}
     Functions: {}

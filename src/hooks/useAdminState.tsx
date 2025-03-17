@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { companyService } from '@/services/company';
-import { getMockUsers } from '@/services/user/userService';
+import { getUsers } from '@/services/user/supabaseUserService';
 import {
-	getMockDevices,
-	getMockTrackingObjects
+	fetchDevices,
+	fetchTrackingObjects
 } from '@/services/sensorService';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
 import { toast } from 'sonner';
-import { mapDeviceToTrackingObject } from '@/services/device/mockDeviceData';
 import { Company, User, SensorFolder } from '@/types/users';
 import { Device, Sensor, TrackingObject } from '@/types/sensors';
 import { SensorData } from '@/components/SensorCard';
@@ -59,12 +58,12 @@ export function useAdminState() {
 	const [sensorFolders, setSensorFolders] = useState<SensorFolder[]>([]);
 
 	useEffect(() => {
-		// Fetch companies, users, and sensors
+		// Fetch companies and users
 		const fetchData = async () => {
 			try {
 				const [companiesData, usersData] = await Promise.all([
 					companyService.list(),
-					getMockUsers()
+					getUsers()
 				]);
 
 				setCompanies(companiesData);
@@ -79,7 +78,7 @@ export function useAdminState() {
 
 		fetchData();
 
-		// Fetch sensors (async)
+		// Fetch sensors
 		const loadSensors = async () => {
 			try {
 				const sensorsData = await fetchSensors();
@@ -104,9 +103,24 @@ export function useAdminState() {
 
 		loadSensors();
 
-		// Initialize with empty arrays instead of mock data
-		setDevices([]);
-		setTrackingObjects([]);
+		// Fetch devices and tracking objects
+		const loadDevicesAndTracking = async () => {
+			try {
+				const [devicesData, trackingData] = await Promise.all([
+					fetchDevices(),
+					fetchTrackingObjects()
+				]);
+				
+				setDevices(devicesData);
+				setTrackingObjects(trackingData);
+			} catch (error) {
+				console.error('Error fetching devices/tracking:', error);
+				setDevices([]);
+				setTrackingObjects([]);
+			}
+		};
+
+		loadDevicesAndTracking();
 	}, []);
 
 	const handleTabChange = (value: string) => {

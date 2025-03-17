@@ -1,13 +1,9 @@
 // Re-export sensor services to maintain backward compatibility
 export { saveSensor } from './sensor/supabaseSensorService';
 
-// Mock functions for tracking objects
-import { getMockTrackingObjects } from './tracking/mockTrackingData';
-export { getMockTrackingObjects };
-
-// Mock functions for devices
-import { getMockDevices } from './device/mockDeviceData';
-export { getMockDevices };
+// Device and tracking services
+export { fetchDevices, saveDevice, deleteDevice } from './device/supabaseDeviceService';
+export { fetchTrackingObjects, updateTrackingObjectPosition, mapDeviceToTrackingObject } from './tracking/supabaseTrackingService';
 
 // Keep other exports from the original files
 export {

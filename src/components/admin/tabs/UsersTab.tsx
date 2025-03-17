@@ -1,9 +1,10 @@
-
 import React from "react";
 import { User, Company } from "@/types/users";
 import UserList from "@/components/admin/UserList";
 import UserEditor from "@/components/admin/UserEditor";
 import { getCurrentUser } from "@/services/authService";
+import MigrateUsersButton from "@/components/admin/MigrateUsersButton";
+import { isMasterAdmin } from "@/utils/authUtils";
 
 interface UsersTabProps {
   mode: string;
@@ -27,9 +28,10 @@ const UsersTab: React.FC<UsersTabProps> = ({
   onAddNewUser
 }) => {
   const currentUser = getCurrentUser();
-  const companyId = currentUser?.isCompanyAdmin && currentUser.role !== "master" 
-    ? currentUser.companyId 
+  const companyId = currentUser?.isCompanyAdmin && currentUser.role !== "master"
+    ? currentUser.companyId
     : undefined;
+  const isMaster = isMasterAdmin();
 
   // Company admin can only add users to their own company
   // Master admin can add users to any company
@@ -40,13 +42,21 @@ const UsersTab: React.FC<UsersTabProps> = ({
   return (
     <>
       {mode === "listUsers" && (
-        <UserList
-          users={users}
-          companies={companies}
-          currentCompanyId={companyId} // Pass company ID if user is company admin
-          onUserSelect={onUserSelect}
-          onAddNew={handleAddUser}
-        />
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <div></div>
+            <div className="flex items-center gap-2">
+              {isMaster && <MigrateUsersButton />}
+            </div>
+          </div>
+          <UserList
+            users={users}
+            companies={companies}
+            currentCompanyId={companyId} // Pass company ID if user is company admin
+            onUserSelect={onUserSelect}
+            onAddNew={handleAddUser}
+          />
+        </>
       )}
       {mode === "editUser" && selectedUser && (
         <UserEditor

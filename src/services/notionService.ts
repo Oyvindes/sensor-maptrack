@@ -1,5 +1,6 @@
 // We'll use the proxy server instead of directly calling the Notion API
-const API_BASE_URL = 'http://localhost:3001/api/notion';
+// Using relative URL to leverage Vite's proxy configuration
+const API_BASE_URL = '/api/notion';
 
 export interface NotionBlock {
   id: string;
