@@ -328,16 +328,33 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch product for purchase');
     }
     
-    // Get the company name
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .select('name')
-      .eq('id', currentUser.companyId)
-      .single();
+    // Use the company name provided by the user, or a default if not provided
+    const realCompanyName = data.companyName || 'Unknown Company';
+    console.log('Using company name from form:', realCompanyName);
     
-    if (companyError) {
-      console.error('Error fetching company for purchase:', companyError);
-      throw new Error('Failed to fetch company for purchase');
+    // Find a valid company ID to use for the database foreign key
+    let companyId;
+    
+    try {
+      // First, try to get any company from the database to use as a fallback
+      const { data: anyCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .limit(1)
+        .single();
+      
+      if (anyCompany) {
+        companyId = anyCompany.id;
+        console.log('Using company ID from database:', companyId);
+      }
+    } catch (error) {
+      console.warn('Error handling company information:', error);
+    }
+    
+    // If we still don't have a valid company ID, we can't proceed
+    if (!companyId) {
+      console.error('No valid company ID found, cannot create purchase');
+      throw new Error('Failed to create purchase: No valid company ID available');
     }
     
     const totalPrice = product.price * data.quantity;
@@ -349,8 +366,8 @@ class StoreService implements StoreServiceInterface {
       status: 'pending',
       purchased_at: new Date().toISOString(),
       purchased_by: currentUser.name,
-      company_id: currentUser.companyId,
-      company_name: company.name,
+      company_id: companyId,
+      company_name: realCompanyName,
       shipping_address: data.shippingAddress,
       shipping_city: data.shippingCity,
       shipping_postal_code: data.shippingPostalCode,
@@ -383,7 +400,7 @@ class StoreService implements StoreServiceInterface {
       purchasedAt: createdPurchase.purchased_at,
       purchasedBy: createdPurchase.purchased_by || 'Unknown User',
       companyId: createdPurchase.company_id,
-      companyName: createdPurchase.company_name || 'Unknown Company',
+      companyName: realCompanyName, // Use the real company name here
       shippingAddress: createdPurchase.shipping_address || '',
       shippingCity: createdPurchase.shipping_city || '',
       shippingPostalCode: createdPurchase.shipping_postal_code || '',

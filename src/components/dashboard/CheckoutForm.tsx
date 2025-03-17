@@ -8,6 +8,7 @@ import { Product, CreatePurchaseDto } from '@/types/store';
 import { storeService } from '@/services/store';
 import { toast } from 'sonner';
 import { Loader2, Minus, Plus, Trash2 } from 'lucide-react';
+import ShippingAddressSearch from './ShippingAddressSearch';
 
 interface CartItem {
   product: Product;
@@ -31,6 +32,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Omit<CreatePurchaseDto, 'productId' | 'quantity' | 'items'>>({
+    companyName: '',
     shippingAddress: '',
     shippingCity: '',
     shippingPostalCode: '',
@@ -41,12 +43,22 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     customerReference: ''
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string, value?: string) => {
+    // Handle both event objects and direct field/value pairs
+    if (typeof e === 'string' && value !== undefined) {
+      // Direct field/value pair from ShippingAddressSearch
+      setFormData(prev => ({
+        ...prev,
+        [e]: value
+      }));
+    } else if (typeof e === 'object') {
+      // Regular input event
+      const { name, value } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -146,8 +158,31 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             <h3 className="text-lg font-medium">Shipping Information</h3>
+            
+            {/* Company Name Field */}
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input
+                id="companyName"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                placeholder="Enter your company name"
+                required
+              />
+            </div>
+            
+            {/* Address Search Component */}
+            <ShippingAddressSearch
+              shippingAddress={formData.shippingAddress}
+              shippingCity={formData.shippingCity}
+              shippingPostalCode={formData.shippingPostalCode}
+              shippingCountry={formData.shippingCountry}
+              onChange={handleChange}
+            />
+            
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="shippingAddress">Address</Label>

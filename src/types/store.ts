@@ -64,6 +64,7 @@ export interface UpdateProductDto {
 export interface CreatePurchaseDto {
   productId: string;
   quantity: number;
+  companyName?: string;     // Added company name field
   shippingAddress?: string;
   shippingCity?: string;
   shippingPostalCode?: string;
