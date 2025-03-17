@@ -139,8 +139,29 @@ class StoreService implements StoreServiceInterface {
     }
     
     return data.map(purchase => ({
-      ...purchase,
-      productName: purchase.products.name
+      id: purchase.id,
+      productId: purchase.product_id,
+      productName: purchase.products?.name || 'Unknown Product',
+      quantity: purchase.quantity || 0,
+      totalPrice: purchase.total_price || 0,
+      status: purchase.status || 'pending',
+      purchasedAt: purchase.purchased_at,
+      purchasedBy: purchase.purchased_by || 'Unknown User',
+      companyId: purchase.company_id,
+      companyName: purchase.company_name || 'Unknown Company',
+      shippingAddress: purchase.shipping_address || '',
+      shippingCity: purchase.shipping_city || '',
+      shippingPostalCode: purchase.shipping_postal_code || '',
+      shippingCountry: purchase.shipping_country || '',
+      contactEmail: purchase.contact_email || '',
+      contactPhone: purchase.contact_phone || '',
+      orderDetails: purchase.order_details || '',
+      trackingNumber: purchase.tracking_number || '',
+      carrier: purchase.carrier || '',
+      shippedDate: purchase.shipped_date,
+      notes: purchase.notes || '',
+      customerReference: purchase.customer_reference || '',
+      orderReference: purchase.order_reference || ''
     })) as Purchase[];
   }
   
@@ -151,10 +172,12 @@ class StoreService implements StoreServiceInterface {
       throw new Error('User not authenticated');
     }
     
+    console.log('Current user in listUserPurchases:', currentUser);
+    
+    // Get all purchases without filtering by purchased_by
     const { data, error } = await supabase
       .from('purchases')
       .select('*, products(name)')
-      .eq('purchased_by', currentUser.name)
       .order('purchased_at', { ascending: false });
     
     if (error) {
@@ -162,9 +185,77 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch user purchases');
     }
     
-    return data.map(purchase => ({
-      ...purchase,
-      productName: purchase.products.name
+    console.log('All purchases from database:', data);
+    
+    // Filter purchases client-side to allow for more flexible name matching
+    const userPurchases = data.filter(purchase => {
+      if (!purchase.purchased_by) {
+        console.log('Skipping purchase with no purchased_by:', purchase);
+        return false;
+      }
+      
+      // For debugging, show all purchases
+      console.log('Purchase:', purchase);
+      
+      // If the user is a site admin, include all purchases
+      if (currentUser.role === 'master') {
+        return true;
+      }
+      
+      // For regular admins, try multiple matching strategies
+      const purchasedBy = purchase.purchased_by.toLowerCase();
+      const userName = currentUser.name.toLowerCase();
+      
+      console.log(`Comparing: "${purchasedBy}" with "${userName}"`);
+      
+      // Strategy 1: Exact match
+      if (purchasedBy === userName) {
+        console.log('Exact match');
+        return true;
+      }
+      
+      // Strategy 2: Either contains the other
+      if (purchasedBy.includes(userName) || userName.includes(purchasedBy)) {
+        console.log('Partial match');
+        return true;
+      }
+      
+      // Strategy 3: Match by company ID
+      if (purchase.company_id === currentUser.companyId) {
+        console.log('Company match');
+        return true;
+      }
+      
+      // No match
+      return false;
+    });
+    
+    console.log('Filtered user purchases:', userPurchases);
+    
+    return userPurchases.map(purchase => ({
+      id: purchase.id,
+      productId: purchase.product_id,
+      productName: purchase.products?.name || 'Unknown Product',
+      quantity: purchase.quantity || 0,
+      totalPrice: purchase.total_price || 0,
+      status: purchase.status || 'pending',
+      purchasedAt: purchase.purchased_at,
+      purchasedBy: purchase.purchased_by || 'Unknown User',
+      companyId: purchase.company_id,
+      companyName: purchase.company_name || 'Unknown Company',
+      shippingAddress: purchase.shipping_address || '',
+      shippingCity: purchase.shipping_city || '',
+      shippingPostalCode: purchase.shipping_postal_code || '',
+      shippingCountry: purchase.shipping_country || '',
+      contactEmail: purchase.contact_email || '',
+      contactPhone: purchase.contact_phone || '',
+      orderDetails: purchase.order_details || '',
+      trackingNumber: purchase.tracking_number || '',
+      carrier: purchase.carrier || '',
+      shippedDate: purchase.shipped_date,
+      notes: purchase.notes || '',
+      customerReference: purchase.customer_reference || '',
+      orderReference: purchase.order_reference || ''
     })) as Purchase[];
   }
   
@@ -192,8 +283,29 @@ class StoreService implements StoreServiceInterface {
     }
     
     return {
-      ...data,
-      productName: data.products.name
+      id: data.id,
+      productId: data.product_id,
+      productName: data.products?.name || 'Unknown Product',
+      quantity: data.quantity || 0,
+      totalPrice: data.total_price || 0,
+      status: data.status || 'pending',
+      purchasedAt: data.purchased_at,
+      purchasedBy: data.purchased_by || 'Unknown User',
+      companyId: data.company_id,
+      companyName: data.company_name || 'Unknown Company',
+      shippingAddress: data.shipping_address || '',
+      shippingCity: data.shipping_city || '',
+      shippingPostalCode: data.shipping_postal_code || '',
+      shippingCountry: data.shipping_country || '',
+      contactEmail: data.contact_email || '',
+      contactPhone: data.contact_phone || '',
+      orderDetails: data.order_details || '',
+      trackingNumber: data.tracking_number || '',
+      carrier: data.carrier || '',
+      shippedDate: data.shipped_date,
+      notes: data.notes || '',
+      customerReference: data.customer_reference || '',
+      orderReference: data.order_reference || ''
     } as Purchase;
   }
   
@@ -245,7 +357,9 @@ class StoreService implements StoreServiceInterface {
       shipping_country: data.shippingCountry,
       contact_email: data.contactEmail,
       contact_phone: data.contactPhone,
-      order_details: data.orderDetails
+      order_details: data.orderDetails,
+      customer_reference: data.customerReference
+      // Note: order_reference will be auto-generated by the database trigger
     };
     
     const { data: createdPurchase, error } = await supabase
@@ -260,8 +374,29 @@ class StoreService implements StoreServiceInterface {
     }
     
     return {
-      ...createdPurchase,
-      productName: product.name
+      id: createdPurchase.id,
+      productId: createdPurchase.product_id,
+      productName: product.name || 'Unknown Product',
+      quantity: createdPurchase.quantity || 0,
+      totalPrice: createdPurchase.total_price || 0,
+      status: createdPurchase.status || 'pending',
+      purchasedAt: createdPurchase.purchased_at,
+      purchasedBy: createdPurchase.purchased_by || 'Unknown User',
+      companyId: createdPurchase.company_id,
+      companyName: createdPurchase.company_name || 'Unknown Company',
+      shippingAddress: createdPurchase.shipping_address || '',
+      shippingCity: createdPurchase.shipping_city || '',
+      shippingPostalCode: createdPurchase.shipping_postal_code || '',
+      shippingCountry: createdPurchase.shipping_country || '',
+      contactEmail: createdPurchase.contact_email || '',
+      contactPhone: createdPurchase.contact_phone || '',
+      orderDetails: createdPurchase.order_details || '',
+      trackingNumber: createdPurchase.tracking_number || '',
+      carrier: createdPurchase.carrier || '',
+      shippedDate: createdPurchase.shipped_date,
+      notes: createdPurchase.notes || '',
+      customerReference: createdPurchase.customer_reference || '',
+      orderReference: createdPurchase.order_reference || ''
     } as Purchase;
   }
   
@@ -272,9 +407,26 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Only site-wide admins can update purchase status');
     }
     
+    // Prepare update data
+    const updateData: any = { status: data.status };
+    
+    // Add tracking information if provided
+    if (data.trackingNumber) updateData.tracking_number = data.trackingNumber;
+    if (data.carrier) updateData.carrier = data.carrier;
+    if (data.shippedDate) updateData.shipped_date = data.shippedDate;
+    
+    // Add customer reference and notes if provided
+    if (data.customerReference) updateData.customer_reference = data.customerReference;
+    if (data.notes) updateData.notes = data.notes;
+    
+    // If status is 'sent' and no shipped_date is provided, set it to now
+    if (data.status === 'sent' && !data.shippedDate) {
+      updateData.shipped_date = new Date().toISOString();
+    }
+    
     const { data: updatedPurchase, error } = await supabase
       .from('purchases')
-      .update({ status: data.status })
+      .update(updateData)
       .eq('id', id)
       .select('*, products(name)')
       .single();
@@ -285,8 +437,29 @@ class StoreService implements StoreServiceInterface {
     }
     
     return {
-      ...updatedPurchase,
-      productName: updatedPurchase.products.name
+      id: updatedPurchase.id,
+      productId: updatedPurchase.product_id,
+      productName: updatedPurchase.products?.name || 'Unknown Product',
+      quantity: updatedPurchase.quantity || 0,
+      totalPrice: updatedPurchase.total_price || 0,
+      status: updatedPurchase.status || 'pending',
+      purchasedAt: updatedPurchase.purchased_at,
+      purchasedBy: updatedPurchase.purchased_by || 'Unknown User',
+      companyId: updatedPurchase.company_id,
+      companyName: updatedPurchase.company_name || 'Unknown Company',
+      shippingAddress: updatedPurchase.shipping_address || '',
+      shippingCity: updatedPurchase.shipping_city || '',
+      shippingPostalCode: updatedPurchase.shipping_postal_code || '',
+      shippingCountry: updatedPurchase.shipping_country || '',
+      contactEmail: updatedPurchase.contact_email || '',
+      contactPhone: updatedPurchase.contact_phone || '',
+      orderDetails: updatedPurchase.order_details || '',
+      trackingNumber: updatedPurchase.tracking_number || '',
+      carrier: updatedPurchase.carrier || '',
+      shippedDate: updatedPurchase.shipped_date,
+      notes: updatedPurchase.notes || '',
+      customerReference: updatedPurchase.customer_reference || '',
+      orderReference: updatedPurchase.order_reference || ''
     } as Purchase;
   }
 }

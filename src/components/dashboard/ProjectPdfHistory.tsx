@@ -3,7 +3,7 @@ import { SensorFolder, PdfRecord } from "@/types/users";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileIcon, Download, Eye } from "lucide-react";
-import { viewPdfFromHistory } from "@/services/pdfService";
+import { viewPdfFromHistory } from "@/services/pdfViewerService";
 import { toast } from "sonner";
 
 interface ProjectPdfHistoryProps {

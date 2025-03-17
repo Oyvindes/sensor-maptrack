@@ -37,7 +37,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     shippingCountry: '',
     contactEmail: '',
     contactPhone: '',
-    orderDetails: ''
+    orderDetails: '',
+    customerReference: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -218,6 +219,20 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 />
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="customerReference">Your Reference Number (Optional)</Label>
+            <Input
+              id="customerReference"
+              name="customerReference"
+              value={formData.customerReference || ''}
+              onChange={handleChange}
+              placeholder="Your purchase order or reference number for invoicing"
+            />
+            <p className="text-xs text-muted-foreground">
+              This reference will appear on your invoice and can be used to track your order.
+            </p>
           </div>
 
           <div className="space-y-2">

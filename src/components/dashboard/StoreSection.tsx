@@ -3,13 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Tag, Package, ShoppingCart as ShoppingCartIcon, CheckCircle } from 'lucide-react';
+import { Loader2, Plus, Tag, Package, ShoppingCart as ShoppingCartIcon, CheckCircle, Pencil, FileText } from 'lucide-react';
 import { getCurrentUser } from '@/services/authService';
 import { toast } from 'sonner';
 import { storeService } from '@/services/store';
+import { pdfService } from '@/services/pdfService';
 import { Product, Purchase } from '@/types/store';
 import ShoppingCart from './ShoppingCart';
 import CheckoutForm from './CheckoutForm';
+import ProductForm from './ProductForm';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define a cart item type
 interface CartItem {
@@ -34,6 +37,8 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
   // Shopping cart and checkout state
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [storeView, setStoreView] = useState<StoreView>('products');
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   
   const currentUser = getCurrentUser();
   const isSiteAdmin = currentUser?.role === 'master';
@@ -54,7 +59,47 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
         if (isSiteAdmin) {
           purchasesData = await storeService.listPurchases();
         } else {
-          purchasesData = await storeService.listUserPurchases();
+          // For regular admins, fetch all purchases and filter client-side
+          // This is a workaround for the issue where purchases don't show up
+          purchasesData = await supabase
+            .from('purchases')
+            .select('*, products(name)')
+            .order('purchased_at', { ascending: false })
+            .then(({ data, error }) => {
+              if (error) {
+                console.error('Error fetching all purchases:', error);
+                return [];
+              }
+              
+              // Map the data to match the Purchase type
+              return data.map(purchase => ({
+                ...purchase,
+                productName: purchase.products?.name || 'Unknown Product',
+                id: purchase.id,
+                productId: purchase.product_id,
+                quantity: purchase.quantity || 0,
+                totalPrice: purchase.total_price || 0,
+                status: purchase.status || 'pending',
+                purchasedAt: purchase.purchased_at,
+                purchasedBy: purchase.purchased_by || 'Unknown User',
+                companyId: purchase.company_id,
+                companyName: purchase.company_name || 'Unknown Company',
+                shippingAddress: purchase.shipping_address || '',
+                shippingCity: purchase.shipping_city || '',
+                shippingPostalCode: purchase.shipping_postal_code || '',
+                shippingCountry: purchase.shipping_country || '',
+                contactEmail: purchase.contact_email || '',
+                contactPhone: purchase.contact_phone || '',
+                orderDetails: purchase.order_details || '',
+                trackingNumber: purchase.tracking_number || '',
+                carrier: purchase.carrier || '',
+                shippedDate: purchase.shipped_date,
+                notes: purchase.notes || '',
+                customerReference: purchase.customer_reference || '',
+                orderReference: purchase.order_reference || ''
+              }));
+            });
+          
         }
         setPurchases(purchasesData);
       } catch (err) {
@@ -126,12 +171,6 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
     setStoreView('checkout');
   };
   
-  const handleDirectCheckout = (product: Product) => {
-    // Create a single item cart and go to checkout
-    setCartItems([{ product, quantity: 1 }]);
-    setStoreView('checkout');
-  };
-  
   const handleCheckoutSuccess = async () => {
     // Clear cart and return to products view
     setCartItems([]);
@@ -151,16 +190,58 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
   };
 
   const handleCreateProduct = () => {
-    // In a real implementation, this would open a product creation form
-    // For now, we'll just show a toast
-    toast.info('Product creation form would open here');
+    setProductToEdit(null);
+    setShowProductForm(true);
+  };
+  
+  const handleEditProduct = (product: Product) => {
+    setProductToEdit(product);
+    setShowProductForm(true);
+  };
+  
+  const handleProductFormSuccess = async (product: Product) => {
+    setShowProductForm(false);
     
-    // Example of how to create a product:
-    // storeService.createProduct({
-    //   name: 'New Sensor',
-    //   description: 'A new sensor',
-    //   price: 199
-    // });
+    // Refresh products
+    const productsData = await storeService.listProducts();
+    setProducts(productsData);
+    
+    toast.success(`Product ${productToEdit ? 'updated' : 'created'} successfully!`);
+  };
+  
+  const handleProductFormCancel = () => {
+    setShowProductForm(false);
+  };
+  
+  const handleGenerateProformaInvoice = async (purchase: Purchase) => {
+    try {
+      // Generate the PDF without showing a loading indicator
+      const pdfBlob = await pdfService.generateProformaInvoice(purchase);
+      
+      // Create a URL for the blob
+      const url = URL.createObjectURL(pdfBlob);
+      
+      // Create a link element
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `proforma-invoice-${purchase.orderReference || purchase.id.substring(0, 8)}.pdf`;
+      
+      // Append to the document, click it, and remove it
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL
+      URL.revokeObjectURL(url);
+      
+      // Show success toast
+      toast.success('Proforma invoice generated successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      
+      // Show error toast
+      toast.error('Failed to generate proforma invoice');
+    }
   };
 
   const getStatusBadge = (status: Purchase['status']) => {
@@ -271,12 +352,17 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                       <ShoppingCartIcon className="h-4 w-4" />
                       Add to Cart
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleDirectCheckout(product)}
-                    >
-                      Buy Now
-                    </Button>
+                    {isSiteAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditProduct(product)}
+                        className="gap-2"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
               ))}
@@ -316,7 +402,37 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
         
         <TabsContent value="purchases">
           <div className="space-y-4">
-            {purchases.filter(p => p.purchasedBy === currentUser?.name).map(purchase => (
+            {purchases.filter(p => {
+              if (!currentUser?.name) {
+                return false;
+              }
+              
+              if (!p.purchasedBy) {
+                return false;
+              }
+              
+              // For regular admins, try multiple matching strategies
+              const purchasedBy = p.purchasedBy.toLowerCase();
+              const userName = currentUser.name.toLowerCase();
+              
+              // Strategy 1: Exact match
+              if (purchasedBy === userName) {
+                return true;
+              }
+              
+              // Strategy 2: Either contains the other
+              if (purchasedBy.includes(userName) || userName.includes(purchasedBy)) {
+                return true;
+              }
+              
+              // Strategy 3: Match by company ID
+              if (p.companyId === currentUser.companyId) {
+                return true;
+              }
+              
+              // No match
+              return false;
+            }).map(purchase => (
               <Card key={purchase.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -359,6 +475,46 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                         </div>
                       )}
                       
+                      {/* Tracking Information */}
+                      {(purchase.trackingNumber || purchase.carrier || purchase.shippedDate) && (
+                        <div className="mt-2">
+                          <p className="font-medium">Tracking Information:</p>
+                          {purchase.trackingNumber && (
+                            <p className="text-sm">
+                              Tracking Number: <a
+                                href={`https://www.google.com/search?q=${purchase.carrier}+${purchase.trackingNumber}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                {purchase.trackingNumber}
+                              </a>
+                            </p>
+                          )}
+                          {purchase.carrier && <p className="text-sm">Carrier: {purchase.carrier}</p>}
+                          {purchase.shippedDate && (
+                            <p className="text-sm">
+                              Shipped on: {new Date(purchase.shippedDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Order References */}
+                      <div className="mt-2">
+                        <p className="font-medium">Order References:</p>
+                        {purchase.orderReference && (
+                          <p className="text-sm">
+                            Order #: <span className="font-mono">{purchase.orderReference}</span>
+                          </p>
+                        )}
+                        {purchase.customerReference && (
+                          <p className="text-sm">
+                            Your Reference: <span className="font-mono">{purchase.customerReference}</span>
+                          </p>
+                        )}
+                      </div>
+                      
                       {purchase.notes && <p className="text-sm text-muted-foreground mt-2">Notes: {purchase.notes}</p>}
                     </div>
                   </div>
@@ -366,7 +522,19 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
               </Card>
             ))}
             
-            {purchases.filter(p => p.purchasedBy === currentUser?.name).length === 0 && (
+            {purchases.filter(p => {
+              if (!currentUser?.name) return false;
+              if (!p.purchasedBy) return false;
+              
+              const purchasedBy = p.purchasedBy.toLowerCase();
+              const userName = currentUser.name.toLowerCase();
+              
+              if (purchasedBy === userName) return true;
+              if (purchasedBy.includes(userName) || userName.includes(purchasedBy)) return true;
+              if (p.companyId === currentUser.companyId) return true;
+              
+              return false;
+            }).length === 0 && (
               <div className="text-center p-8 bg-muted rounded-lg">
                 <p className="text-muted-foreground">You haven't made any purchases yet.</p>
               </div>
@@ -382,30 +550,61 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle>{purchase.productName}</CardTitle>
+                        <CardTitle>{purchase.productName || 'Unknown Product'}</CardTitle>
                         <CardDescription>
-                          Purchased by {purchase.purchasedBy} ({purchase.companyName})
+                          Purchased by {purchase.purchasedBy || 'Unknown User'} ({purchase.companyName || 'Unknown Company'})
                           <br />
-                          on {new Date(purchase.purchasedAt).toLocaleDateString()}
+                          on {purchase.purchasedAt ? new Date(purchase.purchasedAt).toLocaleDateString() : 'Unknown Date'}
                         </CardDescription>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         {getStatusBadge(purchase.status)}
                         <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() => handleGenerateProformaInvoice(purchase)}
+                            title="Generate Proforma Invoice"
+                          >
+                            <FileText className="h-4 w-4" />
+                            Invoice
+                          </Button>
                           <select
                             className="text-xs border rounded p-1"
                             value={purchase.status}
                             onChange={async (e) => {
                               try {
-                                await storeService.updatePurchaseStatus(purchase.id, {
-                                  status: e.target.value as Purchase['status']
-                                });
-                                
-                                // Refresh purchases
-                                const updatedPurchases = await storeService.listPurchases();
-                                setPurchases(updatedPurchases);
-                                
-                                toast.success('Purchase status updated');
+                                try {
+                                  await storeService.updatePurchaseStatus(purchase.id, {
+                                    status: e.target.value as Purchase['status'],
+                                    // Only include tracking info if it exists
+                                    ...(purchase.trackingNumber ? { trackingNumber: purchase.trackingNumber } : {}),
+                                    ...(purchase.carrier ? { carrier: purchase.carrier } : {})
+                                  });
+                                  
+                                  // Refresh purchases
+                                  const updatedPurchases = await storeService.listPurchases();
+                                  setPurchases(updatedPurchases);
+                                  
+                                  toast.success('Purchase status updated');
+                                } catch (error: any) {
+                                  // Check if the error is related to missing columns
+                                  if (error.message?.includes('carrier') || error.message?.includes('Could not find')) {
+                                    // Try again with just the status
+                                    await storeService.updatePurchaseStatus(purchase.id, {
+                                      status: e.target.value as Purchase['status']
+                                    });
+                                    
+                                    // Refresh purchases
+                                    const updatedPurchases = await storeService.listPurchases();
+                                    setPurchases(updatedPurchases);
+                                    
+                                    toast.success('Purchase status updated (tracking info not saved - migration required)');
+                                  } else {
+                                    throw error; // Re-throw if it's a different error
+                                  }
+                                }
                               } catch (error) {
                                 console.error('Error updating purchase status:', error);
                                 toast.error('Failed to update purchase status');
@@ -426,32 +625,195 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                   <CardContent>
                     <div className="flex justify-between">
                       <div>
-                        <p>Quantity: {purchase.quantity}</p>
-                        <p>Total: ${purchase.totalPrice}</p>
+                        <p>Quantity: {purchase.quantity || 0}</p>
+                        <p>Total: ${typeof purchase.totalPrice === 'number' ? purchase.totalPrice.toFixed(2) : '0.00'}</p>
                         
-                        {(purchase.shippingAddress || purchase.shippingCity || purchase.shippingPostalCode || purchase.shippingCountry) && (
-                          <div className="mt-2">
-                            <p className="font-medium">Shipping Address:</p>
-                            <p className="text-sm">{purchase.shippingAddress}</p>
-                            <p className="text-sm">{purchase.shippingCity} {purchase.shippingPostalCode}</p>
-                            <p className="text-sm">{purchase.shippingCountry}</p>
-                          </div>
-                        )}
+                        {/* Always show shipping address section for site-wide admins */}
+                        <div className="mt-2">
+                          <p className="font-medium">Shipping Address:</p>
+                          {purchase.shippingAddress ? (
+                            <>
+                              <p className="text-sm">{purchase.shippingAddress}</p>
+                              <p className="text-sm">{purchase.shippingCity || ''} {purchase.shippingPostalCode || ''}</p>
+                              <p className="text-sm">{purchase.shippingCountry || ''}</p>
+                            </>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No shipping address provided</p>
+                          )}
+                        </div>
                         
-                        {(purchase.contactEmail || purchase.contactPhone) && (
-                          <div className="mt-2">
-                            <p className="font-medium">Contact:</p>
-                            {purchase.contactEmail && <p className="text-sm">Email: {purchase.contactEmail}</p>}
-                            {purchase.contactPhone && <p className="text-sm">Phone: {purchase.contactPhone}</p>}
-                          </div>
-                        )}
+                        {/* Always show contact information section for site-wide admins */}
+                        <div className="mt-2">
+                          <p className="font-medium">Contact:</p>
+                          {purchase.contactEmail || purchase.contactPhone ? (
+                            <>
+                              {purchase.contactEmail && <p className="text-sm">Email: {purchase.contactEmail}</p>}
+                              {purchase.contactPhone && <p className="text-sm">Phone: {purchase.contactPhone}</p>}
+                            </>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No contact information provided</p>
+                          )}
+                        </div>
                         
-                        {purchase.orderDetails && (
-                          <div className="mt-2">
-                            <p className="font-medium">Order Details:</p>
+                        {/* Always show order details section for site-wide admins */}
+                        <div className="mt-2">
+                          <p className="font-medium">Order Details:</p>
+                          {purchase.orderDetails ? (
                             <p className="text-sm">{purchase.orderDetails}</p>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No additional order details provided</p>
+                          )}
+                        </div>
+                        
+                        {/* Tracking Information */}
+                        {/* Order References */}
+                        <div className="mt-4 border-t pt-4">
+                          <p className="font-medium">Order References:</p>
+                          
+                          <p className="text-sm">
+                            Order #: <span className="font-mono">{purchase.orderReference || 'Not yet assigned'}</span>
+                          </p>
+                          
+                          <div className="mt-2">
+                            <label className="text-xs text-muted-foreground">Customer Reference</label>
+                            <input
+                              type="text"
+                              className="w-full text-xs border rounded p-1"
+                              placeholder="Enter customer reference"
+                              defaultValue={purchase.customerReference || ''}
+                              id={`customer-reference-${purchase.id}`}
+                            />
+                            <div className="mt-2">
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={async () => {
+                                  try {
+                                    const customerReferenceInput = document.getElementById(`customer-reference-${purchase.id}`) as HTMLInputElement;
+                                    const customerReference = customerReferenceInput?.value || '';
+                                    
+                                    await storeService.updatePurchaseStatus(purchase.id, {
+                                      status: purchase.status,
+                                      customerReference
+                                    });
+                                    
+                                    // Refresh purchases
+                                    const updatedPurchases = await storeService.listPurchases();
+                                    setPurchases(updatedPurchases);
+                                    
+                                    toast.success('Customer reference updated');
+                                  } catch (error) {
+                                    console.error('Error updating customer reference:', error);
+                                    toast.error('Failed to update customer reference');
+                                  }
+                                }}
+                              >
+                                Update Reference
+                              </Button>
+                            </div>
                           </div>
-                        )}
+                        </div>
+                        
+                        {/* Tracking Information */}
+                        <div className="mt-4 border-t pt-4">
+                          <p className="font-medium">Tracking Information:</p>
+                          
+                          <div className="mt-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-xs text-muted-foreground">Tracking Number</label>
+                                <input
+                                  type="text"
+                                  className="w-full text-xs border rounded p-1"
+                                  placeholder="Enter tracking number"
+                                  defaultValue={purchase.trackingNumber || ''}
+                                  id={`tracking-number-${purchase.id}`}
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="text-xs text-muted-foreground">Carrier</label>
+                                <select
+                                  className="w-full text-xs border rounded p-1"
+                                  defaultValue={purchase.carrier || ''}
+                                  id={`carrier-${purchase.id}`}
+                                >
+                                  <option value="">Select carrier</option>
+                                  <option value="DHL">DHL</option>
+                                  <option value="FedEx">FedEx</option>
+                                  <option value="UPS">UPS</option>
+                                  <option value="USPS">USPS</option>
+                                  <option value="PostNord">PostNord</option>
+                                  <option value="Bring">Bring</option>
+                                </select>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-2">
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={async () => {
+                                  try {
+                                    const trackingNumberInput = document.getElementById(`tracking-number-${purchase.id}`) as HTMLInputElement;
+                                    const carrierSelect = document.getElementById(`carrier-${purchase.id}`) as HTMLSelectElement;
+                                    
+                                    const trackingNumber = trackingNumberInput?.value || '';
+                                    const carrier = carrierSelect?.value || '';
+                                    
+                                    // Check if the database migration has been applied
+                                    try {
+                                      await storeService.updatePurchaseStatus(purchase.id, {
+                                        status: purchase.status,
+                                        trackingNumber,
+                                        carrier
+                                      });
+                                      
+                                      // Refresh purchases
+                                      const updatedPurchases = await storeService.listPurchases();
+                                      setPurchases(updatedPurchases);
+                                      
+                                      toast.success('Tracking information updated');
+                                    } catch (error: any) {
+                                      // Check if the error is related to missing columns
+                                      if (error.message?.includes('carrier') || error.message?.includes('Could not find')) {
+                                        toast.error('Database migration required. Please run the tracking columns migration first.');
+                                        console.error('Database migration required:', error);
+                                      } else {
+                                        console.error('Error updating tracking information:', error);
+                                        toast.error('Failed to update tracking information');
+                                      }
+                                    }
+                                  } catch (error) {
+                                    console.error('Error updating tracking information:', error);
+                                    toast.error('Failed to update tracking information');
+                                  }
+                                }}
+                              >
+                                Update Tracking Info
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          {purchase.trackingNumber && (
+                            <p className="text-sm mt-2">
+                              <a
+                                href={`https://www.google.com/search?q=${purchase.carrier}+${purchase.trackingNumber}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                Track Package
+                              </a>
+                            </p>
+                          )}
+                          
+                          {purchase.shippedDate && (
+                            <p className="text-sm mt-1">
+                              Shipped on: {new Date(purchase.shippedDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
                         
                         {purchase.notes && <p className="text-sm text-muted-foreground mt-2">Notes: {purchase.notes}</p>}
                       </div>
@@ -469,6 +831,20 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
           </TabsContent>
         )}
       </Tabs>
+      
+      {/* Product Form Modal */}
+      {showProductForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100]">
+          <div className="w-full max-w-3xl">
+            <ProductForm
+              onSuccess={handleProductFormSuccess}
+              onCancel={handleProductFormCancel}
+              initialProduct={productToEdit || undefined}
+              isEdit={!!productToEdit}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
