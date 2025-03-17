@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import axios from 'axios';
 import { Database } from '@/integrations/supabase/types';
-import { SupabaseTable } from '@/types/supabase';
+import { SupabaseTable, rawQuery } from '@/types/supabase';
 
 /**
  * This script tests the connection to the Supabase database
@@ -51,8 +51,8 @@ async function testDatabaseConnection() {
     const tableResults = await Promise.all(
       tables.map(async (table) => {
         try {
-          const { data, error, count } = await supabase
-            .from(table)
+          // Use rawQuery to bypass TypeScript's strict typing
+          const { data, error, count } = await rawQuery(supabase, table)
             .select('*', { count: 'exact' })
             .limit(1);
           
@@ -89,8 +89,7 @@ async function testDatabaseConnection() {
     console.log('\n📋 RELATIONSHIPS TEST:');
     try {
       // Get a sample folder
-      const { data: folders, error: folderError } = await supabase
-        .from('sensor_folders')
+      const { data: folders, error: folderError } = await rawQuery(supabase, 'sensor_folders')
         .select('id, name, company_id')
         .limit(1);
       
@@ -102,8 +101,7 @@ async function testDatabaseConnection() {
         
         // Get related company
         if (folder.company_id) {
-          const { data: company, error: companyError } = await supabase
-            .from('companies')
+          const { data: company, error: companyError } = await rawQuery(supabase, 'companies')
             .select('name')
             .eq('id', folder.company_id)
             .single();
@@ -116,8 +114,7 @@ async function testDatabaseConnection() {
         }
         
         // Get related sensors
-        const { data: sensors, error: sensorsError } = await supabase
-          .from('sensors')
+        const { data: sensors, error: sensorsError } = await rawQuery(supabase, 'sensors')
           .select('name, imei')
           .eq('folder_id', folder.id);
         

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -36,9 +35,8 @@ export function DatabaseStatus() {
     setConnectionError(null);
     
     try {
-      // Check basic connection
-      const { data, error } = await supabase
-        .from('companies')
+      // Check basic connection using the rawQuery helper to bypass type checking
+      const { data, error } = await rawQuery(supabase, 'companies')
         .select('count()', { count: 'exact', head: true });
       
       if (error) {
@@ -61,8 +59,8 @@ export function DatabaseStatus() {
         const updatedStatuses = await Promise.all(
           tables.map(async (table) => {
             try {
-              const { count, error } = await supabase
-                .from(table)
+              // Use the rawQuery helper to bypass type checking
+              const { count, error } = await rawQuery(supabase, table)
                 .select('*', { count: 'exact', head: true });
               
               return {

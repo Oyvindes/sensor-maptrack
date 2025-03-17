@@ -1,4 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import { rawQuery } from '@/types/supabase';
 
 /**
  * This script fixes inconsistencies in the database that were identified
@@ -13,8 +15,7 @@ async function fixDatabaseInconsistencies() {
     console.log('\n📋 FIXING INVALID FOLDER REFERENCES:');
     
     // Get all sensors with folder_id
-    const { data: sensorsWithFolders, error: sensorsError } = await supabase
-      .from('sensors')
+    const { data: sensorsWithFolders, error: sensorsError } = await rawQuery(supabase, 'sensors')
       .select('id, name, imei, folder_id')
       .not('folder_id', 'is', null);
     
@@ -28,8 +29,7 @@ async function fixDatabaseInconsistencies() {
       
       for (const sensor of sensorsWithFolders) {
         // Check if the folder exists
-        const { data: folder, error: folderError } = await supabase
-          .from('sensor_folders')
+        const { data: folder, error: folderError } = await rawQuery(supabase, 'sensor_folders')
           .select('id, name')
           .eq('id', sensor.folder_id)
           .maybeSingle();
@@ -39,8 +39,7 @@ async function fixDatabaseInconsistencies() {
           invalidFolderRefs++;
           
           // Fix: Set folder_id to null
-          const { error: updateError } = await supabase
-            .from('sensors')
+          const { error: updateError } = await rawQuery(supabase, 'sensors')
             .update({ folder_id: null })
             .eq('id', sensor.id);
           
@@ -63,8 +62,7 @@ async function fixDatabaseInconsistencies() {
     console.log('\n📋 FIXING MISSING FOLDER-SENSOR RELATIONSHIPS:');
     
     // Get all sensors with folder_id
-    const { data: sensorsWithFoldersAfterFix, error: sensorsAfterFixError } = await supabase
-      .from('sensors')
+    const { data: sensorsWithFoldersAfterFix, error: sensorsAfterFixError } = await rawQuery(supabase, 'sensors')
       .select('id, name, imei, folder_id')
       .not('folder_id', 'is', null);
     
@@ -79,8 +77,7 @@ async function fixDatabaseInconsistencies() {
       
       for (const sensor of sensorsWithFoldersAfterFix) {
         // Check if a folder_sensors record exists
-        const { data: folderSensor, error: folderSensorError } = await supabase
-          .from('folder_sensors')
+        const { data: folderSensor, error: folderSensorError } = await rawQuery(supabase, 'folder_sensors')
           .select('id')
           .eq('folder_id', sensor.folder_id)
           .eq('sensor_imei', sensor.imei)
@@ -101,8 +98,7 @@ async function fixDatabaseInconsistencies() {
       
       // Create missing folder_sensors records
       if (relationshipsToCreate.length > 0) {
-        const { data, error: insertError } = await supabase
-          .from('folder_sensors')
+        const { data, error: insertError } = await rawQuery(supabase, 'folder_sensors')
           .insert(relationshipsToCreate)
           .select();
         

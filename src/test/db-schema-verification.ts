@@ -115,15 +115,16 @@ async function verifyDatabaseSchema() {
     const tableResults = await Promise.all(
       validTables.map(async (tableName) => {
         try {
-          const { data, error } = await supabase
-            .from(tableName as SupabaseTable)
+          // Use typecasting to bypass the type check for the query
+          const { data, error } = await (supabase
+            .from(tableName as any)
             .select('*')
-            .limit(1);
+            .limit(1) as any);
           
-          // Get count with a separate query
-          const countResult = await supabase
-            .from(tableName as SupabaseTable)
-            .select('*', { count: 'exact', head: true });
+          // Get count with a separate query, also with type assertion
+          const countResult = await (supabase
+            .from(tableName as any)
+            .select('*', { count: 'exact', head: true }) as any);
           
           const count = countResult.count;
           
@@ -142,9 +143,9 @@ async function verifyDatabaseSchema() {
           let missingColumns: string[] = [];
           
           try {
-            // Using SQL query to get columns instead of _columns_info
+            // Using SQL query to get columns - with proper type assertion
             const { data: columnData, error: columnError } = await supabase
-              .rpc('get_table_columns', { table_name: tableName });
+              .rpc('get_table_columns', { table_name: tableName }) as any;
             
             if (columnError) {
               console.log(chalk.yellow(`⚠️ Could not fetch column information for ${tableName}: ${columnError.message}`));
@@ -155,9 +156,14 @@ async function verifyDatabaseSchema() {
               }
             } else if (columnData && Array.isArray(columnData)) {
               // Ensure columnData is properly typed and handled
-              columns = columnData.map(col => typeof col === 'object' && col !== null && 'column_name' in col ? 
-                col.column_name as string : 
-                typeof col === 'string' ? col : '');
+              columns = columnData.map(col => {
+                if (typeof col === 'object' && col !== null && 'column_name' in col) {
+                  return col.column_name as string;
+                } else if (typeof col === 'string') {
+                  return col;
+                }
+                return '';
+              }).filter(Boolean);
             }
             
             // Calculate missing columns
@@ -224,10 +230,11 @@ async function verifyDatabaseSchema() {
     
     try {
       for (const tableName of validTables) {
-        const { data, error } = await supabase
-          .from(tableName as SupabaseTable)
+        // Use type assertions to bypass TypeScript's type checking for dynamic table names
+        const { data, error } = await (supabase
+          .from(tableName as any)
           .select('*')
-          .limit(1);
+          .limit(1) as any);
         
         if (error) {
           console.log(chalk.red(`❌ Error fetching table columns for ${tableName}: ${error.message}`));
@@ -236,18 +243,18 @@ async function verifyDatabaseSchema() {
         }
       }
       
-      // Check for information schema access
+      // Check for information schema access using the RPC function
       try {
-        const { data, error } = await supabase
-          .rpc('get_table_columns', { table_name: 'companies' });
+        const { data: columnInfo, error: columnError } = await (supabase
+          .rpc('get_table_columns', { table_name: 'companies' }) as any);
           
-        if (error) {
-          console.log('❌ Cannot access column information: ', error.message);
-        } else if (data && Array.isArray(data) && data.length > 0) {
-          console.log(`✅ Column information accessible: Found ${data.length} columns for companies table`);
+        if (columnError) {
+          console.log('❌ Cannot access column information: ', columnError.message);
+        } else if (columnInfo && Array.isArray(columnInfo) && columnInfo.length > 0) {
+          console.log(`✅ Column information accessible: Found ${columnInfo.length} columns for companies table`);
           
-          if (data.length > 0) {
-            console.log('Sample column data:', data[0]);
+          if (columnInfo.length > 0) {
+            console.log('Sample column data:', columnInfo[0]);
           }
         } else {
           console.log('⚠️ No column information available');
@@ -268,12 +275,12 @@ async function verifyDatabaseSchema() {
       
       for (const relationship of tableInfo.relationships) {
         try {
-          // Get a sample record from the table
-          const { data: sampleData, error: sampleError } = await supabase
-            .from(tableInfo.name as SupabaseTable)
+          // Get a sample record from the table - with type assertion for safety
+          const { data: sampleData, error: sampleError } = await (supabase
+            .from(tableInfo.name as any)
             .select(`${relationship.column}`)
             .not(relationship.column, 'is', null)
-            .limit(1);
+            .limit(1) as any);
           
           if (sampleError || !sampleData || sampleData.length === 0) {
             console.log(chalk.yellow(`⚠️ Could not find a sample record with non-null ${relationship.column} in ${tableInfo.name}`));
@@ -284,15 +291,15 @@ async function verifyDatabaseSchema() {
           const sampleRecord = sampleData[0];
           
           // Check for property existence before using it
-          if (sampleRecord && relationship.column in sampleRecord) {
+          if (sampleRecord && typeof sampleRecord === 'object' && relationship.column in sampleRecord) {
             const foreignKeyValue = sampleRecord[relationship.column];
             
-            // Use a simpler approach to query the referenced table
-            const { data: referencedData, error: referencedError } = await supabase
-              .from(relationship.referencesTable as SupabaseTable)
+            // Use a simpler approach to query the referenced table - with type assertion
+            const { data: referencedData, error: referencedError } = await (supabase
+              .from(relationship.referencesTable as any)
               .select('*')
               .eq(relationship.referencesColumn, foreignKeyValue)
-              .limit(1);
+              .limit(1) as any);
             
             if (referencedError || !referencedData || referencedData.length === 0) {
               console.log(chalk.red(`❌ Relationship broken: ${tableInfo.name}.${relationship.column} -> ${relationship.referencesTable}.${relationship.referencesColumn}`));
@@ -314,11 +321,12 @@ async function verifyDatabaseSchema() {
     
     // Check if all sensors with folder_id have corresponding entries in folder_sensors
     try {
-      const { data: sensorsWithFolders, error: sensorsError } = await supabase
-        .from('sensors' as SupabaseTable)
+      // Use type assertions to bypass TypeScript's strict typing for dynamic queries
+      const { data: sensorsWithFolders, error: sensorsError } = await (supabase
+        .from('sensors' as any)
         .select('id, imei, folder_id')
         .not('folder_id', 'is', null)
-        .limit(10);
+        .limit(10) as any);
       
       if (sensorsError) {
         console.log(chalk.red(`❌ Error fetching sensors with folders: ${sensorsError.message}`));
@@ -329,13 +337,13 @@ async function verifyDatabaseSchema() {
         
         for (const sensor of sensorsWithFolders) {
           // Check if properties exist before using them
-          if (sensor && 'folder_id' in sensor && 'imei' in sensor) {
-            const { data: folderSensor, error: folderSensorError } = await supabase
-              .from('folder_sensors' as SupabaseTable)
+          if (sensor && typeof sensor === 'object' && 'folder_id' in sensor && 'imei' in sensor) {
+            const { data: folderSensor, error: folderSensorError } = await (supabase
+              .from('folder_sensors' as any)
               .select('*')
               .eq('folder_id', sensor.folder_id)
               .eq('sensor_imei', sensor.imei)
-              .limit(1);
+              .limit(1) as any);
             
             if (folderSensorError || !folderSensor || folderSensor.length === 0) {
               console.log(chalk.red(`❌ Consistency issue: Sensor ${sensor.imei} has folder_id ${sensor.folder_id} but no matching entry in folder_sensors`));
@@ -356,11 +364,12 @@ async function verifyDatabaseSchema() {
     
     // Check if all users have valid company_id
     try {
-      const { data: usersWithCompanies, error: usersError } = await supabase
-        .from('users' as SupabaseTable)
+      // Use type assertions for safety with dynamic table queries
+      const { data: usersWithCompanies, error: usersError } = await (supabase
+        .from('users' as any)
         .select('id, name, company_id')
         .not('company_id', 'is', null)
-        .limit(10);
+        .limit(10) as any);
       
       if (usersError) {
         console.log(chalk.red(`❌ Error fetching users with companies: ${usersError.message}`));
@@ -371,12 +380,12 @@ async function verifyDatabaseSchema() {
         
         for (const user of usersWithCompanies) {
           // Check if properties exist before using them
-          if (user && 'company_id' in user && 'name' in user) {
-            const { data: company, error: companyError } = await supabase
-              .from('companies' as SupabaseTable)
+          if (user && typeof user === 'object' && 'company_id' in user && 'name' in user) {
+            const { data: company, error: companyError } = await (supabase
+              .from('companies' as any)
               .select('id, name')
               .eq('id', user.company_id as string)
-              .limit(1);
+              .limit(1) as any);
             
             if (companyError || !company || company.length === 0) {
               console.log(chalk.red(`❌ Consistency issue: User ${user.name} has company_id ${user.company_id} but no matching company exists`));
@@ -406,9 +415,9 @@ async function verifyDatabaseSchema() {
 // Add a function to create the stored procedure for getting table columns if it doesn't exist
 async function setupDatabaseHelpers() {
   try {
-    // Check if we can run the get_table_columns function
-    const { data: testFunctionData, error: testFunctionError } = await supabase
-      .rpc('get_table_columns', { table_name: 'companies' });
+    // Check if we can run the get_table_columns function - with type assertion
+    const { data: testFunctionData, error: testFunctionError } = await (supabase
+      .rpc('get_table_columns', { table_name: 'companies' }) as any);
       
     if (testFunctionError) {
       console.log(chalk.yellow('Note: The get_table_columns function is not available.'));
