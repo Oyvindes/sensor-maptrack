@@ -33,24 +33,122 @@ export type Database = {
         }
         Relationships: []
       }
+      device_positions: {
+        Row: {
+          battery_level: number | null
+          created_at: string | null
+          device_id: string | null
+          direction: number | null
+          id: string
+          latitude: number
+          longitude: number
+          speed: number | null
+        }
+        Insert: {
+          battery_level?: number | null
+          created_at?: string | null
+          device_id?: string | null
+          direction?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          speed?: number | null
+        }
+        Update: {
+          battery_level?: number | null
+          created_at?: string | null
+          device_id?: string | null
+          direction?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_positions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devices: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          folder_id: string | null
+          id: string
+          imei: string | null
+          last_seen: string | null
+          location: Json | null
+          name: string
+          status: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          imei?: string | null
+          last_seen?: string | null
+          location?: Json | null
+          name: string
+          status: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          folder_id?: string | null
+          id?: string
+          imei?: string | null
+          last_seen?: string | null
+          location?: Json | null
+          name?: string
+          status?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devices_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "sensor_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folder_sensors: {
         Row: {
           created_at: string | null
           folder_id: string | null
           id: string
-          sensor_id: string | null
+          sensor_imei: string
         }
         Insert: {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          sensor_id?: string | null
+          sensor_imei?: string
         }
         Update: {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          sensor_id?: string | null
+          sensor_imei?: string
         }
         Relationships: [
           {
@@ -61,13 +159,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "folder_sensors_sensor_id_fkey"
-            columns: ["sensor_id"]
+            foreignKeyName: "folder_sensors_sensor_imei_fkey"
+            columns: ["sensor_imei"]
             isOneToOne: false
             referencedRelation: "sensors"
+            referencedColumns: ["imei"]
+          },
+        ]
+      }
+      pdf_records: {
+        Row: {
+          content_base64: string | null
+          created_at: string
+          created_by: string | null
+          creator_name: string | null
+          filename: string
+          folder_id: string | null
+          id: string
+        }
+        Insert: {
+          content_base64?: string | null
+          created_at?: string
+          created_by?: string | null
+          creator_name?: string | null
+          filename: string
+          folder_id?: string | null
+          id?: string
+        }
+        Update: {
+          content_base64?: string | null
+          created_at?: string
+          created_by?: string | null
+          creator_name?: string | null
+          filename?: string
+          folder_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_records_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "sensor_folders"
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       project_pdfs: {
         Row: {
@@ -103,6 +272,99 @@ export type Database = {
             columns: ["folder_id"]
             isOneToOne: false
             referencedRelation: "sensor_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchases: {
+        Row: {
+          carrier: string | null
+          company_id: string
+          company_name: string
+          contact_email: string | null
+          contact_phone: string | null
+          customer_reference: string | null
+          id: string
+          notes: string | null
+          order_details: string | null
+          order_reference: string | null
+          product_id: string
+          purchased_at: string
+          purchased_by: string
+          quantity: number
+          shipped_date: string | null
+          shipping_address: string | null
+          shipping_city: string | null
+          shipping_country: string | null
+          shipping_postal_code: string | null
+          status: string
+          total_price: number
+          tracking_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          carrier?: string | null
+          company_id: string
+          company_name: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          customer_reference?: string | null
+          id?: string
+          notes?: string | null
+          order_details?: string | null
+          order_reference?: string | null
+          product_id: string
+          purchased_at?: string
+          purchased_by: string
+          quantity: number
+          shipped_date?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_postal_code?: string | null
+          status: string
+          total_price: number
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          carrier?: string | null
+          company_id?: string
+          company_name?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          customer_reference?: string | null
+          id?: string
+          notes?: string | null
+          order_details?: string | null
+          order_reference?: string | null
+          product_id?: string
+          purchased_at?: string
+          purchased_by?: string
+          quantity?: number
+          shipped_date?: string | null
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_postal_code?: string | null
+          status?: string
+          total_price?: number
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -158,34 +420,28 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          sensor_id: string | null
-          type: string
-          unit: string
-          value: number
+          payload: Json
+          sensor_imei: string
         }
         Insert: {
           created_at?: string | null
           id?: string
-          sensor_id?: string | null
-          type: string
-          unit: string
-          value: number
+          payload: Json
+          sensor_imei: string
         }
         Update: {
           created_at?: string | null
           id?: string
-          sensor_id?: string | null
-          type?: string
-          unit?: string
-          value?: number
+          payload?: Json
+          sensor_imei?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sensor_values_sensor_id_fkey"
-            columns: ["sensor_id"]
+            foreignKeyName: "sensor_values_sensor_imei_fkey"
+            columns: ["sensor_imei"]
             isOneToOne: false
             referencedRelation: "sensors"
-            referencedColumns: ["id"]
+            referencedColumns: ["imei"]
           },
         ]
       }
@@ -195,7 +451,7 @@ export type Database = {
           created_at: string | null
           folder_id: string | null
           id: string
-          imei: string | null
+          imei: string
           name: string
           status: string | null
           updated_at: string | null
@@ -205,7 +461,7 @@ export type Database = {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          imei?: string | null
+          imei: string
           name: string
           status?: string | null
           updated_at?: string | null
@@ -215,7 +471,7 @@ export type Database = {
           created_at?: string | null
           folder_id?: string | null
           id?: string
-          imei?: string | null
+          imei?: string
           name?: string
           status?: string | null
           updated_at?: string | null
@@ -227,6 +483,7 @@ export type Database = {
           battery_level: number | null
           company_id: string | null
           direction: number | null
+          folder_id: string | null
           id: string
           last_updated: string | null
           name: string
@@ -237,6 +494,7 @@ export type Database = {
           battery_level?: number | null
           company_id?: string | null
           direction?: number | null
+          folder_id?: string | null
           id?: string
           last_updated?: string | null
           name: string
@@ -247,6 +505,7 @@ export type Database = {
           battery_level?: number | null
           company_id?: string | null
           direction?: number | null
+          folder_id?: string | null
           id?: string
           last_updated?: string | null
           name?: string
@@ -261,6 +520,63 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tracking_objects_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "sensor_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          email: string
+          id: string
+          is_company_admin: boolean | null
+          last_login: string | null
+          name: string
+          password_hash: string
+          role: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          is_company_admin?: boolean | null
+          last_login?: string | null
+          name: string
+          password_hash: string
+          role: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_company_admin?: boolean | null
+          last_login?: string | null
+          name?: string
+          password_hash?: string
+          role?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -268,7 +584,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_rls_enabled: {
+        Args: {
+          table_name: string
+        }
+        Returns: boolean
+      }
+      migrate_mock_devices: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
