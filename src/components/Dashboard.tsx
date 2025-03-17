@@ -11,10 +11,11 @@ import DashboardNavigation from "./dashboard/DashboardNavigation";
 import ProjectsList from "./dashboard/ProjectsList";
 import TrackingSection from "./dashboard/TrackingSection";
 import HelpSection from "./dashboard/HelpSection";
+import StoreSection from "./dashboard/StoreSection";
 import { toast } from "sonner";
 
 // View types for the dashboard
-type DashboardView = "dashboard" | "projects" | "tracking" | "help";
+type DashboardView = "dashboard" | "projects" | "tracking" | "help" | "store";
 
 const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
@@ -104,6 +105,8 @@ const Dashboard: React.FC = () => {
           <TrackingSection className="w-full animate-fade-up [animation-delay:300ms]" />
         ) : currentView === "help" ? (
           <HelpSection className="w-full animate-fade-up [animation-delay:300ms]" />
+        ) : currentView === "store" ? (
+          <StoreSection className="w-full animate-fade-up [animation-delay:300ms]" />
         ) : (
           <div className="w-full animate-fade-up [animation-delay:300ms]">
             <h2 className="text-xl font-semibold mb-4">Projects</h2>

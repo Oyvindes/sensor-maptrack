@@ -1,9 +1,9 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Map, Radio, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Map, Radio, HelpCircle, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type DashboardView = "dashboard" | "projects" | "tracking" | "help";
+type DashboardView = "dashboard" | "projects" | "tracking" | "help" | "store";
 
 interface DashboardNavigationProps {
   currentView: DashboardView;
@@ -44,6 +44,13 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
           onViewChange={onViewChange}
           icon={<HelpCircle className="w-4 h-4 mr-2" />}
           label="Help"
+        />
+        <NavigationButton
+          view="store"
+          currentView={currentView}
+          onViewChange={onViewChange}
+          icon={<ShoppingCart className="w-4 h-4 mr-2" />}
+          label="Store"
         />
       </div>
     </div>

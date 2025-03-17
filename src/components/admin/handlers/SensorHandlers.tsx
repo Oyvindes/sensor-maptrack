@@ -76,9 +76,35 @@ export function useSensorHandlers(
 			return;
 		}
 
+		// Create a default sensor data value if values is empty
+		const defaultSensorValue = {
+			1: [],
+			2: [],
+			3: [],
+			4: [],
+			5: [],
+			6: [],
+			7: [],
+			8: [],
+			DS18B20_Temp: 0,
+			IMEI: '',
+			IMSI: '',
+			Model: '',
+			adc1: 0,
+			battery: 100,
+			digital_in: 0,
+			humidity: 50,
+			interrupt: 0,
+			interrupt_level: 0,
+			mod: 0,
+			signal: 0,
+			temperature: 20,
+			time: new Date().toISOString()
+		};
+
 		const enhancedSensor = {
 			...sensor,
-			values: sensor.values || [''],
+			values: sensor.values && sensor.values.length > 0 ? sensor.values : [defaultSensorValue],
 			companyId: sensor.companyId || 'company-001', // Will be mapped to UUID in the service layer
 			imei: sensor.imei || ''
 		};
@@ -144,16 +170,45 @@ export function useSensorHandlers(
 			return;
 		}
 
-		// For new sensors, set the company ID to the user's company
-		const companyId =
-			currentUser.role === 'master'
-				? companies[0]?.id || 'system'
-				: currentUser.companyId;
+		// Check if user is a site-wide admin
+		if (currentUser.role !== 'master') {
+			toast.error('Adding sensors is only reserved for site wide admins');
+			return;
+		}
+
+		// For new sensors, set the company ID to the first company or system
+		const companyId = companies[0]?.id || 'system';
+
+		// Create a default sensor data value object
+		const defaultSensorValue = {
+			1: [],
+			2: [],
+			3: [],
+			4: [],
+			5: [],
+			6: [],
+			7: [],
+			8: [],
+			DS18B20_Temp: 0,
+			IMEI: '',
+			IMSI: '',
+			Model: '',
+			adc1: 0,
+			battery: 100,
+			digital_in: 0,
+			humidity: 50,
+			interrupt: 0,
+			interrupt_level: 0,
+			mod: 0,
+			signal: 0,
+			temperature: 20,
+			time: new Date().toISOString()
+		};
 
 		setSelectedSensor({
 			id: `temp-${Date.now()}`,
 			name: '',
-			values: [''],
+			values: [defaultSensorValue],
 			status: 'online',
 			lastUpdated: new Date().toLocaleTimeString(),
 			companyId: companyId

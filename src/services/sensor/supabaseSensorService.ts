@@ -5,6 +5,85 @@ import { mapCompanyIdToUUID, mapCompanyIdToUUIDSync, mapCompanyUUIDToId } from '
 import { safeQuery, databaseHelpers } from '@/utils/databaseUtils';
 
 /**
+ * Validates if a sensor exists and belongs to the specified company
+ * @param sensorImei The IMEI or ID of the sensor to validate
+ * @param companyId The company ID to check ownership against
+ * @returns Promise with validation result
+ */
+export const validateSensorOwnership = async (
+  sensorImei: string,
+  companyId: string
+): Promise<{
+  valid: boolean;
+  sensorImei: string | null;
+  message: string;
+}> => {
+  try {
+    // Clean the IMEI/ID
+    const cleanedImei = sensorImei.replace(/\D/g, '');
+    
+    // Convert company ID to UUID format for database query
+    const companyUuid = await mapCompanyIdToUUID(companyId);
+    
+    const result = await safeQuery(
+      async () => {
+        // Use filter builder syntax instead of string interpolation
+        return await supabase
+          .from('sensors')
+          .select('id, imei, company_id')
+          .eq('imei', cleanedImei)
+          .single();
+      },
+      'validateSensorOwnership'
+    );
+
+    if (result.error) {
+      // If no matching record found
+      const errorString = String(result.error);
+      if (errorString.includes('PGRST116') || errorString.includes('no rows returned')) {
+        return {
+          valid: false,
+          sensorImei: null,
+          message: `Sensor with ID ${cleanedImei} does not exist in the database.`
+        };
+      }
+      
+      // Other database errors
+      console.error('Error validating sensor:', result.error);
+      return {
+        valid: false,
+        sensorImei: null,
+        message: `Database error: ${errorString}`
+      };
+    }
+
+    // Sensor exists, check if it belongs to the company
+    // Convert both to strings for comparison to avoid type issues
+    if (String(result.data.company_id) !== String(companyUuid)) {
+      return {
+        valid: false,
+        sensorImei: cleanedImei,
+        message: `Sensor ${cleanedImei} exists but doesn't belong to the selected company.`
+      };
+    }
+
+    // Sensor exists and belongs to the company
+    return {
+      valid: true,
+      sensorImei: cleanedImei,
+      message: `Sensor ${cleanedImei} validated successfully.`
+    };
+  } catch (error) {
+    console.error('Unexpected error in validateSensorOwnership:', error);
+    return {
+      valid: false,
+      sensorImei: null,
+      message: 'An unexpected error occurred while validating the sensor'
+    };
+  }
+};
+
+/**
  * Get all sensors from the database
  */
 export const fetchSensors = async (): Promise<SensorData[]> => {

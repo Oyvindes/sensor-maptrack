@@ -61,27 +61,41 @@ const UserRoleFields: React.FC<UserRoleFieldsProps> = ({
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="company">Company</Label>
-        <Select
-          value={formData.companyId}
-          onValueChange={(value) => handleChange("companyId", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select company" />
-          </SelectTrigger>
-          <SelectContent>
-            {(formData.role === "master" || isProtected) && (
-              <SelectItem value="system">System</SelectItem>
-            )}
-            {companies.map(company => (
-              <SelectItem key={company.id} value={company.id}>
-                {company.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Only show company selection for master admins */}
+      {isMasterAdmin ? (
+        <div className="space-y-2">
+          <Label htmlFor="company">Company</Label>
+          <Select
+            value={formData.companyId}
+            onValueChange={(value) => handleChange("companyId", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select company" />
+            </SelectTrigger>
+            <SelectContent>
+              {(formData.role === "master" || isProtected) && (
+                <SelectItem value="system">System</SelectItem>
+              )}
+              {companies.map(company => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : (
+        // For non-master admins, show the company name but don't allow selection
+        <div className="space-y-2">
+          <Label htmlFor="company">Company</Label>
+          <div className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm">
+            {companies.find(company => company.id === formData.companyId)?.name || "Your company"}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            New users will be assigned to your company
+          </p>
+        </div>
+      )}
 
       {(formData.role === "admin" || isProtected) && (
         <div className="flex items-center space-x-2">

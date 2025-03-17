@@ -145,13 +145,17 @@ export function useDeviceHandlers(
       return;
     }
     
+    // Check if user is a site-wide admin
+    if (currentUser.role !== 'master') {
+      toast.error("Adding tracker devices is only reserved for site wide admins");
+      return;
+    }
+    
     // Generate a temporary ID for new device
     const tempId = `temp-${Date.now()}`;
     
-    // For new devices, set the company ID to the user's company
-    const companyId = currentUser.role === 'master' 
-      ? (companies[0]?.id || "system") 
-      : currentUser.companyId;
+    // For new devices, set the company ID to the first company or system
+    const companyId = companies[0]?.id || "system";
     
     setSelectedDevice({
       id: tempId,

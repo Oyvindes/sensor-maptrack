@@ -55,6 +55,7 @@ const SensorsTab: React.FC<SensorsTabProps> = ({
               setMode("deleteSensors");
             }
           }}
+          currentUser={currentUser}
         />
       )}
       {mode === "editSensor" && selectedSensor && (

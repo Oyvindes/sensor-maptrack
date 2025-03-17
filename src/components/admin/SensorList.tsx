@@ -4,6 +4,7 @@ import { Plus, Folder, Pencil, FileUp, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionContainer, SectionTitle } from '@/components/Layout';
 import { getSensorColor, getSensorIconComponent } from '@/utils/sensorUtils';
+import { User } from '@/types/users';
 
 interface SensorListProps {
 	sensors: (SensorData & { folderId?: string })[];
@@ -11,6 +12,7 @@ interface SensorListProps {
 	onAddNew: () => void;
 	onImport: () => void;
 	onDelete: () => void;
+	currentUser?: User | null;
 }
 
 const SensorList: React.FC<SensorListProps> = ({
@@ -18,8 +20,11 @@ const SensorList: React.FC<SensorListProps> = ({
 	onSensorSelect,
 	onAddNew,
 	onImport,
-	onDelete
+	onDelete,
+	currentUser
 }) => {
+	// Check if user is a site-wide admin (master role)
+	const isSiteAdmin = currentUser?.role === 'master';
 	// Get the last seen timestamp for a sensor
 	const getLastSeenTime = (sensor: SensorData) => {
 		if (sensor.values && sensor.values.length > 0) {
@@ -33,24 +38,28 @@ const SensorList: React.FC<SensorListProps> = ({
 			<div className="flex justify-between items-center mb-4">
 				<SectionTitle>Manage Sensors</SectionTitle>
 				<div className="flex gap-2">
-					<Button
-						onClick={onImport}
-						size="sm"
-						variant="outline"
-						className="gap-2"
-					>
-						<FileUp className="h-4 w-4" />
-						<span>Import CSV</span>
-					</Button>
-					<Button
-						onClick={onDelete}
-						size="sm"
-						variant="outline"
-						className="gap-2 text-destructive"
-					>
-						<Trash2 className="h-4 w-4" />
-						<span>Delete by CSV</span>
-					</Button>
+					{isSiteAdmin && (
+						<>
+							<Button
+								onClick={onImport}
+								size="sm"
+								variant="outline"
+								className="gap-2"
+							>
+								<FileUp className="h-4 w-4" />
+								<span>Import CSV</span>
+							</Button>
+							<Button
+								onClick={onDelete}
+								size="sm"
+								variant="outline"
+								className="gap-2 text-destructive"
+							>
+								<Trash2 className="h-4 w-4" />
+								<span>Delete by CSV</span>
+							</Button>
+						</>
+					)}
 					<Button onClick={onAddNew} size="sm" className="gap-2">
 						<Plus className="h-4 w-4" />
 						<span>Add Sensor</span>
