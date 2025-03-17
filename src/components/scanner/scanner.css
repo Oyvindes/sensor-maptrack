@@ -2,7 +2,7 @@
 
 /* Class to hide elements during barcode scanning */
 .hide-on-scan {
-  /* Elements with this class will be hidden during scanning */
+  display: none !important; /* Hide specific elements during scanning */
 }
 
 /* Make the scanner container full-screen during scanning */

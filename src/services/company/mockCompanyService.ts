@@ -1,96 +1,105 @@
 import { Company, CompanyCreateInput, CompanyFilters, CompanyUpdateInput, ValidationResult } from './types';
 import { CompanyService } from './companyService';
 
-// Mock data - will be removed once proper company management is implemented
+// Mock company data
 const mockCompanies: Company[] = [
   {
-    id: '00000000-0000-0000-0000-000000000000',
-    name: 'System Company',
-    industry: 'System',
+    id: 'company-001',
+    name: 'Acme Corp',
+    industry: 'Construction',
     status: 'active',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    createdAt: '2023-01-15T12:00:00Z'
+  },
+  {
+    id: 'company-002',
+    name: 'TechNova',
+    industry: 'Technology',
+    status: 'active',
+    createdAt: '2023-02-20T14:30:00Z'
+  },
+  {
+    id: 'company-003',
+    name: 'Green Energy',
+    industry: 'Energy',
+    status: 'inactive',
+    createdAt: '2023-03-05T09:15:00Z'
   }
 ];
 
-export const getMockCompanies = () => mockCompanies;
-
+// Class implementation of CompanyService for mock data
 export class MockCompanyService implements CompanyService {
+  private companies: Company[] = [...mockCompanies];
+
   async create(input: CompanyCreateInput): Promise<Company> {
     const newCompany: Company = {
-      ...input,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      id: `company-${Date.now().toString()}`,
+      name: input.name,
+      industry: input.industry || '',
+      status: input.status || 'inactive',
+      createdAt: new Date().toISOString()
     };
-    mockCompanies.push(newCompany);
+    
+    this.companies.push(newCompany);
     return newCompany;
   }
 
   async update(id: string, input: CompanyUpdateInput): Promise<Company> {
-    const index = mockCompanies.findIndex(c => c.id === id);
+    const index = this.companies.findIndex(c => c.id === id);
     if (index === -1) {
-      throw new Error('Company not found');
+      throw new Error(`Company with ID ${id} not found`);
     }
-
+    
     const updatedCompany = {
-      ...mockCompanies[index],
-      ...input,
-      updated_at: new Date().toISOString()
+      ...this.companies[index],
+      ...(input.name !== undefined && { name: input.name }),
+      ...(input.industry !== undefined && { industry: input.industry }),
+      ...(input.status !== undefined && { status: input.status }),
     };
-    mockCompanies[index] = updatedCompany;
+    
+    this.companies[index] = updatedCompany;
     return updatedCompany;
   }
 
   async delete(id: string): Promise<void> {
-    const index = mockCompanies.findIndex(c => c.id === id);
+    const index = this.companies.findIndex(c => c.id === id);
     if (index === -1) {
-      throw new Error('Company not found');
+      throw new Error(`Company with ID ${id} not found`);
     }
-    mockCompanies.splice(index, 1);
+    
+    this.companies.splice(index, 1);
   }
 
-  async get(id: string): Promise<Company> {
-    const company = mockCompanies.find(c => c.id === id);
-    if (!company) {
-      throw new Error('Company not found');
-    }
-    return company;
+  async get(id: string): Promise<Company | null> {
+    const company = this.companies.find(c => c.id === id);
+    return company || null;
   }
 
   async list(filters?: CompanyFilters): Promise<Company[]> {
-    let filtered = [...mockCompanies];
+    let companies = [...this.companies];
     
+    // Apply filters if provided
     if (filters) {
-      if (filters.name) {
-        filtered = filtered.filter(c => 
-          c.name.toLowerCase().includes(filters.name!.toLowerCase())
-        );
+      if (filters.status) {
+        companies = companies.filter(c => c.status === filters.status);
       }
       if (filters.industry) {
-        filtered = filtered.filter(c => 
-          c.industry.toLowerCase().includes(filters.industry!.toLowerCase())
-        );
+        companies = companies.filter(c => c.industry.includes(filters.industry));
       }
-      if (filters.status) {
-        filtered = filtered.filter(c => c.status === filters.status);
+      if (filters.name) {
+        companies = companies.filter(c => c.name.toLowerCase().includes(filters.name.toLowerCase()));
       }
     }
     
-    return filtered;
+    return companies;
   }
 
   async validate(input: CompanyCreateInput | CompanyUpdateInput): Promise<ValidationResult> {
     const errors: { [key: string]: string[] } = {};
-
-    if ('name' in input && (!input.name || input.name.trim().length === 0)) {
-      errors.name = ['Name is required'];
+    
+    if ('name' in input && (!input.name || input.name.trim() === '')) {
+      errors.name = ['Company name is required'];
     }
-
-    if ('industry' in input && (!input.industry || input.industry.trim().length === 0)) {
-      errors.industry = ['Industry is required'];
-    }
-
+    
     return {
       valid: Object.keys(errors).length === 0,
       errors: Object.keys(errors).length > 0 ? errors : undefined
@@ -98,6 +107,9 @@ export class MockCompanyService implements CompanyService {
   }
 
   async exists(id: string): Promise<boolean> {
-    return mockCompanies.some(c => c.id === id);
+    return this.companies.some(c => c.id === id);
   }
 }
+
+// Export utility function for getting mock data
+export const getMockCompanies = () => [...mockCompanies];
