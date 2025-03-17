@@ -1,4 +1,3 @@
-
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
 import { formatCoordinates } from "../geocodingService";
@@ -52,8 +51,14 @@ export const formatProjectAddressDisplay = (project: SensorFolder): string => {
   return displayText;
 };
 
-// Replace mock data with real database calls
+// Fetch sensor folders from the database
+export const getSensorFolders = async (): Promise<SensorFolder[]> => {
+  return await fetchSensorFolders();
+};
+
+// Keep the old function name for backward compatibility
 export const getMockSensorFolders = async (): Promise<SensorFolder[]> => {
+  console.warn('getMockSensorFolders is deprecated. Use getSensorFolders instead.');
   return await fetchSensorFolders();
 };
 

@@ -1,421 +1,690 @@
 import { jsPDF } from 'jspdf';
+import { Purchase } from '@/types/store';
 import { PdfRecord, SensorFolder } from '@/types/users';
-import { getCurrentUser } from '@/services/authService';
+import { format } from 'date-fns';
+import { savePdfRecord } from './pdf/supabasePdfService';
+import { fetchSensors } from './sensor/supabaseSensorService';
 
-/**
- * Helper function to add a new page with Briks styling
- * Ensures consistent appearance across all pages of the PDF
- */
-const addNewPageWithBriksStyle = (pdf: jsPDF): void => {
-  pdf.addPage();
-  
-  // Apply consistent styling to the new page
-  pdf.setFillColor(235, 240, 255); // Light blue/indigo background
-  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), 'F');
-  
-  // Add purple header bar
-  pdf.setFillColor(108, 92, 231); // Purple color from Briks logo (#6c5ce7)
-  pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
-  
-  // Logo removed as requested
-};
-
-interface SensorReading {
-  timestamp: string;
-  values: {
-    temperature: { value: number; unit: string };
-    humidity: { value: number; unit: string };
-    battery: { value: number; unit: string };
-    signal: { value: number; unit: string };
-  };
+export interface PdfServiceInterface {
+  generateProformaInvoice(purchase: Purchase): Promise<Blob>;
 }
 
-const valueConfigs = {
-  temperature: { color: [255, 68, 68], label: "Temperature", min: 0, max: 40 },
-  humidity: { color: [68, 68, 255], label: "Humidity", min: 0, max: 100 },
-  battery: { color: [68, 255, 68], label: "Battery", min: 0, max: 100 },
-  signal: { color: [255, 68, 255], label: "Signal", min: 0, max: 100 }
-};
-
-const generateProjectData = (startDate: Date, endDate: Date): SensorReading[] => {
-  const data: SensorReading[] = [];
-  const duration = endDate.getTime() - startDate.getTime();
-  const intervals = 20; // Number of data points
-  
-  for (let i = 0; i <= intervals; i++) {
-    const timestamp = new Date(startDate.getTime() + (duration * i / intervals));
-    data.push({
-      timestamp: timestamp.toISOString(),
-      values: {
-        temperature: { value: 20 + Math.sin(i/2) * 5 + Math.random() * 2, unit: '°C' },
-        humidity: { value: 40 + Math.cos(i/2) * 15 + Math.random() * 5, unit: '%' },
-        battery: { value: 100 - i/2, unit: '%' },
-        signal: { value: 80 + Math.sin(i) * 10, unit: '%' }
+class PdfService implements PdfServiceInterface {
+  async generateProformaInvoice(purchase: Purchase): Promise<Blob> {
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(20);
+      doc.setTextColor(40, 40, 40);
+      doc.text('PROFORMA INVOICE', 105, 20, { align: 'center' });
+      
+      // Set up coordinates
+      const leftMargin = 20;
+      const rightColumnStart = 120;
+      const startY = 40;
+      let currentY = startY;
+      
+      // Add company details (left column)
+      doc.setFontSize(12);
+      doc.text('From:', leftMargin, currentY);
+      currentY += 7;
+      
+      doc.setFontSize(10);
+      doc.text('Your Company Name', leftMargin, currentY);
+      currentY += 5;
+      doc.text('Your Company Address', leftMargin, currentY);
+      currentY += 5;
+      doc.text('Your City, Country', leftMargin, currentY);
+      currentY += 5;
+      doc.text('VAT: Your VAT Number', leftMargin, currentY);
+      currentY += 5;
+      doc.text('Email: your@email.com', leftMargin, currentY);
+      currentY += 5;
+      doc.text('Phone: Your Phone Number', leftMargin, currentY);
+      
+      // Add invoice details (right column)
+      currentY = startY;
+      doc.setFontSize(10);
+      
+      // Invoice Date
+      doc.text('Invoice Date:', rightColumnStart, currentY);
+      doc.text(format(new Date(), 'yyyy-MM-dd'), rightColumnStart + 30, currentY);
+      currentY += 5;
+      
+      // Invoice Number
+      doc.text('Invoice Number:', rightColumnStart, currentY);
+      doc.text(`INV-${purchase.orderReference || purchase.id.substring(0, 8)}`, rightColumnStart + 30, currentY);
+      currentY += 5;
+      
+      // Order Reference - shortened to save space
+      doc.text('Order Ref:', rightColumnStart, currentY);
+      doc.text(purchase.orderReference || 'N/A', rightColumnStart + 30, currentY);
+      currentY += 5;
+      
+      // Customer Reference (if available) - shortened to save space
+      if (purchase.customerReference) {
+        doc.text('Customer Ref:', rightColumnStart, currentY);
+        doc.text(purchase.customerReference, rightColumnStart + 30, currentY);
       }
-    });
-  }
-  
-  return data;
-};
-
-const drawGraph = (
-  pdf: jsPDF,
-  data: SensorReading[],
-  valueType: keyof SensorReading['values'],
-  x: number,
-  y: number,
-  width: number,
-  height: number
-) => {
-  const config = valueConfigs[valueType];
-  const values = data.map(d => d.values[valueType].value);
-  const timestamps = data.map(d => new Date(d.timestamp));
-  
-  // Ensure we have margin for labels
-  const graphMarginTop = 10;    // Space for title
-  const graphMarginBottom = 15; // Space for x-axis labels
-  const graphMarginLeft = 15;   // Space for y-axis labels
-  
-  // Adjusted coordinates for the actual graph area
-  const graphX = x + graphMarginLeft;
-  const graphY = y + graphMarginTop;
-  const graphWidth = width - graphMarginLeft;
-  const graphHeight = height - (graphMarginTop + graphMarginBottom);
-  
-  // Draw axes
-  pdf.setDrawColor(0);
-  pdf.setLineWidth(0.2);
-  pdf.line(graphX, graphY + graphHeight, graphX + graphWidth, graphY + graphHeight); // X axis
-  pdf.line(graphX, graphY, graphX, graphY + graphHeight); // Y axis
-  
-  // Draw grid
-  pdf.setDrawColor(200);
-  pdf.setLineWidth(0.1);
-  for (let i = 1; i < 5; i++) {
-    const gridY = graphY + graphHeight - (graphHeight * i / 4);
-    pdf.line(graphX, gridY, graphX + graphWidth, gridY);
-  }
-  
-  // Draw data line
-  pdf.setDrawColor(config.color[0], config.color[1], config.color[2]);
-  pdf.setLineWidth(0.3);
-  
-  // Ensure values are within the min-max range to prevent graph overflow
-  const clampedValues = values.map(val =>
-    Math.min(Math.max(val, config.min), config.max)
-  );
-  
-  for (let i = 1; i < clampedValues.length; i++) {
-    const x1 = graphX + (graphWidth * (i - 1) / (clampedValues.length - 1));
-    const x2 = graphX + (graphWidth * i / (clampedValues.length - 1));
-    
-    // Calculate y position ensuring it's properly scaled within the graph height
-    const y1 = graphY + graphHeight - (graphHeight * (clampedValues[i - 1] - config.min) / (config.max - config.min));
-    const y2 = graphY + graphHeight - (graphHeight * (clampedValues[i] - config.min) / (config.max - config.min));
-    
-    pdf.line(x1, y1, x2, y2);
-  }
-  
-  // Add labels
-  pdf.setFontSize(8);
-  pdf.setTextColor(0);
-  
-  // Title
-  pdf.text(`${config.label} over Time`, x, y);
-  
-  // Y-axis labels
-  for (let i = 0; i <= 4; i++) {
-    const value = config.min + (config.max - config.min) * i / 4;
-    const labelY = graphY + graphHeight - (graphHeight * i / 4);
-    pdf.text(value.toFixed(0), graphX - 10, labelY + 2); // +2 to center text vertically
-  }
-  
-  // X-axis labels (start, middle, end)
-  const timeLabels = [timestamps[0], timestamps[Math.floor(timestamps.length / 2)], timestamps[timestamps.length - 1]];
-  const xPositions = [graphX, graphX + graphWidth/2, graphX + graphWidth];
-  
-  timeLabels.forEach((time, i) => {
-    try {
-      pdf.text(time.toLocaleTimeString(), xPositions[i] - 10, graphY + graphHeight + 10);
+      
+      // Add customer details
+      currentY = 85;
+      doc.setFontSize(12);
+      doc.text('Bill To:', leftMargin, currentY);
+      currentY += 7;
+      
+      doc.setFontSize(10);
+      doc.text(purchase.companyName, leftMargin, currentY);
+      currentY += 5;
+      
+      if (purchase.shippingAddress) {
+        doc.text(purchase.shippingAddress, leftMargin, currentY);
+        currentY += 5;
+      }
+      
+      if (purchase.shippingCity || purchase.shippingPostalCode) {
+        const cityPostal = [purchase.shippingCity, purchase.shippingPostalCode].filter(Boolean).join(', ');
+        doc.text(cityPostal, leftMargin, currentY);
+        currentY += 5;
+      }
+      
+      if (purchase.shippingCountry) {
+        doc.text(purchase.shippingCountry, leftMargin, currentY);
+        currentY += 5;
+      }
+      
+      if (purchase.contactEmail) {
+        doc.text(`Email: ${purchase.contactEmail}`, leftMargin, currentY);
+        currentY += 5;
+      }
+      
+      if (purchase.contactPhone) {
+        doc.text(`Phone: ${purchase.contactPhone}`, leftMargin, currentY);
+        currentY += 5;
+      }
+      
+      // Add item table
+      currentY = 130;
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+      
+      // Table headers
+      const colItem = leftMargin;
+      const colDesc = leftMargin + 15;
+      const colQty = 140;
+      const colPrice = 160;
+      const colTotal = 180;
+      
+      doc.text('Item', colItem, currentY);
+      doc.text('Description', colDesc, currentY);
+      doc.text('Qty', colQty, currentY);
+      doc.text('Price', colPrice, currentY);
+      doc.text('Total', colTotal, currentY);
+      
+      // Draw a line under headers
+      currentY += 2;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(leftMargin, currentY, 190, currentY);
+      
+      // Table data
+      currentY += 8;
+      doc.text('1', colItem, currentY);
+      doc.text(purchase.productName, colDesc, currentY);
+      doc.text(purchase.quantity.toString(), colQty, currentY);
+      doc.text(`$${(purchase.totalPrice / purchase.quantity).toFixed(2)}`, colPrice, currentY);
+      doc.text(`$${purchase.totalPrice.toFixed(2)}`, colTotal, currentY);
+      
+      // Draw a line under data
+      currentY += 5;
+      doc.line(leftMargin, currentY, 190, currentY);
+      
+      // Add total
+      currentY += 15;
+      doc.text('Subtotal:', 140, currentY);
+      doc.text(`$${purchase.totalPrice.toFixed(2)}`, 180, currentY);
+      
+      currentY += 5;
+      doc.text('Tax (0%):', 140, currentY);
+      doc.text('$0.00', 180, currentY);
+      
+      currentY += 5;
+      doc.text('Total:', 140, currentY);
+      doc.text(`$${purchase.totalPrice.toFixed(2)}`, 180, currentY);
+      
+      // Add notes
+      currentY += 15;
+      doc.text('Notes:', leftMargin, currentY);
+      currentY += 5;
+      doc.text('This is a proforma invoice. It is not a tax invoice.', leftMargin, currentY);
+      
+      if (purchase.orderDetails) {
+        currentY += 10;
+        doc.text('Order Details:', leftMargin, currentY);
+        currentY += 5;
+        doc.text(purchase.orderDetails, leftMargin, currentY);
+      }
+      
+      // Add a border around the entire invoice
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.rect(10, 10, 190, currentY + 10);
+      
+      // Add footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(
+          `Page ${i} of ${pageCount} - Generated on ${format(new Date(), 'yyyy-MM-dd HH:mm')}`,
+          105,
+          doc.internal.pageSize.height - 10,
+          { align: 'center' }
+        );
+      }
+      
+      // Return the PDF as a blob
+      return doc.output('blob');
     } catch (error) {
-      // Fallback for time formatting issues
-      pdf.text(time.toString().split(' ')[4] || '00:00:00', xPositions[i] - 10, graphY + graphHeight + 10);
+      console.error('Error generating PDF:', error);
+      throw error;
     }
-  });
-};
+  }
+}
 
-export const generateProjectReport = async (
+/**
+ * Generate and download a PDF report for a project
+ * @param project The project to generate a report for
+ * @param dataTypes Array of data types to include in the report (temperature, humidity, battery, signal)
+ * @returns Updated project with new PDF history
+ */
+export async function downloadProjectReport(
   project: SensorFolder,
-  selectedDataTypes?: string[]
-): Promise<Blob> => {
+  dataTypes: string[] = ['temperature', 'humidity', 'battery', 'signal']
+): Promise<SensorFolder> {
   try {
-    console.log('Starting PDF generation with jsPDF v3...');
+    // Fetch sensor data for the project
+    const allSensors = await fetchSensors();
+    const projectSensors = allSensors.filter(sensor =>
+      project.assignedSensorImeis?.includes(sensor.imei)
+    );
+
+    // Create a new PDF document in landscape orientation
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
     
-    // Create the jsPDF instance with safe defaults
-    let pdf;
-    try {
-      pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      console.log('jsPDF instance created successfully');
-    } catch (pdfError) {
-      console.error('Error creating jsPDF instance:', pdfError);
-      throw new Error(`Failed to initialize PDF document: ${pdfError.message || 'Unknown error'}`);
+    // Add title
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text(`Project Report: ${project.name}`, 105, 20, { align: 'center' });
+    
+    // Add project details
+    let currentY = 40;
+    const leftMargin = 20;
+    
+    doc.setFontSize(12);
+    doc.text('Project Details', leftMargin, currentY);
+    currentY += 8;
+    
+    doc.setFontSize(10);
+    doc.text(`Project Number: ${project.projectNumber || 'N/A'}`, leftMargin, currentY);
+    currentY += 6;
+    
+    doc.text(`Address: ${project.address || 'N/A'}`, leftMargin, currentY);
+    currentY += 6;
+    
+    doc.text(`Created By: ${project.creatorName || 'Unknown'}`, leftMargin, currentY);
+    currentY += 6;
+    
+    doc.text(`Created On: ${format(new Date(project.createdAt), 'yyyy-MM-dd')}`, leftMargin, currentY);
+    currentY += 6;
+    
+    if (project.startedAt) {
+      doc.text(`Started: ${format(new Date(project.startedAt), 'yyyy-MM-dd HH:mm')}`, leftMargin, currentY);
+      currentY += 6;
     }
     
-    let yOffset = 20;
+    if (project.stoppedAt) {
+      doc.text(`Stopped: ${format(new Date(project.stoppedAt), 'yyyy-MM-dd HH:mm')}`, leftMargin, currentY);
+      currentY += 6;
+    }
     
-    // Add background color similar to login page's gradient
-    pdf.setFillColor(235, 240, 255); // Light blue/indigo similar to the gradient start
-    pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), 'F');
+    // Add sensor data
+    currentY += 10;
+    doc.setFontSize(12);
+    doc.text('Sensor Data', leftMargin, currentY);
+    currentY += 8;
     
-    // Add header with gradient-like decoration
-    pdf.setFillColor(108, 92, 231); // Purple color from Briks logo (#6c5ce7)
-    pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), 15, 'F');
+    // Value type configurations
+    const valueConfigs = {
+      temperature: { color: '#ff4444', label: 'Temperature', unit: '°C' },
+      humidity: { color: '#4444ff', label: 'Humidity', unit: '%' },
+      battery: { color: '#44ff44', label: 'Battery', unit: '%' },
+      signal: { color: '#ff44ff', label: 'Signal', unit: '%' }
+    };
     
-    // Logo removed as requested
-  
-  // Add project information
-  yOffset = 30; // Reduced since there's no logo to move past
-  
-  pdf.setTextColor(50, 50, 100); // Dark blue/indigo text
-  pdf.setFontSize(20);
-  pdf.text('Project Report', 20, yOffset);
-  
-  pdf.setFontSize(12);
-  yOffset += 15; // Reduced from 20
-  pdf.text(`Project Name: ${project.name}`, 20, yOffset);
-  yOffset += 6; // Reduced from 10
-  pdf.text(`Project Number: ${project.projectNumber}`, 20, yOffset);
-  yOffset += 6; // Reduced from 10
-  pdf.text(`Created By: ${project.creatorName}`, 20, yOffset);
-  yOffset += 6; // Reduced from 10
-  pdf.text(`Created At: ${new Date(project.createdAt).toLocaleDateString()}`, 20, yOffset);
-  yOffset += 6; // Reduced from 10
-  if (project.startedAt) {
-    pdf.text(`Started At: ${new Date(project.startedAt).toLocaleString()}`, 20, yOffset);
-    yOffset += 6; // Reduced from 10
-  }
-  if (project.stoppedAt) {
-    pdf.text(`Stopped At: ${new Date(project.stoppedAt).toLocaleString()}`, 20, yOffset);
-    yOffset += 6; // Reduced from 10
-  }
-  pdf.text(`Address: ${project.address || 'N/A'}`, 20, yOffset);
-  yOffset += 6; // Reduced from 10
-  pdf.text(`Description: ${project.description || 'N/A'}`, 20, yOffset);
-  yOffset += 12; // Reduced from 20
-
-  // Add sensor data
-  if (project.assignedSensorIds?.length) {
-    pdf.text('Sensor Data', 20, yOffset);
-    yOffset += 6; // Reduced from 10
-
-    for (const sensorId of project.assignedSensorIds) {
-      // Use default time range if project hasn't been started/stopped
-      const endDate = project.stoppedAt ? new Date(project.stoppedAt) : new Date();
-      const startDate = project.startedAt ? new Date(project.startedAt) : new Date(endDate.getTime() - 24 * 60 * 60 * 1000); // Default to last 24 hours
-      const data = generateProjectData(startDate, endDate);
-      const latestData = data[data.length - 1];
-
-      pdf.text(`Sensor ${sensorId}`, 20, yOffset);
-      yOffset += 6; // Reduced from 10
-
-      // Add latest sensor readings - with reduced spacing
-      Object.entries(latestData.values).forEach(([key, value]) => {
-        pdf.text(`Latest ${key.charAt(0).toUpperCase() + key.slice(1)}: ${value.value.toFixed(1)}${value.unit}`, 30, yOffset);
-        yOffset += 5; // Reduced from 7
-      });
-      yOffset += 3; // Reduced from 5
-
-      // Check if we need a new page before drawing graphs - with reduced space requirement
-            if (yOffset > pdf.internal.pageSize.getHeight() - 180) { // Reduced from 220
-              addNewPageWithBriksStyle(pdf);
-              yOffset = 25; // Reduced from 30 - Start content a bit closer to the header
+    // Add data for each sensor
+    for (const sensor of projectSensors) {
+      doc.setFontSize(11);
+      doc.text(`Sensor: ${sensor.name} (${sensor.imei})`, leftMargin, currentY);
+      currentY += 8;
+      
+      // Check if sensor has values
+      if (!sensor.values || sensor.values.length === 0) {
+        doc.setFontSize(9);
+        doc.text('No data available for this sensor', leftMargin + 5, currentY);
+        currentY += 10;
+        continue;
+      }
+      
+      // Process sensor values
+      let processedValues = [];
+      for (const value of sensor.values) {
+        try {
+          const parsedValue = typeof value === 'string' ? JSON.parse(value) : value;
+          
+          // Format the values appropriately
+          const formattedValue = {
+            ...parsedValue,
+            time: new Date(parsedValue.time).toISOString(),
+            formattedTime: format(new Date(parsedValue.time), 'MM/dd HH:mm'),
+            // Apply the same transformations as in the UI
+            batteryPercentage: ((parsedValue.battery - 2.5) / 1.1) * 100,
+            signalPercentage: parsedValue.signal * 3.33
+          };
+          
+          processedValues.push(formattedValue);
+        } catch (e) {
+          console.error('Error parsing sensor value:', e);
+        }
+      }
+      
+      // Sort by time
+      processedValues.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+      
+      // Get latest values for each selected data type
+      if (processedValues.length > 0) {
+        const latestValue = processedValues[processedValues.length - 1];
+        
+        doc.setFontSize(9);
+        doc.text('Latest Values:', leftMargin + 5, currentY);
+        currentY += 6;
+        
+        for (const dataType of dataTypes) {
+          if (dataType in valueConfigs) {
+            const config = valueConfigs[dataType as keyof typeof valueConfigs];
+            let displayValue;
+            
+            // Get the appropriate value based on data type
+            if (dataType === 'battery') {
+              displayValue = latestValue.batteryPercentage;
+            } else if (dataType === 'signal') {
+              displayValue = latestValue.signalPercentage;
+            } else {
+              displayValue = latestValue[dataType];
             }
-      
-      // Filter data types if selectedDataTypes is provided
-      const dataTypesToInclude = (selectedDataTypes && selectedDataTypes.length > 0)
-        ? Object.keys(valueConfigs).filter(key => selectedDataTypes.includes(key))
-        : Object.keys(valueConfigs);
-      
-      // Add graphs for selected sensor value types
-      for (const valueType of dataTypesToInclude as Array<keyof SensorReading['values']>) {
-        // Check if we have enough space for this graph - reduced space requirement
-        if (yOffset > pdf.internal.pageSize.getHeight() - 60) { // Reduced from 70
-          addNewPageWithBriksStyle(pdf);
-          yOffset = 25; // Reduced from 30 - Start content a bit closer to the header
+            
+            doc.text(`${config.label}: ${displayValue.toFixed(1)}${config.unit}`, leftMargin + 10, currentY);
+            currentY += 5;
+          }
         }
         
-        // Draw the graph with better height ratio (reduced from 60mm)
-        drawGraph(pdf, data, valueType, 20, yOffset, 170, 50);
-        yOffset += 55; // Reduced from 75mm to make the document more compact
-      }
-
-      // Add new page if needed for next sensor
-      if (yOffset > pdf.internal.pageSize.getHeight() - 100) {
-        addNewPageWithBriksStyle(pdf);
-        yOffset = 30; // Start content below the header
-      }
-    }
-  } else {
-    pdf.text('No sensors assigned to this project', 20, yOffset);
-  }
-
-  // Add timestamp
-  yOffset = pdf.internal.pageSize.getHeight() - 20;
-  pdf.setFontSize(10);
-  pdf.text(`Report generated on ${new Date().toLocaleString()}`, 20, yOffset);
-
-  // Safely generate the blob with proper error handling
-  try {
-    console.log('Generating PDF blob...');
-    const blob = pdf.output('blob');
-    
-    if (!blob) {
-      throw new Error('PDF output returned null or undefined');
-    }
-    
-    console.log('PDF blob generated successfully');
-    return blob;
-  } catch (outputError) {
-    console.error('Error generating PDF output:', outputError);
-    throw new Error(`Failed to generate PDF output: ${outputError.message || 'Unknown error'}`);
-  }
-  } catch (error) {
-    console.error('Error in PDF generation:', error);
-    throw new Error(`Failed to generate PDF: ${error.message || 'Unknown error'}`);
-  }
-};
-
-/**
- * Gets PDF history for a project
- */
-export const getProjectPdfHistory = (project: SensorFolder): PdfRecord[] => {
-  return project.pdfHistory || [];
-};
-
-/**
- * Generates and downloads a PDF report for a project, and adds it to the project's PDF history
- * @param project The project to generate a report for
- * @param selectedDataTypes Optional array of data types to include in the report
- * @returns The updated project with the new PDF record added to history
- */
-export const downloadProjectReport = async (
-  project: SensorFolder,
-  selectedDataTypes?: string[]
-): Promise<SensorFolder> => {
-  try {
-    console.log('Starting PDF generation for project:', project.name);
-    console.log('Selected data types:', selectedDataTypes);
-    
-    const currentUser = getCurrentUser();
-    const timestamp = new Date();
-    const filename = `${project.name}-report-${timestamp.toISOString().split('T')[0]}.pdf`;
-    
-    // Use a try-catch block with more specific error handling
-    let pdfBlob;
-    try {
-      // Ensure jsPDF is properly imported and initialized with default params
-      console.log('Initializing PDF generation with jsPDF v3');
-      pdfBlob = await generateProjectReport(project, selectedDataTypes);
-      console.log('PDF blob generated successfully, size:', pdfBlob.size);
-      
-      if (!pdfBlob || pdfBlob.size === 0) {
-        throw new Error('Generated PDF blob is empty or invalid');
-      }
-    } catch (genError) {
-      console.error('Error in generateProjectReport:', genError);
-      throw new Error(`PDF generation failed: ${genError.message || 'Unknown error'}`);
-    }
-    
-    // Create URL from the blob with safer error handling
-    let url;
-    try {
-      console.log('Creating URL from blob...');
-      url = URL.createObjectURL(pdfBlob);
-      
-      if (!url) {
-        throw new Error('URL creation returned empty result');
-      }
-      console.log('URL created successfully:', url.substring(0, 30) + '...');
-    } catch (urlError) {
-      console.error('Error creating URL from blob:', urlError);
-      throw new Error(`Failed to create URL from PDF: ${urlError.message || 'Unknown error'}`);
-    }
-    
-    // Create download link with more reliable implementation
-    try {
-      console.log('Creating download link...');
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      
-      // Using a small timeout to ensure the browser has time to process
-      setTimeout(() => {
-        link.click();
-        setTimeout(() => {
-          document.body.removeChild(link);
-          console.log('Download initiated and link cleaned up');
-        }, 100);
-      }, 100);
-    } catch (linkError) {
-      console.error('Error in download process:', linkError);
-      throw new Error(`Failed to initiate download: ${linkError.message || 'Unknown error'}`);
-    }
-    
-    // Create a new PDF record
-    const pdfRecord: PdfRecord = {
-      id: `pdf-${Date.now()}`,
-      filename: filename,
-      createdAt: timestamp.toISOString(),
-      createdBy: currentUser?.id,
-      creatorName: currentUser?.name,
-      blobUrl: url // Store temporarily for viewing
-    };
-    
-    // Add to project history
-    const updatedProject = {
-      ...project,
-      pdfHistory: [...(project.pdfHistory || []), pdfRecord]
-    };
-    
-    // Clean up the URL after 30 minutes to avoid memory leaks
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-      if (updatedProject.pdfHistory) {
-        const index = updatedProject.pdfHistory.findIndex(pdf => pdf.id === pdfRecord.id);
-        if (index !== -1) {
-          updatedProject.pdfHistory[index] = {
-            ...updatedProject.pdfHistory[index],
-            blobUrl: undefined
-          };
+        currentY += 5;
+        
+        // Draw graphs for each selected data type
+        // In landscape mode, we can display graphs side by side
+        // Calculate how many graphs we need to display
+        const graphsToDisplay = dataTypes.filter(dt => dt in valueConfigs && processedValues.length > 1);
+        
+        if (graphsToDisplay.length > 0) {
+          // Add a page break for the graphs
+          doc.addPage();
+          currentY = 20;
+          
+          // Add a title for the graphs page
+          doc.setFontSize(14);
+          doc.setTextColor(40, 40, 40);
+          doc.text(`Sensor Data Graphs: ${sensor.name}`, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+          currentY += 15;
+          
+          // Display one graph per page for maximum size and detail
+          const graphsPerPage = 1;
+          
+          // Calculate graph dimensions - use full width of the page with proper margins
+          const graphSpacing = 30;
+          const availableWidth = doc.internal.pageSize.width - (leftMargin * 2) - 20; // Extra margin for safety
+          const singleGraphWidth = availableWidth;
+          const singleGraphHeight = 120; // Make graphs taller
+          
+          // Draw graphs two at a time, with a new page for each pair
+          for (let i = 0; i < graphsToDisplay.length; i += graphsPerPage) {
+            // Start a new page for each pair of graphs (except the first pair)
+            if (i > 0) {
+              doc.addPage();
+              currentY = 20;
+              
+              // Add a title for the graphs page
+              doc.setFontSize(14);
+              doc.setTextColor(40, 40, 40);
+              doc.text(`Sensor Data Graphs: ${sensor.name}`, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+              currentY += 15;
+            }
+            
+            // Draw up to two graphs on this page
+            for (let j = 0; j < graphsPerPage && (i + j) < graphsToDisplay.length; j++) {
+              const dataType = graphsToDisplay[i + j];
+              const config = valueConfigs[dataType as keyof typeof valueConfigs];
+              
+              // Calculate position based on vertical layout
+              const graphX = leftMargin;
+              const graphY = currentY + (j * (singleGraphHeight + graphSpacing));
+              
+              // Add graph title
+              doc.setFontSize(10);
+              doc.setTextColor(40, 40, 40);
+              doc.text(`${config.label} (${config.unit})`, graphX + singleGraphWidth / 2, graphY - 5, { align: 'center' });
+              
+              // Define padding for the graph - more space for labels
+              const padding = { top: 15, right: 15, bottom: 25, left: 35 };
+              
+              // Calculate the actual plotting area
+              const plotX = graphX + padding.left;
+              const plotY = graphY + padding.top;
+              const plotWidth = singleGraphWidth - padding.left - padding.right;
+              const plotHeight = singleGraphHeight - padding.top - padding.bottom;
+              
+              // Get min and max values for scaling
+              let values = [];
+              for (const value of processedValues) {
+                if (dataType === 'battery') {
+                  values.push(value.batteryPercentage);
+                } else if (dataType === 'signal') {
+                  values.push(value.signalPercentage);
+                } else {
+                  values.push(value[dataType]);
+                }
+              }
+              
+              // Calculate nice min/max values for the y-axis
+              let minValue = Math.min(...values);
+              let maxValue = Math.max(...values);
+              
+              // Add some padding to the min/max values
+              const valuePadding = (maxValue - minValue) * 0.1;
+              minValue = Math.max(0, minValue - valuePadding);
+              maxValue = maxValue + valuePadding;
+              
+              // Round to nice numbers
+              minValue = Math.floor(minValue);
+              maxValue = Math.ceil(maxValue);
+              
+              const valueRange = maxValue - minValue;
+              
+              // Draw grid lines
+              doc.setDrawColor(220, 220, 220);
+              doc.setLineWidth(0.2);
+              
+              // Draw background rectangle with light gray
+              doc.setFillColor(248, 248, 248);
+              doc.rect(plotX, plotY, plotWidth, plotHeight, 'F');
+              
+              // Horizontal grid lines (y-axis) - more lines for better detail
+              const yGridCount = 6;
+              for (let k = 0; k <= yGridCount; k++) {
+                const y = plotY + plotHeight - (k / yGridCount) * plotHeight;
+                
+                // Make grid lines lighter
+                doc.setDrawColor(220, 220, 220);
+                doc.setLineWidth(0.2);
+                doc.line(plotX, y, plotX + plotWidth, y);
+                
+                // Add y-axis labels
+                const labelValue = minValue + (k / yGridCount) * valueRange;
+                doc.setFontSize(9);
+                doc.setTextColor(80, 80, 80);
+                doc.text(`${labelValue.toFixed(1)}${config.unit}`, plotX - 5, y, { align: 'right' });
+              }
+              
+              // Vertical grid lines (x-axis) - more lines for better time resolution
+              const xGridCount = 8;
+              for (let k = 0; k <= xGridCount; k++) {
+                const x = plotX + (k / xGridCount) * plotWidth;
+                
+                // Make grid lines lighter
+                doc.setDrawColor(220, 220, 220);
+                doc.setLineWidth(0.2);
+                doc.line(x, plotY, x, plotY + plotHeight);
+                
+                // Add x-axis labels with better formatting
+                if (processedValues.length > 0) {
+                  const index = Math.floor((k / xGridCount) * (processedValues.length - 1));
+                  const value = processedValues[index];
+                  doc.setFontSize(8);
+                  // Rotate text slightly for better readability
+                  doc.text(value.formattedTime, x, plotY + plotHeight + 15, {
+                    align: 'center',
+                    angle: 0
+                  });
+                }
+              }
+              
+              // Draw axes
+              doc.setDrawColor(100, 100, 100);
+              doc.setLineWidth(0.5);
+              doc.line(plotX, plotY + plotHeight, plotX + plotWidth, plotY + plotHeight); // X-axis
+              doc.line(plotX, plotY, plotX, plotY + plotHeight); // Y-axis
+              
+              // Use only a subset of points if there are too many
+              const maxPoints = 100;
+              const step = processedValues.length > maxPoints ? Math.floor(processedValues.length / maxPoints) : 1;
+              const pointsToPlot = [];
+              
+              for (let k = 0; k < processedValues.length; k += step) {
+                pointsToPlot.push(processedValues[k]);
+              }
+              
+              // Make sure the last point is included
+              if (pointsToPlot[pointsToPlot.length - 1] !== processedValues[processedValues.length - 1]) {
+                pointsToPlot.push(processedValues[processedValues.length - 1]);
+              }
+              
+              // Prepare points for the area fill
+              const areaPoints = [];
+              
+              // Mark day changes with vertical lines
+              let currentDay = null;
+              const dayMarkers = [];
+              
+              // Find where days change
+              for (let k = 0; k < processedValues.length; k++) {
+                const date = new Date(processedValues[k].time);
+                const day = date.getDate();
+                
+                if (currentDay !== null && day !== currentDay) {
+                  // Day changed, calculate position
+                  const position = plotX + (k / processedValues.length) * plotWidth;
+                  const dateStr = format(date, 'MMM d');
+                  dayMarkers.push({ position, dateStr });
+                }
+                
+                currentDay = day;
+              }
+              
+              // Draw day change markers
+              for (const marker of dayMarkers) {
+                // Draw vertical line
+                doc.setDrawColor(180, 0, 0); // Red line
+                doc.setLineWidth(0.5);
+                doc.line(marker.position, plotY, marker.position, plotY + plotHeight);
+                
+                // Add date label
+                doc.setFontSize(8);
+                doc.setTextColor(180, 0, 0);
+                doc.text(marker.dateStr, marker.position, plotY - 5, { align: 'center' });
+              }
+              
+              // Draw data points and connect them with lines
+              // Parse the color components
+              const r = parseInt(config.color.substring(1, 3), 16);
+              const g = parseInt(config.color.substring(3, 5), 16);
+              const b = parseInt(config.color.substring(5, 7), 16);
+              
+              // Set line color and width
+              doc.setDrawColor(r, g, b);
+              doc.setLineWidth(1.5); // Thicker line for better visibility
+              
+              let prevX = null;
+              let prevY = null;
+              
+              for (let k = 0; k < pointsToPlot.length; k++) {
+                const value = pointsToPlot[k];
+                let dataValue;
+                
+                if (dataType === 'battery') {
+                  dataValue = value.batteryPercentage;
+                } else if (dataType === 'signal') {
+                  dataValue = value.signalPercentage;
+                } else {
+                  dataValue = value[dataType];
+                }
+                
+                // Calculate position
+                const xPos = plotX + (k / (pointsToPlot.length - 1)) * plotWidth;
+                const normalizedValue = valueRange === 0 ? 0.5 : (dataValue - minValue) / valueRange;
+                const yPos = plotY + plotHeight - (normalizedValue * plotHeight);
+                
+                // Store points for area fill
+                areaPoints.push({ x: xPos, y: yPos });
+                
+                // Connect with line if not the first point
+                if (prevX !== null && prevY !== null) {
+                  doc.line(prevX, prevY, xPos, yPos);
+                }
+                
+                prevX = xPos;
+                prevY = yPos;
+              }
+              
+              // Fill area under the curve
+              if (areaPoints.length > 1) {
+                // Create a filled area under the curve using triangles
+                // Use a more transparent fill for better appearance
+                doc.setFillColor(r, g, b, 0.15); // More transparent fill
+                
+                // Draw triangles to fill the area under the curve
+                for (let k = 0; k < areaPoints.length - 1; k++) {
+                  const p1 = areaPoints[k];
+                  const p2 = areaPoints[k + 1];
+                  
+                  // Draw a filled triangle for each segment
+                  doc.setDrawColor(0, 0, 0, 0); // Transparent border
+                  
+                  // Triangle: current point, next point, and bottom point
+                  doc.triangle(
+                    p1.x, p1.y,
+                    p2.x, p2.y,
+                    p2.x, plotY + plotHeight,
+                    'F'
+                  );
+                  
+                  // Triangle: current point, bottom point under current, bottom point under next
+                  doc.triangle(
+                    p1.x, p1.y,
+                    p1.x, plotY + plotHeight,
+                    p2.x, plotY + plotHeight,
+                    'F'
+                  );
+                }
+                
+                // Redraw the line on top to make it more visible
+                doc.setDrawColor(r, g, b);
+                doc.setLineWidth(1.5);
+                
+                for (let k = 0; k < areaPoints.length - 1; k++) {
+                  const p1 = areaPoints[k];
+                  const p2 = areaPoints[k + 1];
+                  doc.line(p1.x, p1.y, p2.x, p2.y);
+                }
+              }
+              
+              // Draw points on top of the area
+              doc.setFillColor(parseInt(config.color.substring(1, 3), 16),
+                              parseInt(config.color.substring(3, 5), 16),
+                              parseInt(config.color.substring(5, 7), 16));
+              
+              // Only draw points if there aren't too many
+              if (pointsToPlot.length <= 20) {
+                for (const point of areaPoints) {
+                  doc.circle(point.x, point.y, 1, 'F');
+                }
+              }
+            }
+          }
+          
+          // Update currentY to account for the graphs
+          currentY += singleGraphHeight + 30;
         }
       }
-    }, 30 * 60 * 1000);
+      
+      // Add a page break between sensors
+      if (sensor !== projectSensors[projectSensors.length - 1]) {
+        doc.addPage();
+        currentY = 20;
+      }
+    }
     
-    console.log('PDF report generation completed successfully');
+    // Add footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(
+        `Page ${i} of ${pageCount} - Generated on ${format(new Date(), 'yyyy-MM-dd HH:mm')}`,
+        105,
+        doc.internal.pageSize.height - 10,
+        { align: 'center' }
+      );
+    }
+    
+    // Generate the PDF blob
+    const pdfBlob = doc.output('blob');
+    
+    // Create a filename
+    const timestamp = format(new Date(), 'yyyyMMdd-HHmmss');
+    const filename = `${project.name.replace(/\s+/g, '_')}_Report_${timestamp}.pdf`;
+    
+    // Save the PDF record to the database
+    const pdfRecord = {
+      filename,
+      createdAt: new Date().toISOString(),
+      creatorName: project.creatorName || 'System',
+      pdfBlob
+    };
+    
+    const result = await savePdfRecord(project.id, pdfRecord);
+    
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+    
+    // Update the project with the new PDF record
+    const updatedProject = {
+      ...project,
+      pdfHistory: [
+        ...(project.pdfHistory || []),
+        result.data as PdfRecord
+      ]
+    };
+    
     return updatedProject;
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error('Error generating project report:', error);
     throw error;
   }
-};
+}
 
-/**
- * Opens a PDF from history for viewing
- */
-export const viewPdfFromHistory = (pdfRecord: PdfRecord) => {
-  if (pdfRecord.blobUrl) {
-    // URL is still cached, open it directly
-    window.open(pdfRecord.blobUrl, '_blank');
-  } else {
-    // URL expired, notify the user
-    console.log('PDF URL has expired. Please regenerate the PDF.');
-    return false;
-  }
-  return true;
-};
+export const pdfService: PdfServiceInterface = new PdfService();

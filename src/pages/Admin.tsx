@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/services/authService";
 import AdminHeader from "@/components/admin/AdminHeader";
@@ -11,6 +10,7 @@ import { useSensorHandlers } from "@/components/admin/handlers/SensorHandlers";
 import { useDeviceHandlers } from "@/components/admin/handlers/DeviceHandlers";
 import { useTrackingObjects } from "@/hooks/useTrackingObjects";
 import { Toaster } from "sonner";
+import { isMasterAdmin, filterSensorsByCompany, filterTrackingObjectsByCompany } from "@/utils/authUtils";
 
 // Tab components
 import CompaniesTab from "@/components/admin/tabs/CompaniesTab";
@@ -59,19 +59,28 @@ const Admin = () => {
   );
 
   const deviceHandlers = useDeviceHandlers(
-    devices, trackingObjects, setDevices, setTrackingObjects, 
-    setSelectedDevice, setMode, companies, updateTrackingObject, deleteTrackingObject
+    devices, trackingObjects, setDevices, setTrackingObjects,
+    setSelectedDevice, setMode, companies, updateTrackingObject, deleteTrackingObject,
+    adminState.loadDevicesAndTracking // Pass the loadDevicesAndTracking function
   );
   
   const currentUser = getCurrentUser();
+  const isMaster = isMasterAdmin();
+
+  // We'll move the filtering logic to the SensorsTab component
 
   useEffect(() => {
     // If the tab was set to folders, change it to companies
     // Using as AdminTab to ensure type safety
     if (activeTab === "folders" as any) {
-      handleTabChange('companies');
+      handleTabChange(isMaster ? 'companies' : 'sensors');
     }
-  }, [activeTab, handleTabChange]);
+    
+    // If user is not a master admin and tries to access companies tab, redirect to sensors tab
+    if (!isMaster && activeTab === 'companies') {
+      handleTabChange('sensors');
+    }
+  }, [activeTab, handleTabChange, isMaster]);
 
   if (!currentUser) {
     return <div>Not authenticated</div>;
@@ -82,18 +91,18 @@ const Admin = () => {
       <AdminHeader />
       <Toaster position="top-right" />
 
-      <div className="container mx-auto p-4 pb-20">
+      <div className="container mx-auto p-2 sm:p-4 pb-20">
         <SectionContainer>
-          <SectionTitle>Admin Controls</SectionTitle>
-          <p>Manage your system's data and settings.</p>
+          <SectionTitle className="text-lg sm:text-xl md:text-2xl">Admin Controls</SectionTitle>
+          <p className="text-sm sm:text-base">Manage your system's data and settings.</p>
         </SectionContainer>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="companies">Companies</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="sensors">Sensors</TabsTrigger>
-            <TabsTrigger value="devices">Asset Tracking</TabsTrigger>
+          <TabsList className="mb-2 sm:mb-4 h-8 sm:h-10 overflow-x-auto flex-wrap">
+            {isMaster && <TabsTrigger value="companies" className="text-xs sm:text-sm h-7 sm:h-9">Companies</TabsTrigger>}
+            <TabsTrigger value="users" className="text-xs sm:text-sm h-7 sm:h-9">Users</TabsTrigger>
+            <TabsTrigger value="sensors" className="text-xs sm:text-sm h-7 sm:h-9">Sensors</TabsTrigger>
+            <TabsTrigger value="devices" className="text-xs sm:text-sm h-7 sm:h-9">Asset Tracking</TabsTrigger>
           </TabsList>
           
           <TabsContent value="companies">
@@ -135,6 +144,7 @@ const Admin = () => {
               onImportSensors={sensorHandlers.handleImportSensors}
               onDeleteByCsv={sensorHandlers.handleDeleteSensors}
               setMode={setMode}
+              currentUser={currentUser}
             />
           </TabsContent>
 
@@ -149,6 +159,7 @@ const Admin = () => {
               onDeviceCancel={deviceHandlers.handleDeviceCancel}
               onAddNewDevice={deviceHandlers.handleAddNewDevice}
               onDeviceDelete={deviceHandlers.handleDeviceDelete}
+              currentUser={currentUser}
             />
           </TabsContent>
         </Tabs>

@@ -9,13 +9,28 @@ import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import { initializeAuthService, isUserAuthenticated } from "./services/authService";
+import SensorHealthCheck from "./pages/SensorHealthCheck";
+import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "./services/authService";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { hasAdminAccess } from "./utils/authUtils";
 
 // Authentication guard component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!isUserAuthenticated()) {
     return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Admin route guard component
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  if (!isUserAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!hasAdminAccess()) {
+    return <Navigate to="/index" replace />;
   }
   
   return <>{children}</>;
@@ -60,13 +75,21 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/admin" 
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <Admin />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/sensor-health-check"
                 element={
                   <ProtectedRoute>
-                    <Admin />
+                    <SensorHealthCheck />
                   </ProtectedRoute>
-                } 
+                }
               />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

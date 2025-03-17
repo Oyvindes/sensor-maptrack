@@ -1,139 +1,157 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 210 40% 99%;
-    --foreground: 222 47% 11%;
+	:root {
+		--background: 210 40% 99%;
+		--foreground: #1f1;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+		--card: 0 0% 100%;
+		--card-foreground: #1f1;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+		--popover: 0 0% 100%;
+		--popover-foreground: #1f1;
 
-    --primary: 210 100% 62%;
-    --primary-foreground: 210 40% 98%;
+		--primary: 210 100% 62%;
+		--primary-foreground: #ceccd9;
 
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 222 47% 11%;
+		--secondary: 210 20% 96%;
+		--secondary-foreground: #1f1;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+		--muted: 210 20% 96%;
+		--muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+		--accent: 210 40% 96%;
+		--accent-foreground: #1f1;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+		--destructive: 0 84% 60%;
+		--destructive-foreground: #ceccd9;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+		--border: 214.3 31.8% 91.4%;
+		--input: 214.3 31.8% 91.4%;
+		--ring: 221.2 83.2% 53.3%;
 
-    --radius: 0.75rem;
+		--radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+		--sidebar-background: 0 0% 98%;
+		--sidebar-foreground: 240 5.3% 26.1%;
+		--sidebar-primary: 240 5.9% 10%;
+		--sidebar-primary-foreground: 0 0% 98%;
+		--sidebar-accent: 240 4.8% 95.9%;
+		--sidebar-accent-foreground: 240 5.9% 10%;
+		--sidebar-border: 220 13% 91%;
+		--sidebar-ring: 217.2 91.2% 59.8%;
 
-    --sensor-temp: 0 72% 51%;
-    --sensor-humidity: 199 89% 48%;
-    --sensor-battery: 142 71% 45%;
-    --sensor-proximity: 262 83% 58%;
-    --sensor-signal: 31 95% 56%;
-  }
+		--sensor-temp: 0 72% 51%;
+		--sensor-humidity: 199 89% 48%;
+		--sensor-battery: 142 71% 45%;
+		--sensor-proximity: 262 83% 58%;
+		--sensor-signal: 31 95% 56%;
+	}
 
-  .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+	.dark {
+		--background: #000;
+		--foreground: #ceccd9;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
+		--card: #1f1e24;
+		--card-foreground: #ceccd9;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+		--popover: #1f1e24;
+		--popover-foreground: #ceccd9;
 
-    --primary: 210 100% 52%;
-    --primary-foreground: 210 40% 98%;
+		--primary: #e5e4f0;
+		--primary-foreground: #2d2c33;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+		--secondary: #1f1e24;
+		--secondary-foreground: #ceccd9;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+		--muted: #1f1e24;
+		--muted-foreground: #e5e4f0;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+		--accent: #1f1e24;
+		--accent-foreground: #ceccd9;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+		--destructive: #bf264c;
+		--destructive-foreground: #ceccd9;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+		--border: #2d2c33;
+		--input: #1f1e24;
+		--ring: 224.3 76.3% 48%;
 
-    --sidebar-background: 222 47% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 100% 52%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 224.3 76.3% 48%;
+		--sidebar-background: 222 47% 10%;
+		--sidebar-foreground: #ceccd9;
+		--sidebar-primary: 210 100% 52%;
+		--sidebar-primary-foreground: #ceccd9;
+		--sidebar-accent: #1f1e24;
+		--sidebar-accent-foreground: #ceccd9;
+		--sidebar-border: #1f1e24;
+		--sidebar-ring: 224.3 76.3% 48%;
 
-    --sensor-temp: 0 72% 51%;
-    --sensor-humidity: 199 89% 48%;
-    --sensor-battery: 142 71% 45%;
-    --sensor-proximity: 262 83% 58%;
-    --sensor-signal: 31 95% 56%;
-  }
+		--sensor-temp: 0 72% 51%;
+		--sensor-humidity: 199 89% 48%;
+		--sensor-battery: 142 71% 45%;
+		--sensor-proximity: 262 83% 58%;
+		--sensor-signal: 31 95% 56%;
+	}
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+	* {
+		@apply border-border;
+	}
 
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+	body {
+		@apply bg-background text-foreground antialiased;
+		font-feature-settings: 'rlig' 1, 'calt' 1;
+	}
 }
 
 @layer components {
-  .glass-card {
-    @apply bg-white/70 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10 shadow-lg;
-  }
-  
-  .sensor-pulse {
-    @apply relative inline-flex items-center justify-center z-0;
-  }
-  
-  .sensor-pulse::after {
-    @apply content-[''] absolute w-full h-full rounded-full bg-current opacity-30 animate-ping-subtle;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
+	.glass-card {
+		@apply bg-white/70 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10 shadow-lg;
+	}
 
-  .transition-all-ease {
-    @apply transition-all duration-300 ease-in-out;
-  }
+	.sensor-pulse {
+		@apply relative inline-flex items-center justify-center z-0;
+	}
 
-  .map-container {
-    @apply rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ease-out;
-    height: 500px;
-  }
-  
-  .sensor-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
-  }
+	.sensor-pulse::after {
+		@apply content-[''] absolute w-full h-full rounded-full bg-current opacity-30 animate-ping-subtle;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	.transition-all-ease {
+		@apply transition-all duration-300 ease-in-out;
+	}
+
+	/* Custom responsive utilities */
+	@screen xs {
+		.xs\:grid-cols-2 {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	.map-container {
+		@apply rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ease-out;
+		height: 300px;
+	}
+
+	@media (min-width: 640px) {
+		.map-container {
+			height: 400px;
+		}
+	}
+
+	@media (min-width: 768px) {
+		.map-container {
+			height: 500px;
+		}
+	}
+
+	.sensor-grid {
+		@apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6;
+	}
 }

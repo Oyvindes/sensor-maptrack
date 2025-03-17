@@ -26,32 +26,32 @@ const AdminHeader: React.FC = () => {
   };
 
   return (
-    <header className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
-      <div className="flex items-center space-x-4">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+    <header className="p-2 sm:p-4 border-b border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 w-full sm:w-auto">
+        <h1 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h1>
         {currentUser && (
-          <div className="flex items-center gap-2 ml-8 text-sm">
-            <User className="h-4 w-4" />
+          <div className="flex items-center gap-1 sm:gap-2 sm:ml-4 md:ml-8 text-xs sm:text-sm mt-1 sm:mt-0">
+            <User className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>
-              {currentUser.name} 
-              <span className="text-xs ml-1 text-muted-foreground">
+              {currentUser.name}
+              <span className="text-[10px] sm:text-xs ml-1 text-muted-foreground">
                 ({currentUser.role})
               </span>
             </span>
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto">
         <ThemeToggle />
-        <Button variant="ghost" size="sm" asChild className="gap-2">
+        <Button variant="ghost" size="sm" asChild className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2 p-0 sm:gap-2">
           <Link to="/index">
             <LayoutDashboard className="h-4 w-4" />
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
           </Link>
         </Button>
-        <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2 p-0 sm:gap-2">
           <LogOut className="h-4 w-4" />
-          Logout
+          <span className="hidden sm:inline">Logout</span>
         </Button>
       </div>
     </header>

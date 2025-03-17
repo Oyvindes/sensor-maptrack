@@ -1,0 +1,38 @@
+/* Scanner styles */
+
+/* Class to hide elements during barcode scanning */
+.hide-on-scan {
+  /* Elements with this class will be hidden during scanning */
+}
+
+/* Make the scanner container full-screen during scanning */
+.scanner-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: transparent;
+}
+
+/* Transparent background for the body during scanning */
+body.scanning {
+  background: transparent !important;
+}
+
+/* Hide all elements except the scanner during scanning */
+body.scanning > *:not(.scanner-container) {
+  display: none !important;
+}
+
+/* Show only the scanner container during scanning */
+body.scanning .scanner-container {
+  display: block !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+}

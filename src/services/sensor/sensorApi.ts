@@ -1,45 +1,44 @@
-
-import { SensorData } from "@/components/SensorCard";
+import { SensorData } from '@/components/SensorCard';
 
 // API calls related to sensors
 export const sendCommandToSensor = async (
-  sensorId: string,
-  command: string,
-  params?: Record<string, any>
+	sensorImei: string,
+	command: string,
+	params?: Record<string, any>
 ): Promise<{ success: boolean; message: string }> => {
-  console.log(`Sending command "${command}" to sensor ${sensorId}`, params);
-  
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: `Command "${command}" sent to sensor ${sensorId} successfully`,
-      });
-    }, 800);
-  });
+	console.log(`Sending command "${command}" to sensor ${sensorImei}`, params);
+
+	// Simulate API call
+	return new Promise((resolve) => {
+		setTimeout(() => {
+			resolve({
+				success: true,
+				message: `Command "${command}" sent to sensor ${sensorImei} successfully`
+			});
+		}, 800);
+	});
 };
 
 // Mock API call to create a new sensor
 export const createSensor = async (
-  sensorData: SensorData
+	sensorData: SensorData
 ): Promise<{ success: boolean; data: SensorData; message: string }> => {
-  console.log("Creating new sensor:", sensorData);
-  
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Generate a more realistic ID based on the sensor type
-      const newId = `sensor-${Date.now().toString().slice(-3)}`;
-      const createdSensor = { ...sensorData, id: newId };
-      
-      resolve({
-        success: true,
-        data: createdSensor,
-        message: `Sensor ${createdSensor.name} created successfully`,
-      });
-    }, 800);
-  });
+	console.log('Creating new sensor:', sensorData);
+
+	// Simulate API call
+	return new Promise((resolve) => {
+		setTimeout(() => {
+			// Generate a more realistic ID based on the sensor type
+			const newId = `sensor-${Date.now().toString().slice(-3)}`;
+			const createdSensor = { ...sensorData, id: newId };
+
+			resolve({
+				success: true,
+				data: createdSensor,
+				message: `Sensor ${createdSensor.name} created successfully`
+			});
+		}, 800);
+	});
 };
 
 /**
@@ -49,55 +48,20 @@ export const createSensor = async (
  * @returns Promise with validation result
  */
 export const validateSensorForCompany = async (
-  sensorImei: string,
-  companyId: string
+	sensorImei: string,
+	companyId: string
 ): Promise<{
-  valid: boolean;
-  sensorId: string | null;
-  message: string;
+	valid: boolean;
+	sensorImei: string | null;
+	message: string;
 }> => {
-  console.log(`Validating sensor IMEI ${sensorImei} for company ${companyId}`);
-  
-  // Import mock data to check against
-  const { getMockSensors } = await import('./mockSensorData');
-  const sensors = getMockSensors();
-  
-  // Clean the IMEI/ID and format it as an ID
-  const cleanedImei = sensorImei.replace(/\D/g, '');
-  // Try both formats - with and without the "sensor-" prefix
-  const sensorId = cleanedImei;
-  const legacySensorId = `sensor-${cleanedImei}`;
-  
-  // Simulate server validation with mock data
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Find the sensor in our mock database with either id format
-      const sensor = sensors.find(s => s.id === sensorId || s.id === legacySensorId);
-      
-      if (!sensor) {
-        resolve({
-          valid: false,
-          sensorId: null,
-          message: `Sensor with ID ${sensorId} does not exist in the database.`
-        });
-        return;
-      }
-      
-      if (sensor.companyId !== companyId) {
-        resolve({
-          valid: false,
-          sensorId: sensorId,
-          message: `Sensor ${sensorId} exists but doesn't belong to the selected company.`
-        });
-        return;
-      }
-      
-      // Sensor exists and belongs to the company
-      resolve({
-        valid: true,
-        sensorId: sensorId,
-        message: `Sensor ${sensorId} validated successfully.`
-      });
-    }, 800);
-  });
+	console.log(
+		`Validating sensor IMEI ${sensorImei} for company ${companyId}`
+	);
+
+	// Import the validateSensorOwnership function from supabaseSensorService
+	const { validateSensorOwnership } = await import('./supabaseSensorService');
+	
+	// Use the real database validation instead of mock data
+	return await validateSensorOwnership(sensorImei, companyId);
 };

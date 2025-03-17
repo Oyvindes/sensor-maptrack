@@ -27,26 +27,26 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   
   return (
     <SectionContainer>
-      <SectionTitle>Projects Overview</SectionTitle>
+      <SectionTitle className="text-lg sm:text-xl md:text-2xl">Projects Overview</SectionTitle>
       
       <Tabs defaultValue="map" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="map">Map View</TabsTrigger>
-          <TabsTrigger value="list">List View</TabsTrigger>
+        <TabsList className="mb-2 sm:mb-4 h-8 sm:h-10">
+          <TabsTrigger value="map" className="text-xs sm:text-sm h-7 sm:h-9">Map View</TabsTrigger>
+          <TabsTrigger value="list" className="text-xs sm:text-sm h-7 sm:h-9">List View</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="map" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <TabsContent value="map" className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4">
             <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden">
               <ProjectsMap
                 projects={runningProjects}
                 isLoading={isLoading}
                 onProjectSelect={onProjectSelect}
-                className="w-full h-[400px] animate-fade-up [animation-delay:300ms]"
+                className="w-full h-[250px] sm:h-[300px] md:h-[400px] animate-fade-up [animation-delay:300ms]"
               />
             </div>
-            <div className="flex flex-col glass-card rounded-xl h-[433px]">
-              <h3 className="text-base font-semibold p-3 border-b border-border animate-fade-up [animation-delay:350ms]">
+            <div className="flex flex-col glass-card rounded-xl h-[300px] sm:h-[350px] md:h-[433px]">
+              <h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 border-b border-border animate-fade-up [animation-delay:350ms]">
                 Running Projects
               </h3>
               <div className="flex-1 overflow-hidden">
@@ -63,10 +63,10 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           </div>
         </TabsContent>
         
-        <TabsContent value="list" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="flex flex-col glass-card rounded-xl h-[400px]">
-              <h3 className="text-base font-semibold p-3 border-b border-border animate-fade-up [animation-delay:350ms]">
+        <TabsContent value="list" className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4">
+            <div className="flex flex-col glass-card rounded-xl h-[250px] sm:h-[300px] md:h-[400px]">
+              <h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 border-b border-border animate-fade-up [animation-delay:350ms]">
                 Running Projects
               </h3>
               <div className="flex-1 overflow-hidden">
@@ -81,8 +81,8 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               </div>
             </div>
             
-            <div className="flex flex-col glass-card rounded-xl h-[400px]">
-              <h3 className="text-base font-semibold p-3 border-b border-border animate-fade-up [animation-delay:350ms]">
+            <div className="flex flex-col glass-card rounded-xl h-[250px] sm:h-[300px] md:h-[400px]">
+              <h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 border-b border-border animate-fade-up [animation-delay:350ms]">
                 Stopped Projects
               </h3>
               <div className="flex-1 overflow-hidden">

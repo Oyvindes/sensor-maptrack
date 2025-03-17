@@ -42,16 +42,16 @@ const Login = () => {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-950 dark:via-indigo-900 dark:to-purple-900">
-			<div className="absolute top-4 right-4">
+		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-950 dark:via-indigo-900 dark:to-purple-900 px-4">
+			<div className="absolute top-2 sm:top-4 right-2 sm:right-4">
 				<ThemeToggle />
 			</div>
-			<div className="max-w-md w-full p-8 glass-card rounded-lg shadow-lg">
-				<h2 className="text-2xl font-bold text-center mb-6">
+			<div className="max-w-md w-full p-4 sm:p-6 md:p-8 glass-card rounded-lg shadow-lg">
+				<h2 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">
 					Briks Environment Monitoring
 				</h2>
 
-				<form onSubmit={handleSubmit} className="space-y-6">
+				<form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
 					<div className="space-y-2">
 						<Label htmlFor="email">Email</Label>
 						<Input

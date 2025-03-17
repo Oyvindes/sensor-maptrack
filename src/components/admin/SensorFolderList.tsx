@@ -1,155 +1,175 @@
-
 import React, { useState } from 'react';
 import { SensorFolder, Company } from '@/types/users';
-import { SectionContainer } from "@/components/Layout";
+import { SectionContainer } from '@/components/Layout';
 import SensorFolderEditor from './SensorFolderEditor';
 import { toast } from 'sonner';
 import { getCurrentUser } from '@/services/authService';
-import { getMockSensors } from '@/services/sensorService';
+import { fetchSensors } from '@/services/sensor/supabaseSensorService';
 import FolderListHeader from './folder-list/FolderListHeader';
 import EmptyFolderState from './folder-list/EmptyFolderState';
 import FolderListItem from './folder-list/FolderListItem';
 
 interface SensorFolderListProps {
-  folders: SensorFolder[];
-  companies: Company[];
-  selectedCompanyId?: string;
-  onFolderCreate: (folder: Omit<SensorFolder, "id" | "createdAt">) => Promise<void>;
-  onFolderUpdate: (folderId: string, data: Partial<SensorFolder>) => Promise<void>;
-  onFolderSelect?: (folderId: string) => void;
-  onAddNew?: () => void;
+	folders: SensorFolder[];
+	companies: Company[];
+	selectedCompanyId?: string;
+	onFolderCreate: (
+		folder: Omit<SensorFolder, 'id' | 'createdAt'>
+	) => Promise<void>;
+	onFolderUpdate: (
+		folderId: string,
+		data: Partial<SensorFolder>
+	) => Promise<void>;
+	onFolderSelect?: (folderId: string) => void;
+	onAddNew?: () => void;
 }
 
 const SensorFolderList: React.FC<SensorFolderListProps> = ({
-  folders,
-  companies,
-  selectedCompanyId,
-  onFolderCreate,
-  onFolderUpdate,
-  onFolderSelect,
-  onAddNew
+	folders,
+	companies,
+	selectedCompanyId,
+	onFolderCreate,
+	onFolderUpdate,
+	onFolderSelect,
+	onAddNew
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentFolder, setCurrentFolder] = useState<SensorFolder | null>(null);
-  const currentUser = getCurrentUser();
-  const allSensors = getMockSensors();
-  
-  const filteredFolders = folders.filter(folder => {
-    if (currentUser?.role === 'master') {
-      return true;
-    }
-    
-    if (currentUser?.role === 'admin') {
-      return folder.companyId === currentUser.companyId;
-    }
-    
-    return folder.companyId === currentUser?.companyId;
-  });
+	const [isEditing, setIsEditing] = useState(false);
+	const [currentFolder, setCurrentFolder] = useState<SensorFolder | null>(
+		null
+	);
+	const currentUser = getCurrentUser();
+	const allSensors = fetchSensors();
 
-  const displayedFolders = selectedCompanyId
-    ? filteredFolders.filter(folder => folder.companyId === selectedCompanyId)
-    : filteredFolders;
+	const filteredFolders = folders.filter((folder) => {
+		if (currentUser?.role === 'master') {
+			return true;
+		}
 
-  const handleAddNew = () => {
-    if (onAddNew) {
-      onAddNew();
-      return;
-    }
-    
-    const newFolder: SensorFolder = {
-      id: `temp-${Date.now()}`,
-      name: "",
-      description: "",
-      companyId: selectedCompanyId || currentUser?.companyId || "",
-      createdAt: new Date().toISOString().split('T')[0],
-      createdBy: currentUser?.id,
-      creatorName: currentUser?.name,
-      projectNumber: `PRJ-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      address: "",
-      assignedSensorIds: []
-    };
-    setCurrentFolder(newFolder);
-    setIsEditing(true);
-  };
+		if (currentUser?.role === 'admin') {
+			return folder.companyId === currentUser.companyId;
+		}
 
-  const handleEdit = (folder: SensorFolder, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentFolder(folder);
-    setIsEditing(true);
-  };
+		return folder.companyId === currentUser?.companyId;
+	});
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    setCurrentFolder(null);
-  };
+	const displayedFolders = selectedCompanyId
+		? filteredFolders.filter(
+				(folder) => folder.companyId === selectedCompanyId
+		  )
+		: filteredFolders;
 
-  const handleSave = async (folder: SensorFolder) => {
-    try {
-      if (folder.id.startsWith('temp-')) {
-        const { id, createdAt, ...folderData } = folder;
-        await onFolderCreate(folderData);
-      } else {
-        const { id, ...updates } = folder;
-        await onFolderUpdate(id, updates);
-      }
-      setIsEditing(false);
-      setCurrentFolder(null);
-    } catch (error) {
-      console.error("Error saving folder:", error);
-      toast.error("Failed to save project");
-    }
-  };
+	const handleAddNew = () => {
+		if (onAddNew) {
+			onAddNew();
+			return;
+		}
 
-  const getSensorCount = (folder: SensorFolder) => {
-    return folder.assignedSensorIds?.length || 0;
-  };
+		const newFolder: SensorFolder = {
+			id: `temp-${Date.now()}`,
+			name: '',
+			description: '',
+			companyId: selectedCompanyId || currentUser?.companyId || '',
+			createdAt: new Date().toISOString().split('T')[0],
+			createdBy: currentUser?.id,
+			creatorName: currentUser?.name,
+			projectNumber: `PRJ-${new Date().getFullYear()}-${Math.floor(
+				Math.random() * 1000
+			)
+				.toString()
+				.padStart(3, '0')}`,
+			address: '',
+			assignedSensorImeis: []
+		};
+		setCurrentFolder(newFolder);
+		setIsEditing(true);
+	};
 
-  const canEditFolder = (folder: SensorFolder) => {
-    if (!currentUser) return false;
-    
-    if (currentUser.role === 'master') return true;
-    
-    if (currentUser.role === 'admin' && folder.companyId === currentUser.companyId) return true;
-    
-    if (folder.createdBy === currentUser.id) return true;
-    
-    return false;
-  };
+	const handleEdit = (folder: SensorFolder, e: React.MouseEvent) => {
+		e.stopPropagation();
+		setCurrentFolder(folder);
+		setIsEditing(true);
+	};
 
-  if (isEditing && currentFolder) {
-    return (
-      <SensorFolderEditor
-        folder={currentFolder}
-        companies={companies}
-        onSave={handleSave}
-        onCancel={handleCancel}
-      />
-    );
-  }
+	const handleCancel = () => {
+		setIsEditing(false);
+		setCurrentFolder(null);
+	};
 
-  return (
-    <SectionContainer>
-      <FolderListHeader onAddNew={handleAddNew} />
+	const handleSave = async (folder: SensorFolder) => {
+		try {
+			if (folder.id.startsWith('temp-')) {
+				const { id, createdAt, ...folderData } = folder;
+				await onFolderCreate(folderData);
+			} else {
+				const { id, ...updates } = folder;
+				await onFolderUpdate(id, updates);
+			}
+			setIsEditing(false);
+			setCurrentFolder(null);
+		} catch (error) {
+			console.error('Error saving folder:', error);
+			toast.error('Failed to save project');
+		}
+	};
 
-      {displayedFolders.length === 0 && (
-        <EmptyFolderState hasSelectedCompany={Boolean(selectedCompanyId)} />
-      )}
+	const getSensorCount = (folder: SensorFolder) => {
+		return folder.assignedSensorImeis?.length || 0;
+	};
 
-      <div className="space-y-2">
-        {displayedFolders.map(folder => (
-          <FolderListItem
-            key={folder.id}
-            folder={folder}
-            companies={companies}
-            onFolderSelect={(folderId) => onFolderSelect && onFolderSelect(folderId)}
-            onEdit={handleEdit}
-            canEdit={canEditFolder(folder)}
-            sensorCount={getSensorCount(folder)}
-          />
-        ))}
-      </div>
-    </SectionContainer>
-  );
+	const canEditFolder = (folder: SensorFolder) => {
+		if (!currentUser) return false;
+
+		if (currentUser.role === 'master') return true;
+
+		if (
+			currentUser.role === 'admin' &&
+			folder.companyId === currentUser.companyId
+		)
+			return true;
+
+		if (folder.createdBy === currentUser.id) return true;
+
+		return false;
+	};
+
+	if (isEditing && currentFolder) {
+		return (
+			<SensorFolderEditor
+				folder={currentFolder}
+				companies={companies}
+				onSave={handleSave}
+				onCancel={handleCancel}
+			/>
+		);
+	}
+
+	return (
+		<SectionContainer>
+			<FolderListHeader onAddNew={handleAddNew} />
+
+			{displayedFolders.length === 0 && (
+				<EmptyFolderState
+					hasSelectedCompany={Boolean(selectedCompanyId)}
+				/>
+			)}
+
+			<div className="space-y-2">
+				{displayedFolders.map((folder) => (
+					<FolderListItem
+						key={folder.id}
+						folder={folder}
+						companies={companies}
+						onFolderSelect={(folderId) =>
+							onFolderSelect && onFolderSelect(folderId)
+						}
+						onEdit={handleEdit}
+						canEdit={canEditFolder(folder)}
+						sensorCount={getSensorCount(folder)}
+					/>
+				))}
+			</div>
+		</SectionContainer>
+	);
 };
 
 export default SensorFolderList;

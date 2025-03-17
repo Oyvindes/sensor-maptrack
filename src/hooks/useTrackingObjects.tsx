@@ -1,88 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Device, TrackingObject, Location } from '@/types/sensors';
+import { Device, TrackingObject } from '@/types/sensors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Json } from '@/integrations/supabase/types';
-import { isValidUUID } from '@/utils/uuidUtils';
-import { companyService } from '@/services/company';
+import { fetchDevices, fetchTrackingObjects, updateTrackingObjectPosition, saveDevice, deleteDevice } from '@/services/sensorService';
 
 export const useTrackingObjects = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const parsePosition = (position: Json | null): Location => {
-    if (!position) return { lat: 0, lng: 0 };
-    
-    try {
-      if (typeof position === 'object' && position !== null && !Array.isArray(position)) {
-        const posObj = position as Record<string, Json>;
-        
-        const lat = typeof posObj.lat === 'number' ? posObj.lat : 
-                   typeof posObj.lat === 'string' ? parseFloat(posObj.lat) : 0;
-        
-        const lng = typeof posObj.lng === 'number' ? posObj.lng : 
-                   typeof posObj.lng === 'string' ? parseFloat(posObj.lng) : 0;
-                   
-        return { lat, lng };
-      }
-    } catch (error) {
-      console.error('Error parsing position:', error);
-    }
-    
-    return { lat: 0, lng: 0 };
-  };
-
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       
-      const { data: trackingData, error } = await supabase
-        .from('tracking_objects')
-        .select('*');
-
-      if (error) {
-        console.error('Error fetching tracking objects from Supabase:', error);
-        throw error;
-      }
-
-      if (trackingData && trackingData.length > 0) {
-        const formattedTrackingObjects = trackingData.map(item => ({
-          id: item.id,
-          name: item.name,
-          position: parsePosition(item.position),
-          lastUpdated: item.last_updated ? new Date(item.last_updated).toLocaleString() : new Date().toLocaleString(),
-          speed: typeof item.speed === 'number' ? item.speed : 0,
-          direction: typeof item.direction === 'number' ? item.direction : 0,
-          batteryLevel: typeof item.battery_level === 'number' ? item.battery_level : 100,
-          folderId: (item as any).folder_id || undefined,
-        }));
-        setTrackingObjects(formattedTrackingObjects);
-
-        const deviceData: Device[] = formattedTrackingObjects.map(obj => ({
-          id: obj.id,
-          name: obj.name,
-          type: 'tracker',
-          status: 'online' as const,
-          location: obj.position,
-          companyId: 'system',
-          lastUpdated: obj.lastUpdated,
-          folderId: obj.folderId
-        }));
-        
-        deviceData.forEach((device, index) => {
-          const trackingItem = trackingData[index];
-          if (trackingItem && trackingItem.company_id) {
-            device.companyId = trackingItem.company_id;
-          }
-        });
-        
-        setDevices(deviceData);
-      } else {
-        setTrackingObjects([]);
-        setDevices([]);
-        console.log('No tracking objects found in database');
-      }
+      // Use the Supabase services to fetch data
+      const [devicesData, trackingData] = await Promise.all([
+        fetchDevices(),
+        fetchTrackingObjects()
+      ]);
+      
+      setDevices(devicesData);
+      setTrackingObjects(trackingData);
+      
       setIsLoading(false);
     } catch (error) {
       console.error('Error in fetchData:', error);
@@ -96,99 +35,28 @@ export const useTrackingObjects = () => {
 
   const updateTrackingObject = useCallback(async (updatedDevice: Device) => {
     try {
-      const position: Record<string, number> = {
-        lat: updatedDevice.location?.lat || 0,
-        lng: updatedDevice.location?.lng || 0
-      };
+      // Save the device first
+      const result = await saveDevice(updatedDevice);
 
-      const isNewDevice = !isValidUUID(updatedDevice.id);
-      let companyIdForDb = null;
+      if (!result.success) {
+        toast.error('Failed to update device');
+        return false;
+      }
 
-      if (updatedDevice.companyId) {
-        try {
-          // Import the mapCompanyIdToUUID function
-          const { mapCompanyIdToUUID } = await import('@/utils/uuidUtils');
-          
-          // Try to map the company ID to a UUID
-          const mappedId = mapCompanyIdToUUID(updatedDevice.companyId);
-          
-          if (mappedId) {
-            // Verify the company exists
-            const exists = await companyService.exists(mappedId);
-            if (exists) {
-              companyIdForDb = mappedId;
-            } else {
-              toast.error('Invalid company ID - company does not exist');
-              return false;
-            }
-          } else if (isValidUUID(updatedDevice.companyId)) {
-            // If it's already a UUID but not in our mapping, verify it exists
-            const exists = await companyService.exists(updatedDevice.companyId);
-            if (exists) {
-              companyIdForDb = updatedDevice.companyId;
-            } else {
-              toast.error('Invalid company ID - company does not exist');
-              return false;
-            }
-          }
-        } catch (error) {
-          console.error('Error validating company:', error);
-          toast.error('Failed to validate company');
+      // Then update the tracking object position if location is provided
+      if (updatedDevice.location) {
+        const positionResult = await updateTrackingObjectPosition(
+          updatedDevice.id,
+          updatedDevice.location,
+          0, // Default speed
+          0, // Default direction
+          100 // Default battery level
+        );
+
+        if (!positionResult.success) {
+          toast.error('Failed to update tracking object position');
           return false;
         }
-      }
-      console.log(`Processing company ID: ${updatedDevice.companyId} -> ${companyIdForDb}`);
-      
-      let result;
-      
-      if (isNewDevice) {
-        const insertData: any = {
-          name: updatedDevice.name,
-          position: position,
-          last_updated: new Date().toISOString(),
-          battery_level: 100,
-          speed: 0,
-          direction: 0
-        };
-        
-        if (companyIdForDb) {
-          insertData.company_id = companyIdForDb;
-        }
-        
-        if (updatedDevice.folderId) {
-          insertData.folder_id = updatedDevice.folderId;
-        }
-        
-        result = await supabase
-          .from('tracking_objects')
-          .insert(insertData)
-          .select('id')
-          .single();
-      } else {
-        const updateData: any = {
-          name: updatedDevice.name,
-          position: position,
-          last_updated: new Date().toISOString(),
-        };
-        
-        if (companyIdForDb) {
-          updateData.company_id = companyIdForDb;
-        }
-        
-        if (updatedDevice.folderId) {
-          updateData.folder_id = updatedDevice.folderId;
-        }
-        
-        result = await supabase
-          .from('tracking_objects')
-          .update(updateData)
-          .eq('id', updatedDevice.id);
-      }
-
-      if (result.error) {
-        console.error('Error updating tracking object:', result.error);
-        toast.error('Failed to update tracking object');
-        return false;
       }
 
       await fetchData();
@@ -203,22 +71,10 @@ export const useTrackingObjects = () => {
 
   const deleteTrackingObject = useCallback(async (deviceId: string) => {
     try {
-      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      
-      if (!uuidPattern.test(deviceId)) {
-        console.error('Invalid UUID format for deviceId:', deviceId);
-        toast.error('Cannot delete: Invalid device ID format');
-        return false;
-      }
-      
-      const { error } = await supabase
-        .from('tracking_objects')
-        .delete()
-        .eq('id', deviceId);
+      const result = await deleteDevice(deviceId);
 
-      if (error) {
-        console.error('Error deleting tracking object:', error);
-        toast.error('Failed to delete tracking object');
+      if (!result.success) {
+        toast.error('Failed to delete device');
         return false;
       }
 
@@ -235,31 +91,36 @@ export const useTrackingObjects = () => {
   useEffect(() => {
     fetchData();
 
+    // Set up real-time subscription for tracking objects
     const channel = supabase
       .channel('tracking_objects_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'tracking_objects' }, 
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'devices' },
         (payload) => {
-          console.log('Real-time update received:', payload);
+          console.log('Real-time update received for devices:', payload);
+          fetchData();
+        }
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'device_positions' },
+        (payload) => {
+          console.log('Real-time update received for device positions:', payload);
           fetchData();
         }
       )
       .subscribe();
-
-    const interval = setInterval(() => {
-      setTrackingObjects(prev => 
-        prev.map(obj => ({
-          ...obj,
-          speed: Math.random() > 0.7 ? Math.floor(Math.random() * 60) : obj.speed,
-          batteryLevel: obj.batteryLevel > 0 ? Math.max(obj.batteryLevel - 0.1, 0) : 0,
-          lastUpdated: new Date().toLocaleString()
-        }))
-      );
-    }, 30000);
+      
+    // Listen for the custom device-updated event
+    const handleDeviceUpdated = () => {
+      console.log('Device updated event received, refreshing data...');
+      fetchData();
+    };
+    
+    window.addEventListener('device-updated', handleDeviceUpdated);
 
     return () => {
-      clearInterval(interval);
       supabase.removeChannel(channel);
+      window.removeEventListener('device-updated', handleDeviceUpdated);
     };
   }, [fetchData]);
 

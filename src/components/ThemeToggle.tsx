@@ -16,12 +16,12 @@ export function ThemeToggle() {
           variant="ghost"
           size="icon"
           aria-label="Select theme"
-          className="rounded-full"
+          className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
         >
           {resolvedTheme === "dark" ? (
-            <Moon className="h-5 w-5 transition-all" />
+            <Moon className="h-4 w-4 sm:h-5 sm:w-5 transition-all" />
           ) : (
-            <Sun className="h-5 w-5 transition-all" />
+            <Sun className="h-4 w-4 sm:h-5 sm:w-5 transition-all" />
           )}
         </Button>
       </DropdownMenuTrigger>

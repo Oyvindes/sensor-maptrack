@@ -22,9 +22,16 @@ const UserEditor: React.FC<UserEditorProps> = ({
   onSave,
   onCancel
 }) => {
-  const [formData, setFormData] = useState<User>(user);
-  const [showPassword, setShowPassword] = useState(false);
   const currentUser = getCurrentUser();
+  
+  // Initialize form data - for new users created by non-master admins, set company to admin's company
+  const initialFormData = { ...user };
+  if (currentUser?.role !== "master" && user.id.startsWith("user-") && currentUser?.companyId) {
+    initialFormData.companyId = currentUser.companyId;
+  }
+  
+  const [formData, setFormData] = useState<User>(initialFormData);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Always ensure oe@briks.no is a master admin
   useEffect(() => {
