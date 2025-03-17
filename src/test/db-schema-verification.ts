@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { SupabaseTable, SupabaseFunction } from '@/types/supabase';
 import axios from 'axios';
 import chalk from 'chalk';
 
@@ -108,42 +109,44 @@ async function verifyDatabaseSchema() {
     // Test 1: Verify all expected tables exist
     console.log(chalk.cyan('\n📋 TABLE EXISTENCE TEST:'));
     
+    const validTables = expectedSchema.map(tableInfo => tableInfo.name);
+    
     const tableResults = await Promise.all(
-      expectedSchema.map(async (tableInfo) => {
+      validTables.map(async (tableName) => {
         try {
           const { data, error, count } = await supabase
-            .from(tableInfo.name)
+            .from(tableName as SupabaseTable)
             .select('*', { count: 'exact' })
             .limit(1);
           
           if (error) {
             return { 
-              table: tableInfo.name, 
+              table: tableName, 
               exists: false, 
               error: error.message, 
               columns: [], 
-              missingColumns: tableInfo.requiredColumns 
+              missingColumns: expectedSchema.find(t => t.name === tableName)?.requiredColumns || [] 
             };
           }
           
           // Get column information
           const { data: columnData, error: columnError } = await supabase.rpc(
             'get_table_columns',
-            { table_name: tableInfo.name }
+            { table_name: tableName }
           );
           
           let columns: string[] = [];
           let missingColumns: string[] = [];
           
           if (columnError || !columnData) {
-            console.log(chalk.yellow(`⚠️ Could not fetch column information for ${tableInfo.name}: ${columnError?.message || 'No data returned'}`));
+            console.log(chalk.yellow(`⚠️ Could not fetch column information for ${tableName}: ${columnError?.message || 'No data returned'}`));
           } else {
             columns = columnData.map((col: any) => col.column_name);
-            missingColumns = tableInfo.requiredColumns.filter(col => !columns.includes(col));
+            missingColumns = expectedSchema.find(t => t.name === tableName)?.requiredColumns.filter(col => !columns.includes(col)) || [];
           }
           
           return { 
-            table: tableInfo.name, 
+            table: tableName, 
             exists: true, 
             count, 
             columns,
@@ -151,11 +154,11 @@ async function verifyDatabaseSchema() {
           };
         } catch (err: any) {
           return { 
-            table: tableInfo.name, 
+            table: tableName, 
             exists: false, 
             error: err.message,
             columns: [],
-            missingColumns: tableInfo.requiredColumns
+            missingColumns: expectedSchema.find(t => t.name === tableName)?.requiredColumns || []
           };
         }
       })
@@ -185,6 +188,46 @@ async function verifyDatabaseSchema() {
       console.log(chalk.yellow('\n⚠️ WARNING: All tables exist but some required columns are missing.'));
     } else {
       console.log(chalk.red('\n❌ ERROR: Some required tables do not exist.'));
+    }
+    
+    // Check table columns
+    console.log('\n📋 TABLE COLUMNS CHECK:');
+    
+    try {
+      for (const tableName of validTables as SupabaseTable[]) {
+        const { data, error } = await supabase
+          .from(tableName as SupabaseTable)
+          .select('*')
+          .limit(1);
+        
+        if (error) {
+          console.log(chalk.red(`❌ Error fetching table columns for ${tableName}: ${error.message}`));
+        } else {
+          console.log(chalk.green(`✅ Table '${tableName}': Found ${data.length} rows`));
+        }
+      }
+      
+      // Check if the get_table_columns function exists
+      try {
+        const { data: funcData, error: funcError } = await supabase
+          .rpc('get_table_columns' as SupabaseFunction, { table_name: 'companies' });
+        
+        if (funcError) {
+          console.log('❌ Function get_table_columns is not available');
+        } else if (funcData) {
+          // Fix the type handling for funcData
+          const columnData = Array.isArray(funcData) ? funcData : [];
+          console.log(`✅ Function get_table_columns works: Found ${columnData.length} columns for companies table`);
+          
+          if (columnData.length > 0) {
+            console.log('Sample column data:', columnData[0]);
+          }
+        }
+      } catch (funcErr) {
+        console.error('Error checking function:', funcErr);
+      }
+    } catch (schemaError) {
+      console.error('Error during schema check:', schemaError);
     }
     
     // Test 2: Verify foreign key relationships

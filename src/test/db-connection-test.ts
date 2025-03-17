@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import axios from 'axios';
 import { Database } from '@/integrations/supabase/types';
+import { SupabaseTable } from '@/types/supabase';
 
 /**
  * This script tests the connection to the Supabase database
@@ -41,7 +42,7 @@ async function testDatabaseConnection() {
       'sensors',
       'sensor_values',
       'users'
-    ];
+    ] as SupabaseTable[];
     
     console.log(`Testing ${tables.length} tables: ${tables.join(', ')}`);
     

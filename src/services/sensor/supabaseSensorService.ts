@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { SensorData, SensorDataValues } from '@/components/SensorCard';
+import { SensorData } from '@/components/SensorCard';
+import { SensorDataValues } from '@/types/sensor';
 import { toast } from 'sonner';
 import { mapCompanyIdToUUID, mapCompanyIdToUUIDSync, mapCompanyUUIDToId } from '@/utils/uuidUtils';
 import { safeQuery, databaseHelpers } from '@/utils/databaseUtils';

@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { SensorData } from '@/components/SensorCard';
+import { SensorData, SensorType } from '@/components/SensorCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,7 +57,6 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 
 	const [usePrefix, setUsePrefix] = useState(true);
 
-	// Convert SensorDataValues to SensorValue for the UI
 	const simplifiedValues = template.values.map(value => convertToSensorValue(value));
 
 	const handleValueChange = (
@@ -72,7 +70,6 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 			[field]: field === 'value' ? parseFloat(value) : value
 		};
 
-		// Convert back to SensorDataValues
 		const updatedDataValues = template.values.map((original, i) => 
 			i === index 
 				? { ...original, ...convertToSensorDataValues(newValues[i]) }
@@ -90,10 +87,9 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 		newValues[index] = {
 			...newValues[index],
 			type: value,
-			unit: getDefaultUnit(value)
+			unit: getDefaultUnit(value as SensorType)
 		};
 
-		// Convert back to SensorDataValues
 		const updatedDataValues = template.values.map((original, i) => 
 			i === index 
 				? { ...original, ...convertToSensorDataValues(newValues[i]) }
@@ -107,7 +103,6 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 	};
 
 	const addSensorValue = () => {
-		// Create new value with default properties
 		const defaultValue: SensorDataValues = {
 			1: [],
 			2: [],

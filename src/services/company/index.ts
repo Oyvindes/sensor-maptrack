@@ -17,4 +17,4 @@ export * from './companyService';
 
 // For backwards compatibility during transition
 export { getAllCompanies } from './mockCompanyService';
-export { getMockCompanies } from './mockCompanyService';
+export { getAllCompanies as getMockCompanies } from './mockCompanyService';

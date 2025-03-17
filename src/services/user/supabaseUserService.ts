@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/users';
 import { getMockUsers } from './userService';
 import { toast } from 'sonner';
+import { SupabaseFunction } from '@/types/supabase';
 
 /**
  * Get all users from the database
@@ -22,10 +23,10 @@ export const getUsers = async (): Promise<User[]> => {
       name: user.name,
       email: user.email,
       password: user.password_hash, // Note: In a real app, passwords should never be returned
-      role: user.role,
+      role: user.role as 'admin' | 'user' | 'master',
       companyId: user.company_id,
       lastLogin: user.last_login,
-      status: user.status,
+      status: user.status as 'active' | 'inactive',
       isCompanyAdmin: user.is_company_admin
     }));
   } catch (error) {
@@ -164,7 +165,9 @@ export const migrateMockUsersToDB = async (): Promise<{ success: boolean; messag
     let errorCount = 0;
 
     // Create the users table if it doesn't exist
-    const { error: createTableError } = await supabase.rpc('create_users_table_if_not_exists');
+    const { error: createTableError } = await supabase.rpc(
+      'create_users_table_if_not_exists' as SupabaseFunction
+    );
     
     if (createTableError) {
       console.error('Error creating users table:', createTableError);

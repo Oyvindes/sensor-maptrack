@@ -2,16 +2,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Product, Purchase, CreateProductDto, UpdateProductDto, CreatePurchaseDto, UpdatePurchaseStatusDto } from '@/types/store';
 import { getCurrentUser } from '@/services/authService';
 
-// Interface for the store service
 export interface StoreServiceInterface {
-  // Product methods
   listProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | null>;
   createProduct(data: CreateProductDto): Promise<Product>;
   updateProduct(id: string, data: UpdateProductDto): Promise<Product | null>;
   deleteProduct(id: string): Promise<boolean>;
   
-  // Purchase methods
   listPurchases(): Promise<Purchase[]>;
   listUserPurchases(): Promise<Purchase[]>;
   getPurchase(id: string): Promise<Purchase | null>;
@@ -19,9 +16,7 @@ export interface StoreServiceInterface {
   updatePurchaseStatus(id: string, data: UpdatePurchaseStatusDto): Promise<Purchase | null>;
 }
 
-// Implementation of the store service using Supabase
 class StoreService implements StoreServiceInterface {
-  // Product methods
   async listProducts(): Promise<Product[]> {
     const { data, error } = await supabase
       .from('products')
@@ -33,7 +28,16 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch products');
     }
     
-    return data as Product[];
+    return data.map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description || '',
+      price: item.price,
+      imageUrl: item.image_url,
+      createdAt: item.created_at,
+      createdBy: item.created_by,
+      updatedAt: item.updated_at
+    })) as Product[];
   }
   
   async getProduct(id: string): Promise<Product | null> {
@@ -48,7 +52,16 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch product');
     }
     
-    return data as Product;
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: data.price,
+      imageUrl: data.image_url,
+      createdAt: data.created_at,
+      createdBy: data.created_by,
+      updatedAt: data.updated_at
+    } as Product;
   }
   
   async createProduct(data: CreateProductDto): Promise<Product> {
@@ -75,7 +88,16 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to create product');
     }
     
-    return createdProduct as Product;
+    return {
+      id: createdProduct.id,
+      name: createdProduct.name,
+      description: createdProduct.description || '',
+      price: createdProduct.price,
+      imageUrl: createdProduct.image_url,
+      createdAt: createdProduct.created_at,
+      createdBy: createdProduct.created_by,
+      updatedAt: createdProduct.updated_at
+    } as Product;
   }
   
   async updateProduct(id: string, data: UpdateProductDto): Promise<Product | null> {
@@ -97,7 +119,16 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to update product');
     }
     
-    return updatedProduct as Product;
+    return {
+      id: updatedProduct.id,
+      name: updatedProduct.name,
+      description: updatedProduct.description || '',
+      price: updatedProduct.price,
+      imageUrl: updatedProduct.image_url,
+      createdAt: updatedProduct.created_at,
+      createdBy: updatedProduct.created_by,
+      updatedAt: updatedProduct.updated_at
+    } as Product;
   }
   
   async deleteProduct(id: string): Promise<boolean> {
@@ -120,7 +151,6 @@ class StoreService implements StoreServiceInterface {
     return true;
   }
   
-  // Purchase methods
   async listPurchases(): Promise<Purchase[]> {
     const currentUser = getCurrentUser();
     
@@ -174,7 +204,6 @@ class StoreService implements StoreServiceInterface {
     
     console.log('Current user in listUserPurchases:', currentUser);
     
-    // Get all purchases without filtering by purchased_by
     const { data, error } = await supabase
       .from('purchases')
       .select('*, products(name)')
@@ -187,46 +216,38 @@ class StoreService implements StoreServiceInterface {
     
     console.log('All purchases from database:', data);
     
-    // Filter purchases client-side to allow for more flexible name matching
     const userPurchases = data.filter(purchase => {
       if (!purchase.purchased_by) {
         console.log('Skipping purchase with no purchased_by:', purchase);
         return false;
       }
       
-      // For debugging, show all purchases
       console.log('Purchase:', purchase);
       
-      // If the user is a site admin, include all purchases
       if (currentUser.role === 'master') {
         return true;
       }
       
-      // For regular admins, try multiple matching strategies
       const purchasedBy = purchase.purchased_by.toLowerCase();
       const userName = currentUser.name.toLowerCase();
       
       console.log(`Comparing: "${purchasedBy}" with "${userName}"`);
       
-      // Strategy 1: Exact match
       if (purchasedBy === userName) {
         console.log('Exact match');
         return true;
       }
       
-      // Strategy 2: Either contains the other
       if (purchasedBy.includes(userName) || userName.includes(purchasedBy)) {
         console.log('Partial match');
         return true;
       }
       
-      // Strategy 3: Match by company ID
       if (purchase.company_id === currentUser.companyId) {
         console.log('Company match');
         return true;
       }
       
-      // No match
       return false;
     });
     
@@ -277,7 +298,6 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch purchase');
     }
     
-    // Check if the user is authorized to view this purchase
     if (currentUser.role !== 'master' && data.purchased_by !== currentUser.name) {
       throw new Error('Unauthorized to view this purchase');
     }
@@ -316,7 +336,6 @@ class StoreService implements StoreServiceInterface {
       throw new Error('User not authenticated');
     }
     
-    // Get the product to calculate the total price
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('*')
@@ -328,15 +347,12 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch product for purchase');
     }
     
-    // Use the company name provided by the user, or a default if not provided
     const realCompanyName = data.companyName || 'Unknown Company';
     console.log('Using company name from form:', realCompanyName);
     
-    // Find a valid company ID to use for the database foreign key
     let companyId;
     
     try {
-      // First, try to get any company from the database to use as a fallback
       const { data: anyCompany } = await supabase
         .from('companies')
         .select('id')
@@ -351,7 +367,6 @@ class StoreService implements StoreServiceInterface {
       console.warn('Error handling company information:', error);
     }
     
-    // If we still don't have a valid company ID, we can't proceed
     if (!companyId) {
       console.error('No valid company ID found, cannot create purchase');
       throw new Error('Failed to create purchase: No valid company ID available');
@@ -376,7 +391,6 @@ class StoreService implements StoreServiceInterface {
       contact_phone: data.contactPhone,
       order_details: data.orderDetails,
       customer_reference: data.customerReference
-      // Note: order_reference will be auto-generated by the database trigger
     };
     
     const { data: createdPurchase, error } = await supabase
@@ -400,7 +414,7 @@ class StoreService implements StoreServiceInterface {
       purchasedAt: createdPurchase.purchased_at,
       purchasedBy: createdPurchase.purchased_by || 'Unknown User',
       companyId: createdPurchase.company_id,
-      companyName: realCompanyName, // Use the real company name here
+      companyName: realCompanyName,
       shippingAddress: createdPurchase.shipping_address || '',
       shippingCity: createdPurchase.shipping_city || '',
       shippingPostalCode: createdPurchase.shipping_postal_code || '',
@@ -424,19 +438,15 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Only site-wide admins can update purchase status');
     }
     
-    // Prepare update data
     const updateData: any = { status: data.status };
     
-    // Add tracking information if provided
     if (data.trackingNumber) updateData.tracking_number = data.trackingNumber;
     if (data.carrier) updateData.carrier = data.carrier;
     if (data.shippedDate) updateData.shipped_date = data.shippedDate;
     
-    // Add customer reference and notes if provided
     if (data.customerReference) updateData.customer_reference = data.customerReference;
     if (data.notes) updateData.notes = data.notes;
     
-    // If status is 'sent' and no shipped_date is provided, set it to now
     if (data.status === 'sent' && !data.shippedDate) {
       updateData.shipped_date = new Date().toISOString();
     }
