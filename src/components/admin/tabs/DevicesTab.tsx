@@ -32,7 +32,10 @@ const DevicesTab: React.FC<DevicesTabProps> = ({
 }) => {
   // Filter tracking objects by company for non-master users
   const filteredTrackingObjects = useMemo(() => {
-    return filterTrackingObjectsByCompany(trackingObjects, currentUser);
+    console.log('DevicesTab - All tracking objects:', trackingObjects);
+    const filtered = filterTrackingObjectsByCompany(trackingObjects, currentUser);
+    console.log('DevicesTab - Filtered tracking objects:', filtered);
+    return filtered;
   }, [trackingObjects, currentUser]);
   return (
     <>

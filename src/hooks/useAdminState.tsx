@@ -57,6 +57,23 @@ export function useAdminState() {
 	);
 	const [sensorFolders, setSensorFolders] = useState<SensorFolder[]>([]);
 
+	// Create a memoized function for loading devices and tracking objects
+	const loadDevicesAndTracking = useCallback(async () => {
+		try {
+			const [devicesData, trackingData] = await Promise.all([
+				fetchDevices(),
+				fetchTrackingObjects()
+			]);
+			
+			setDevices(devicesData);
+			setTrackingObjects(trackingData);
+		} catch (error) {
+			console.error('Error fetching devices/tracking:', error);
+			setDevices([]);
+			setTrackingObjects([]);
+		}
+	}, []);
+
 	useEffect(() => {
 		// Fetch companies and users
 		const fetchData = async () => {
@@ -104,24 +121,20 @@ export function useAdminState() {
 		loadSensors();
 
 		// Fetch devices and tracking objects
-		const loadDevicesAndTracking = async () => {
-			try {
-				const [devicesData, trackingData] = await Promise.all([
-					fetchDevices(),
-					fetchTrackingObjects()
-				]);
-				
-				setDevices(devicesData);
-				setTrackingObjects(trackingData);
-			} catch (error) {
-				console.error('Error fetching devices/tracking:', error);
-				setDevices([]);
-				setTrackingObjects([]);
-			}
-		};
-
 		loadDevicesAndTracking();
-	}, []);
+		
+		// Listen for the custom device-updated event
+		const handleDeviceUpdated = (event: Event) => {
+			console.log('Device updated event received in useAdminState, refreshing data...');
+			loadDevicesAndTracking();
+		};
+		
+		window.addEventListener('device-updated', handleDeviceUpdated);
+		
+		return () => {
+			window.removeEventListener('device-updated', handleDeviceUpdated);
+		};
+	}, [loadDevicesAndTracking]);
 
 	const handleTabChange = (value: string) => {
 		setActiveTab(value as AdminTab);
@@ -138,6 +151,11 @@ export function useAdminState() {
 				break;
 			case 'devices':
 				setMode('listDevices');
+				// Force a refresh of tracking objects when switching to devices tab
+				console.log('Switching to devices tab, refreshing data...');
+				setTimeout(() => {
+					loadDevicesAndTracking();
+				}, 500);
 				break;
 			case 'folders':
 				setMode('listFolders');
@@ -172,6 +190,7 @@ export function useAdminState() {
 		setTrackingObjects,
 		sensorFolders,
 		setSensorFolders,
-		handleTabChange
+		handleTabChange,
+		loadDevicesAndTracking // Export the function so it can be called from outside
 	};
 }

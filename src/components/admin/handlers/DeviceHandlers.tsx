@@ -21,7 +21,8 @@ export function useDeviceHandlers(
   setMode: React.Dispatch<React.SetStateAction<string>>,
   companies: { id: string }[],
   updateTrackingObject?: (updatedDevice: Device) => Promise<boolean>,
-  deleteTrackingObject?: (deviceId: string) => Promise<boolean>
+  deleteTrackingObject?: (deviceId: string) => Promise<boolean>,
+  loadDevicesAndTracking?: () => Promise<void> // Add the loadDevicesAndTracking function
 ): DeviceHandlers {
   const currentUser = getCurrentUser();
 
@@ -50,21 +51,36 @@ export function useDeviceHandlers(
   };
 
   const handleTrackingObjectSelect = (object: TrackingObject) => {
-    const device = devices.find(d => d.id === object.id);
-    if (device) {
-      // Check if user has permissions for this device
-      if (!canEditDevice(device)) {
-        toast.error("You don't have permission to edit this device");
-        return;
-      }
-      
+    // First try to find a corresponding device
+    let device = devices.find(d => d.id === object.id);
+    
+    // If no device is found, create one from the tracking object
+    if (!device) {
+      device = {
+        id: object.id,
+        name: object.name,
+        type: "tracker",
+        status: "online",
+        location: object.position,
+        lastUpdated: object.lastUpdated,
+        companyId: currentUser?.companyId || "",
+        folderId: (object as any).folderId
+      };
+    } else {
       // If the tracking object has a folderId, make sure it's preserved
       if ((object as any).folderId && !device.folderId) {
         device.folderId = (object as any).folderId;
       }
-      setSelectedDevice(device);
-      setMode("editDevice");
     }
+    
+    // Check if user has permissions for this device
+    if (!canEditDevice(device)) {
+      toast.error("You don't have permission to edit this device");
+      return;
+    }
+    
+    setSelectedDevice(device);
+    setMode("editDevice");
   };
 
   const handleDeviceSave = async (updatedDevice: Device) => {
@@ -82,6 +98,15 @@ export function useDeviceHandlers(
         // as the fetchData function called inside updateTrackingObject will have already done that
         setMode("listDevices");
         setSelectedDevice(null);
+        
+        // Force a refresh of the devices and tracking objects
+        if (loadDevicesAndTracking) {
+          console.log('Calling loadDevicesAndTracking after device save');
+          setTimeout(() => {
+            loadDevicesAndTracking();
+          }, 1000); // Add a delay to ensure the database has time to update
+        }
+        
         return;
       }
     }
@@ -90,7 +115,7 @@ export function useDeviceHandlers(
     setDevices(devices.map(d => d.id === updatedDevice.id ? updatedDevice : d));
     
     // When updating tracking objects, preserve the folderId
-    setTrackingObjects(trackingObjects.map(obj => 
+    setTrackingObjects(trackingObjects.map(obj =>
       obj.id === updatedDevice.id ? {
         ...mapDeviceToTrackingObject(updatedDevice),
         ...(updatedDevice.folderId && { folderId: updatedDevice.folderId })
@@ -99,6 +124,14 @@ export function useDeviceHandlers(
     
     setMode("listDevices");
     setSelectedDevice(null);
+    
+    // Force a refresh of the devices and tracking objects
+    if (loadDevicesAndTracking) {
+      console.log('Calling loadDevicesAndTracking after local device save');
+      setTimeout(() => {
+        loadDevicesAndTracking();
+      }, 1000); // Add a delay to ensure the database has time to update
+    }
   };
 
   const handleDeviceCancel = () => {

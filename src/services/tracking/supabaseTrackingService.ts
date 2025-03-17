@@ -8,6 +8,8 @@ import { safeQuery } from '@/utils/databaseUtils';
  */
 export const fetchTrackingObjects = async (): Promise<TrackingObject[]> => {
   try {
+    console.log('Fetching tracking objects from database...');
+    
     // Get tracking objects from the database
     const result = await safeQuery<any[]>(
       async () => {
@@ -36,6 +38,8 @@ export const fetchTrackingObjects = async (): Promise<TrackingObject[]> => {
       toast.error('Failed to load tracking objects from database');
       return [];
     }
+
+    console.log('Raw tracking objects from database:', result.data);
 
     // Map the database results to TrackingObject format
     const trackingObjects: TrackingObject[] = result.data.map(item => {
@@ -68,6 +72,7 @@ export const fetchTrackingObjects = async (): Promise<TrackingObject[]> => {
       };
     });
 
+    console.log('Formatted tracking objects:', trackingObjects);
     return trackingObjects;
   } catch (error) {
     console.error('Error in fetchTrackingObjects:', error);
@@ -87,6 +92,15 @@ export const updateTrackingObjectPosition = async (
   batteryLevel: number
 ): Promise<{ success: boolean; message: string }> => {
   try {
+    // Check if the ID is a temporary ID (starts with "temp-")
+    if (trackingObjectId.startsWith('temp-')) {
+      console.log('Skipping position update for temporary tracking object:', trackingObjectId);
+      return {
+        success: true,
+        message: 'Skipped update for temporary tracking object'
+      };
+    }
+
     // Update the tracking object in the database
     const result = await safeQuery(
       async () => {

@@ -113,6 +113,24 @@ async function getPageBlocks(pageId) {
 }
 
 // Start the server
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Notion API proxy server running at http://localhost:${port}`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${port} is already in use. The server may already be running.`);
+  } else {
+    console.error('Server error:', error);
+  }
+});
+
+// Handle process termination
+process.on('SIGINT', () => {
+  console.log('Shutting down Notion API proxy server...');
+  server.close(() => {
+    console.log('Notion API proxy server has been shut down.');
+    process.exit(0);
+  });
 });

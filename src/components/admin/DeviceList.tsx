@@ -21,12 +21,14 @@ interface DeviceListProps {
   onDelete?: (deviceId: string) => Promise<boolean>;
 }
 
-const DeviceList: React.FC<DeviceListProps> = ({ 
-  devices, 
-  onDeviceSelect, 
+const DeviceList: React.FC<DeviceListProps> = ({
+  devices,
+  onDeviceSelect,
   onAddNew,
   onDelete
 }) => {
+  // Log the devices for debugging
+  console.log('DeviceList - Received devices:', devices);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
   const [deviceToDelete, setDeviceToDelete] = React.useState<{id: string, name: string} | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);

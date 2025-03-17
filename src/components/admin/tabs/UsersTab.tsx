@@ -3,7 +3,6 @@ import { User, Company } from "@/types/users";
 import UserList from "@/components/admin/UserList";
 import UserEditor from "@/components/admin/UserEditor";
 import { getCurrentUser } from "@/services/authService";
-import MigrateUsersButton from "@/components/admin/MigrateUsersButton";
 import { isMasterAdmin } from "@/utils/authUtils";
 
 interface UsersTabProps {
@@ -43,12 +42,6 @@ const UsersTab: React.FC<UsersTabProps> = ({
     <>
       {mode === "listUsers" && (
         <>
-          <div className="flex justify-between items-center mb-4">
-            <div></div>
-            <div className="flex items-center gap-2">
-              {isMaster && <MigrateUsersButton />}
-            </div>
-          </div>
           <UserList
             users={users}
             companies={companies}

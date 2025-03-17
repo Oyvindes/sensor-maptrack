@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import DatabaseStatus from "./pages/admin/DatabaseStatus";
 import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "./services/authService";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { hasAdminAccess } from "./utils/authUtils";
@@ -80,14 +79,6 @@ const App = () => {
                 element={
                   <AdminRoute>
                     <Admin />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin/database-status"
-                element={
-                  <AdminRoute>
-                    <DatabaseStatus />
                   </AdminRoute>
                 }
               />

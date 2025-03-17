@@ -94,24 +94,33 @@ export const useTrackingObjects = () => {
     // Set up real-time subscription for tracking objects
     const channel = supabase
       .channel('tracking_objects_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'devices' }, 
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'devices' },
         (payload) => {
           console.log('Real-time update received for devices:', payload);
           fetchData();
         }
       )
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'device_positions' }, 
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'device_positions' },
         (payload) => {
           console.log('Real-time update received for device positions:', payload);
           fetchData();
         }
       )
       .subscribe();
+      
+    // Listen for the custom device-updated event
+    const handleDeviceUpdated = () => {
+      console.log('Device updated event received, refreshing data...');
+      fetchData();
+    };
+    
+    window.addEventListener('device-updated', handleDeviceUpdated);
 
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('device-updated', handleDeviceUpdated);
     };
   }, [fetchData]);
 

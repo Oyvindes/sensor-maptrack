@@ -59,8 +59,9 @@ const Admin = () => {
   );
 
   const deviceHandlers = useDeviceHandlers(
-    devices, trackingObjects, setDevices, setTrackingObjects, 
-    setSelectedDevice, setMode, companies, updateTrackingObject, deleteTrackingObject
+    devices, trackingObjects, setDevices, setTrackingObjects,
+    setSelectedDevice, setMode, companies, updateTrackingObject, deleteTrackingObject,
+    adminState.loadDevicesAndTracking // Pass the loadDevicesAndTracking function
   );
   
   const currentUser = getCurrentUser();
