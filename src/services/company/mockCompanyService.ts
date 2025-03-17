@@ -1,4 +1,3 @@
-
 import { Company, CompanyCreateInput, CompanyFilters, CompanyUpdateInput, ValidationResult } from './types';
 import { CompanyService } from './companyService';
 
@@ -27,77 +26,56 @@ const mockCompanies: Company[] = [
   }
 ];
 
-// Implementation of CompanyService for mock data
-export const getAllCompanies = async (): Promise<Company[]> => {
-  return [...mockCompanies];
-};
+// Class implementation of CompanyService for mock data
+export class MockCompanyService implements CompanyService {
+  private companies: Company[] = [...mockCompanies];
 
-export const getCompanyById = async (id: string): Promise<Company | null> => {
-  const company = mockCompanies.find(c => c.id === id);
-  return company || null;
-};
-
-export const createCompany = async (input: CompanyCreateInput): Promise<Company> => {
-  const newCompany: Company = {
-    id: `company-${Date.now().toString()}`,
-    name: input.name,
-    industry: input.industry || '',
-    status: input.status || 'inactive',
-    createdAt: new Date().toISOString()
-  };
-  
-  mockCompanies.push(newCompany);
-  return newCompany;
-};
-
-export const updateCompany = async (id: string, input: CompanyUpdateInput): Promise<Company> => {
-  const index = mockCompanies.findIndex(c => c.id === id);
-  if (index === -1) {
-    throw new Error(`Company with ID ${id} not found`);
+  async create(input: CompanyCreateInput): Promise<Company> {
+    const newCompany: Company = {
+      id: `company-${Date.now().toString()}`,
+      name: input.name,
+      industry: input.industry || '',
+      status: input.status || 'inactive',
+      createdAt: new Date().toISOString()
+    };
+    
+    this.companies.push(newCompany);
+    return newCompany;
   }
-  
-  const updatedCompany = {
-    ...mockCompanies[index],
-    ...(input.name !== undefined && { name: input.name }),
-    ...(input.industry !== undefined && { industry: input.industry }),
-    ...(input.status !== undefined && { status: input.status }),
-  };
-  
-  mockCompanies[index] = updatedCompany;
-  return updatedCompany;
-};
 
-export const deleteCompany = async (id: string): Promise<void> => {
-  const index = mockCompanies.findIndex(c => c.id === id);
-  if (index === -1) {
-    throw new Error(`Company with ID ${id} not found`);
+  async update(id: string, input: CompanyUpdateInput): Promise<Company> {
+    const index = this.companies.findIndex(c => c.id === id);
+    if (index === -1) {
+      throw new Error(`Company with ID ${id} not found`);
+    }
+    
+    const updatedCompany = {
+      ...this.companies[index],
+      ...(input.name !== undefined && { name: input.name }),
+      ...(input.industry !== undefined && { industry: input.industry }),
+      ...(input.status !== undefined && { status: input.status }),
+    };
+    
+    this.companies[index] = updatedCompany;
+    return updatedCompany;
   }
-  
-  mockCompanies.splice(index, 1);
-};
 
-export const validateCompany = async (input: CompanyCreateInput | CompanyUpdateInput): Promise<ValidationResult> => {
-  // Perform validation logic here
-  const errors: string[] = [];
-  
-  if ('name' in input && (!input.name || input.name.trim() === '')) {
-    errors.push('Company name is required');
+  async delete(id: string): Promise<void> {
+    const index = this.companies.findIndex(c => c.id === id);
+    if (index === -1) {
+      throw new Error(`Company with ID ${id} not found`);
+    }
+    
+    this.companies.splice(index, 1);
   }
-  
-  return {
-    valid: errors.length === 0,
-    errors
-  };
-};
 
-// Mock implementation of CompanyService
-export const mockCompanyService: CompanyService = {
-  create: createCompany,
-  update: updateCompany,
-  delete: deleteCompany,
-  get: getCompanyById,
-  list: async (filters?: CompanyFilters) => {
-    let companies = [...mockCompanies];
+  async get(id: string): Promise<Company | null> {
+    const company = this.companies.find(c => c.id === id);
+    return company || null;
+  }
+
+  async list(filters?: CompanyFilters): Promise<Company[]> {
+    let companies = [...this.companies];
     
     // Apply filters if provided
     if (filters) {
@@ -113,11 +91,25 @@ export const mockCompanyService: CompanyService = {
     }
     
     return companies;
-  },
-  validate: validateCompany,
-  exists: async (id: string) => {
-    return mockCompanies.some(c => c.id === id);
   }
-};
 
-export default mockCompanyService;
+  async validate(input: CompanyCreateInput | CompanyUpdateInput): Promise<ValidationResult> {
+    const errors: { [key: string]: string[] } = {};
+    
+    if ('name' in input && (!input.name || input.name.trim() === '')) {
+      errors.name = ['Company name is required'];
+    }
+    
+    return {
+      valid: Object.keys(errors).length === 0,
+      errors: Object.keys(errors).length > 0 ? errors : undefined
+    };
+  }
+
+  async exists(id: string): Promise<boolean> {
+    return this.companies.some(c => c.id === id);
+  }
+}
+
+// Export utility function for getting mock data
+export const getMockCompanies = () => [...mockCompanies];
