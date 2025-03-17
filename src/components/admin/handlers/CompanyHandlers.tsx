@@ -2,6 +2,7 @@
 import { Company } from "@/types/users";
 import { getCurrentUser } from "@/services/authService";
 import { toast } from "sonner";
+import { companyService } from "@/services/company";
 
 export interface CompanyHandlers {
   handleCompanySelect: (company: Company) => void;
@@ -27,10 +28,41 @@ export function useCompanyHandlers(
     setMode("editCompany");
   };
 
-  const handleCompanySave = (updatedCompany: Company) => {
-    setCompanies(companies.map(c => c.id === updatedCompany.id ? updatedCompany : c));
-    setMode("listCompanies");
-    setSelectedCompany(null);
+  const handleCompanySave = async (updatedCompany: Company) => {
+    try {
+      let savedCompany: Company;
+      
+      // Check if this is a new company (ID starts with "company-")
+      if (updatedCompany.id.startsWith("company-")) {
+        // Create new company
+        savedCompany = await companyService.create({
+          name: updatedCompany.name,
+          industry: updatedCompany.industry,
+          status: updatedCompany.status
+        });
+        
+        // Add the new company to the list
+        setCompanies(prevCompanies => [...prevCompanies, savedCompany]);
+        toast.success("Company created successfully");
+      } else {
+        // Update existing company
+        savedCompany = await companyService.update(updatedCompany.id, {
+          name: updatedCompany.name,
+          industry: updatedCompany.industry,
+          status: updatedCompany.status
+        });
+        
+        // Update the company in the list
+        setCompanies(companies.map(c => c.id === savedCompany.id ? savedCompany : c));
+        toast.success("Company updated successfully");
+      }
+      
+      setMode("listCompanies");
+      setSelectedCompany(null);
+    } catch (error) {
+      console.error("Error saving company:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to save company");
+    }
   };
 
   const handleCompanyCancel = () => {

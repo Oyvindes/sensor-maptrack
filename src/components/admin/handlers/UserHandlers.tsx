@@ -1,6 +1,8 @@
 
 import { User, Company } from "@/types/users";
 import { getCurrentUser } from "@/services/authService";
+import { saveUser } from "@/services/user/supabaseUserService";
+import { toast } from "sonner";
 
 export interface UserHandlers {
   handleUserSelect: (user: User) => void;
@@ -22,10 +24,35 @@ export function useUserHandlers(
     setMode("editUser");
   };
 
-  const handleUserSave = (updatedUser: User) => {
-    setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
-    setMode("listUsers");
-    setSelectedUser(null);
+  const handleUserSave = async (updatedUser: User) => {
+    try {
+      // Save user to database
+      const result = await saveUser(updatedUser);
+      
+      if (result.success) {
+        // If we have the returned data, use it, otherwise use the updated user
+        const savedUser = result.data || updatedUser;
+        
+        // Check if this is a new user (ID starts with "user-")
+        if (updatedUser.id.startsWith("user-")) {
+          // Add the new user to the list
+          setUsers(prevUsers => [...prevUsers, savedUser]);
+          toast.success("User created successfully");
+        } else {
+          // Update the user in the list
+          setUsers(users.map(u => u.id === savedUser.id ? savedUser : u));
+          toast.success("User updated successfully");
+        }
+        
+        setMode("listUsers");
+        setSelectedUser(null);
+      } else {
+        toast.error(result.message || "Failed to save user");
+      }
+    } catch (error) {
+      console.error("Error saving user:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to save user");
+    }
   };
 
   const handleUserCancel = () => {

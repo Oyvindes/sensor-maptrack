@@ -80,21 +80,28 @@ export const saveUser = async (user: User): Promise<{ success: boolean; message:
       };
     } else {
       // Create new user
+      // If the ID starts with "user-", it's a temporary ID and we should let the database generate a UUID
+      const insertData = {
+        name: user.name,
+        email: user.email,
+        password_hash: user.password, // In a real app, this would be hashed
+        role: user.role,
+        company_id: user.companyId,
+        last_login: user.lastLogin,
+        status: user.status,
+        is_company_admin: user.isCompanyAdmin || false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Only include the ID if it's not a temporary ID
+      if (!user.id.startsWith('user-')) {
+        (insertData as any).id = user.id;
+      }
+
       const { data, error } = await supabase
         .from('users')
-        .insert({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          password_hash: user.password, // In a real app, this would be hashed
-          role: user.role,
-          company_id: user.companyId,
-          last_login: user.lastLogin,
-          status: user.status,
-          is_company_admin: user.isCompanyAdmin || false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(insertData)
         .select()
         .single();
 
