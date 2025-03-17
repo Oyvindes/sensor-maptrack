@@ -39,11 +39,13 @@ const FoldersTab: React.FC<FoldersTabProps> = ({
         };
       }
       
-      // Add creator information to the folder data
+      // Add creator information and provide default values for required fields
       const folderWithCreator = {
         ...folderData,
         createdBy: currentUser?.id,
-        creatorName: currentUser?.name
+        creatorName: currentUser?.name,
+        id: `temp-${Date.now()}`, // Temporary ID that will be replaced by the server
+        createdAt: new Date().toISOString() // Default value for createdAt
       };
       
       const response = await createSensorFolder(folderWithCreator);
@@ -68,7 +70,7 @@ const FoldersTab: React.FC<FoldersTabProps> = ({
         data = otherData;
       }
       
-      const response = await updateSensorFolder(folderId, data);
+      const response = await updateSensorFolder(folderId);
       if (response.success) {
         toast.success("Folder updated successfully");
         return Promise.resolve();

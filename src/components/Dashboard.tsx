@@ -106,7 +106,7 @@ const Dashboard: React.FC = () => {
         ) : currentView === "help" ? (
           <HelpSection className="w-full animate-fade-up [animation-delay:300ms]" />
         ) : currentView === "store" ? (
-          <StoreSection className="w-full animate-fade-up [animation-delay:300ms]" />
+          <StoreSection />
         ) : (
           <div className="w-full animate-fade-up [animation-delay:300ms]">
             <h2 className="text-xl font-semibold mb-4">Projects</h2>

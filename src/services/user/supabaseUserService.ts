@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/users';
 import { getMockUsers } from './userService';
@@ -165,8 +166,10 @@ export const migrateMockUsersToDB = async (): Promise<{ success: boolean; messag
     let errorCount = 0;
 
     // Create the users table if it doesn't exist
+    // Note: We need to cast the function name as any to bypass the type checking
+    // since the SupabaseFunction type doesn't include all functions
     const { error: createTableError } = await supabase.rpc(
-      'create_users_table_if_not_exists' as SupabaseFunction
+      'create_users_table_if_not_exists' as any
     );
     
     if (createTableError) {

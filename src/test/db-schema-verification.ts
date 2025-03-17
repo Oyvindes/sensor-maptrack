@@ -131,7 +131,7 @@ async function verifyDatabaseSchema() {
           
           // Get column information
           const { data: columnData, error: columnError } = await supabase.rpc(
-            'get_table_columns',
+            'get_table_columns' as any,
             { table_name: tableName }
           );
           
@@ -141,7 +141,7 @@ async function verifyDatabaseSchema() {
           if (columnError || !columnData) {
             console.log(chalk.yellow(`⚠️ Could not fetch column information for ${tableName}: ${columnError?.message || 'No data returned'}`));
           } else {
-            columns = columnData.map((col: any) => col.column_name);
+            columns = Array.isArray(columnData) ? columnData.map((col: any) => col.column_name) : [];
             missingColumns = expectedSchema.find(t => t.name === tableName)?.requiredColumns.filter(col => !columns.includes(col)) || [];
           }
           
@@ -210,7 +210,7 @@ async function verifyDatabaseSchema() {
       // Check if the get_table_columns function exists
       try {
         const { data: funcData, error: funcError } = await supabase
-          .rpc('get_table_columns' as SupabaseFunction, { table_name: 'companies' });
+          .rpc('get_table_columns' as any, { table_name: 'companies' });
         
         if (funcError) {
           console.log('❌ Function get_table_columns is not available');
@@ -241,7 +241,7 @@ async function verifyDatabaseSchema() {
         try {
           // Get a sample record from the table
           const { data: sampleData, error: sampleError } = await supabase
-            .from(tableInfo.name)
+            .from(tableInfo.name as SupabaseTable)
             .select(`${relationship.column}`)
             .not(relationship.column, 'is', null)
             .limit(1)
@@ -254,9 +254,10 @@ async function verifyDatabaseSchema() {
           
           const foreignKeyValue = sampleData[relationship.column];
           
-          // Check if the referenced record exists
+          // Type handling for the checking of relationships
+          const tblName = relationship.referencesTable as SupabaseTable;
           const { data: referencedData, error: referencedError } = await supabase
-            .from(relationship.referencesTable)
+            .from(tblName)
             .select('*')
             .eq(relationship.referencesColumn, foreignKeyValue)
             .single();
@@ -378,7 +379,7 @@ async function setupDatabaseHelpers() {
       $$ LANGUAGE plpgsql;
     `;
     
-    const { error } = await supabase.rpc('get_table_columns', { table_name: 'companies' });
+    const { error } = await supabase.rpc('get_table_columns' as any, { table_name: 'companies' });
     
     if (error && error.message.includes('does not exist')) {
       // Function doesn't exist, create it
