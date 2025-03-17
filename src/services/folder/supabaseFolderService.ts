@@ -2,336 +2,213 @@
 import { supabase } from "@/integrations/supabase/client";
 import { SensorFolder } from "@/types/users";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
-import { mapCompanyIdToUUID, isValidUUID } from "@/utils/uuidUtils";
+import { mapCompanyIdToUUID } from "@/utils/uuidUtils";
 
 /**
- * Fetch all sensor folders/projects from the database
+ * Get all sensor folders from the database
  */
 export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
   try {
-    const { data, error } = await supabase
+    const { data: folders, error } = await supabase
       .from('sensor_folders')
       .select(`
-        id,
-        name,
+        id, 
+        name, 
         description,
-        address,
-        location,
-        company_id,
-        project_number,
         status,
+        company_id,
         created_at,
-        updated_at
+        updated_at,
+        location,
+        address,
+        project_number
       `);
 
     if (error) throw error;
 
-    // Fetch folder-sensor relationships
-    const { data: folderSensors, error: relError } = await supabase
+    // Get all folder sensors relationships
+    const { data: folderSensors, error: sensorsError } = await supabase
       .from('folder_sensors')
-      .select('folder_id, sensor_id');
+      .select(`
+        id,
+        folder_id,
+        sensor_imei
+      `);
 
-    if (relError) throw relError;
+    if (sensorsError) throw sensorsError;
 
-    // Map the database results to SensorFolder format
-    const formattedFolders: SensorFolder[] = data.map(folder => {
-      // Find all sensors assigned to this folder
-      const assignedSensorIds = folderSensors
+    // Map database results to SensorFolder format
+    return folders.map(folder => {
+      // Find assigned sensors for this folder
+      const assignedSensors = folderSensors
         .filter(fs => fs.folder_id === folder.id)
-        .map(fs => fs.sensor_id);
-
-      // Parse location if it's stored as a string or as JSON data
-      let parsedLocation: { lat: number; lng: number } | string | undefined = undefined;
-      
-      if (folder.location) {
-        if (typeof folder.location === 'string') {
-          try {
-            parsedLocation = JSON.parse(folder.location);
-          } catch (e) {
-            console.warn(`Error parsing location string for folder ${folder.id}:`, e);
-            parsedLocation = folder.location;
-          }
-        } else if (typeof folder.location === 'object' && folder.location !== null) {
-          // Convert Supabase JSONB to the correct type
-          const locationObj = folder.location as Record<string, any>;
-          
-          if ('lat' in locationObj && 'lng' in locationObj) {
-            parsedLocation = {
-              lat: Number(locationObj.lat),
-              lng: Number(locationObj.lng)
-            };
-          } else {
-            console.warn(`Invalid location object format for folder ${folder.id}`);
-            // Convert to a string representation instead of throwing it away
-            parsedLocation = JSON.stringify(locationObj);
-          }
-        } else {
-          console.warn(`Unexpected location type for folder ${folder.id}: ${typeof folder.location}`);
-          parsedLocation = undefined;
-        }
-      }
+        .map(fs => fs.sensor_imei);
 
       return {
         id: folder.id,
         name: folder.name,
-        description: folder.description || "",
-        address: folder.address || "",
-        location: parsedLocation,
-        companyId: folder.company_id,
-        projectNumber: folder.project_number || "",
-        status: folder.status as "running" | "stopped" || "stopped",
-        createdAt: folder.created_at.split('T')[0],
-        updatedAt: folder.updated_at.split('T')[0],
-        assignedSensorIds: assignedSensorIds
+        description: folder.description || '',
+        status: folder.status === 'running' ? 'running' : 'stopped',
+        companyId: folder.company_id || '',
+        createdAt: new Date(folder.created_at).toISOString().split('T')[0],
+        address: folder.address || '',
+        projectNumber: folder.project_number || '',
+        location: folder.location ? folder.location : undefined,
+        assignedSensorIds: assignedSensors
       };
     });
-
-    return formattedFolders;
   } catch (error) {
-    console.error("Error fetching folders:", error);
-    toast.error("Failed to load projects from database");
+    console.error("Error fetching sensor folders:", error);
+    toast.error("Failed to load projects");
     return [];
   }
 };
 
 /**
- * Create or update a sensor folder/project in the database
+ * Create a new sensor folder in the database
  */
-export const saveSensorFolder = async (
-  folder: SensorFolder
-): Promise<{ success: boolean; data?: SensorFolder; message: string }> => {
+export const createNewSensorFolder = async (folderData: Omit<SensorFolder, "id" | "createdAt">): Promise<SensorFolder | null> => {
   try {
-    // Check if folder exists
-    const isNewFolder = folder.id.startsWith('folder-') && folder.id.includes('temp-') || 
-                        folder.id.startsWith('temp-');
+    // Map client-side IDs to database UUIDs if needed
+    const companyId = folderData.companyId ? mapCompanyIdToUUID(folderData.companyId) : null;
     
-    // Convert location to proper format for database storage
-    let locationForDb = folder.location;
-    if (typeof folder.location === 'string' && folder.location.trim() !== '') {
-      try {
-        locationForDb = JSON.parse(folder.location);
-      } catch (e) {
-        console.warn(`Error parsing location string: ${e}`);
-        // Keep as string if can't parse
-      }
-    }
-    
-    // Map company ID to UUID or keep as is if already valid UUID
-    let mappedCompanyId = null;
-    if (folder.companyId) {
-      // Check if it's already a valid UUID
-      if (isValidUUID(folder.companyId)) {
-        mappedCompanyId = folder.companyId;
-      } else {
-        // Use the mapping function
-        mappedCompanyId = mapCompanyIdToUUID(folder.companyId);
-      }
-      
-      // Verify that we have a valid company ID
-      if (!mappedCompanyId) {
-        throw new Error("Invalid company ID. Please select a valid company.");
-      }
-    } else {
-      // If no company ID is provided, use default
-      mappedCompanyId = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22'; // Acme Corporation's UUID
-    }
-    
-    // Prepare folder data for insert/update
-    const folderData = {
-      name: folder.name,
-      description: folder.description,
-      address: folder.address,
-      location: locationForDb,
-      company_id: mappedCompanyId,
-      project_number: folder.projectNumber,
-      status: folder.status || 'stopped',
-      updated_at: new Date().toISOString()
+    // Prepare folder data for insert
+    const insertData = {
+      name: folderData.name,
+      description: folderData.description,
+      status: folderData.status || 'stopped',
+      company_id: companyId,
+      project_number: folderData.projectNumber,
+      address: folderData.address,
+      location: folderData.location || null
     };
 
-    console.log("Saving folder with company_id:", folderData.company_id, "from original:", folder.companyId);
-
-    // Verify the company exists in the database
-    const { data: companyExists, error: companyCheckError } = await supabase
-      .from('companies')
-      .select('id, name')
-      .eq('id', mappedCompanyId)
+    // Insert folder record
+    const { data: newFolder, error } = await supabase
+      .from('sensor_folders')
+      .insert(insertData)
+      .select('id')
       .single();
-      
-    if (companyCheckError || !companyExists) {
-      console.error("Company not found in database:", companyCheckError);
-      console.error("Attempted to use company ID:", mappedCompanyId);
-      
-      // Check if any companies exist at all
-      const { data: allCompanies, error: companiesError } = await supabase
-        .from('companies')
-        .select('id, name')
-        .limit(5);
-        
-      if (!companiesError && allCompanies && allCompanies.length > 0) {
-        console.log("Available companies:", allCompanies);
-        // Use the first available company as fallback
-        folderData.company_id = allCompanies[0].id;
-        console.log("Using fallback company:", allCompanies[0].name, "with ID:", allCompanies[0].id);
-      } else {
-        throw new Error(`No valid companies found in the database. Please contact an administrator.`);
-      }
-    } else {
-      console.log("Verified company exists:", companyExists.name, "with ID:", companyExists.id);
+
+    if (error) throw error;
+
+    // Add sensor assignments if provided
+    if (folderData.assignedSensorIds && folderData.assignedSensorIds.length > 0) {
+      const sensorInserts = folderData.assignedSensorIds.map(sensorId => ({
+        folder_id: newFolder.id,
+        sensor_imei: sensorId
+      }));
+
+      const { error: sensorsError } = await supabase
+        .from('folder_sensors')
+        .insert(sensorInserts);
+
+      if (sensorsError) throw sensorsError;
     }
 
-    let folderId = folder.id;
+    // Return the created folder
+    return {
+      ...folderData,
+      id: newFolder.id,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+  } catch (error) {
+    console.error("Error creating sensor folder:", error);
+    toast.error("Failed to create project");
+    return null;
+  }
+};
 
-    // Handle folder record (insert or update)
-    if (isNewFolder) {
-      // Create new folder
-      const { data, error } = await supabase
-        .from('sensor_folders')
-        .insert(folderData)
-        .select('id, created_at')
-        .single();
+/**
+ * Update an existing sensor folder in the database
+ */
+export const updateExistingSensorFolder = async (
+  folderId: string, 
+  updates: Partial<SensorFolder>
+): Promise<boolean> => {
+  try {
+    // Map client-side IDs to database UUIDs if needed
+    const companyId = updates.companyId ? mapCompanyIdToUUID(updates.companyId) : undefined;
+    
+    // Prepare update data
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (companyId !== undefined) updateData.company_id = companyId;
+    if (updates.projectNumber !== undefined) updateData.project_number = updates.projectNumber;
+    if (updates.address !== undefined) updateData.address = updates.address;
+    if (updates.location !== undefined) updateData.location = updates.location;
 
-      if (error) {
-        console.error("Error creating folder:", error);
-        throw error;
-      }
-      folderId = data.id;
-    } else {
-      // Update existing folder
-      const { error } = await supabase
-        .from('sensor_folders')
-        .update(folderData)
-        .eq('id', folder.id);
+    // Update folder record
+    const { error } = await supabase
+      .from('sensor_folders')
+      .update(updateData)
+      .eq('id', folderId);
 
-      if (error) {
-        console.error("Error updating folder:", error);
-        throw error;
-      }
-    }
+    if (error) throw error;
 
-    // Handle assigned sensors (delete old relationships first)
-    if (!isNewFolder) {
+    // Handle sensor assignments if provided
+    if (updates.assignedSensorIds !== undefined) {
+      // First, remove existing assignments
       const { error: deleteError } = await supabase
         .from('folder_sensors')
         .delete()
         .eq('folder_id', folderId);
 
       if (deleteError) throw deleteError;
+
+      // Then, add new assignments
+      if (updates.assignedSensorIds.length > 0) {
+        const sensorInserts = updates.assignedSensorIds.map(sensorId => ({
+          folder_id: folderId,
+          sensor_imei: sensorId
+        }));
+
+        const { error: insertError } = await supabase
+          .from('folder_sensors')
+          .insert(sensorInserts);
+
+        if (insertError) throw insertError;
+      }
     }
 
-    // Insert new sensor relationships
-    if (folder.assignedSensorIds && folder.assignedSensorIds.length > 0) {
-      const sensorRelations = folder.assignedSensorIds.map(sensorId => ({
-        folder_id: folderId,
-        sensor_id: sensorId
-      }));
-
-      const { error: insertError } = await supabase
-        .from('folder_sensors')
-        .insert(sensorRelations);
-
-      if (insertError) throw insertError;
-    }
-
-    // Also update the folder_id in the sensors table
-    if (folder.assignedSensorIds && folder.assignedSensorIds.length > 0) {
-      const { error: updateError } = await supabase
-        .from('sensors')
-        .update({ folder_id: folderId })
-        .in('id', folder.assignedSensorIds);
-      
-      if (updateError) throw updateError;
-    }
-
-    // Get the final company ID that was used
-    const actualCompanyId = folderData.company_id;
-
-    // Return the updated folder with the real ID
-    return {
-      success: true,
-      data: {
-        ...folder,
-        id: folderId,
-        companyId: actualCompanyId // Update with the properly mapped company ID
-      },
-      message: isNewFolder 
-        ? "Project created successfully" 
-        : "Project updated successfully"
-    };
+    return true;
   } catch (error) {
-    console.error("Error saving folder:", error);
-    return {
-      success: false,
-      message: `Failed to save project: ${error.message}`
-    };
+    console.error("Error updating sensor folder:", error);
+    toast.error("Failed to update project");
+    return false;
   }
 };
 
 /**
- * Update the status of a project
+ * Delete a sensor folder from the database
  */
-export const updateProjectStatus = async (
-  projectId: string,
-  status: "running" | "stopped"
-): Promise<{ success: boolean; message: string }> => {
+export const deleteSensorFolder = async (folderId: string): Promise<boolean> => {
   try {
-    const updateData = {
-      status,
-      updated_at: new Date().toISOString()
-    };
-
-    const { error } = await supabase
-      .from('sensor_folders')
-      .update(updateData)
-      .eq('id', projectId);
-
-    if (error) throw error;
-
-    return {
-      success: true,
-      message: `Project status updated to ${status}`
-    };
-  } catch (error) {
-    console.error("Error updating project status:", error);
-    return {
-      success: false,
-      message: `Failed to update project status: ${error.message}`
-    };
-  }
-};
-
-/**
- * Delete a project and its folder-sensor relationships
- */
-export const deleteProject = async (
-  projectId: string
-): Promise<{ success: boolean; message: string }> => {
-  try {
-    // First delete folder-sensor relationships
-    const { error: deleteRelError } = await supabase
+    // First, delete all sensor assignments for this folder
+    const { error: sensorError } = await supabase
       .from('folder_sensors')
       .delete()
-      .eq('folder_id', projectId);
+      .eq('folder_id', folderId);
 
-    if (deleteRelError) throw deleteRelError;
+    if (sensorError) throw sensorError;
 
-    // Then delete the folder itself
+    // Then, delete the folder
     const { error } = await supabase
       .from('sensor_folders')
       .delete()
-      .eq('id', projectId);
+      .eq('id', folderId);
 
     if (error) throw error;
 
-    return {
-      success: true,
-      message: "Project deleted successfully"
-    };
+    return true;
   } catch (error) {
-    console.error("Error deleting project:", error);
-    return {
-      success: false,
-      message: `Failed to delete project: ${error.message}`
-    };
+    console.error("Error deleting sensor folder:", error);
+    toast.error("Failed to delete project");
+    return false;
   }
 };

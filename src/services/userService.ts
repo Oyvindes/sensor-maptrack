@@ -4,9 +4,9 @@
 
 // Company services
 export { 
-  getMockCompanies, 
+  getAllCompanies as getMockCompanies, 
   updateCompany 
-} from './company/companyService';
+} from './company/mockCompanyService';
 
 // User services
 export { 

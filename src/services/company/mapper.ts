@@ -1,3 +1,4 @@
+
 import { Company } from '@/types/users';
 import { CompanyDB, CompanyInsert, CompanyUpdate, CompanyCreateInput, CompanyUpdateInput } from './types';
 
