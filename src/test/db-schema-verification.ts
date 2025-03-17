@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SupabaseTable, SupabaseFunction } from '@/types/supabase';
+import { SupabaseTable, SupabaseFunction, rawQuery } from '@/types/supabase';
 import axios from 'axios';
 import chalk from 'chalk';
 
@@ -115,18 +115,14 @@ async function verifyDatabaseSchema() {
     const tableResults = await Promise.all(
       validTables.map(async (tableName) => {
         try {
-          // Explicitly cast tableName to SupabaseTable type
-          const tableNameTyped = tableName as SupabaseTable;
-          
-          // Use a simple query with limit to avoid deep type recursion
           const { data, error } = await supabase
-            .from(tableNameTyped)
+            .from(tableName as SupabaseTable)
             .select('*')
             .limit(1);
           
           // Get count with a separate query
           const countResult = await supabase
-            .from(tableNameTyped)
+            .from(tableName as SupabaseTable)
             .select('*', { count: 'exact', head: true });
           
           const count = countResult.count;
@@ -141,27 +137,27 @@ async function verifyDatabaseSchema() {
             };
           }
           
-          // Get column information using direct query instead of RPC
+          // Get column information using alternative approach
           let columns: string[] = [];
           let missingColumns: string[] = [];
           
           try {
-            // Instead of using RPC, we'll query information_schema directly
+            // Using SQL query to get columns instead of _columns_info
             const { data: columnData, error: columnError } = await supabase
-              .from('_columns_info')
-              .select('column_name')
-              .eq('table_name', tableName)
-              .limit(100);
+              .rpc('get_table_columns', { table_name: tableName });
             
             if (columnError) {
-              console.log(chalk.yellow(`⚠️ Fallback: Could not fetch column information from _columns_info for ${tableName}: ${columnError.message}`));
+              console.log(chalk.yellow(`⚠️ Could not fetch column information for ${tableName}: ${columnError.message}`));
               
               // If columns can't be fetched, we'll infer them from the first row of data
               if (data && data.length > 0) {
                 columns = Object.keys(data[0]);
               }
-            } else if (columnData && columnData.length > 0) {
-              columns = columnData.map(col => col.column_name);
+            } else if (columnData && Array.isArray(columnData)) {
+              // Ensure columnData is properly typed and handled
+              columns = columnData.map(col => typeof col === 'object' && col !== null && 'column_name' in col ? 
+                col.column_name as string : 
+                typeof col === 'string' ? col : '');
             }
             
             // Calculate missing columns
@@ -228,10 +224,8 @@ async function verifyDatabaseSchema() {
     
     try {
       for (const tableName of validTables) {
-        // Cast explicitly to avoid type errors
-        const tableNameTyped = tableName as SupabaseTable;
         const { data, error } = await supabase
-          .from(tableNameTyped)
+          .from(tableName as SupabaseTable)
           .select('*')
           .limit(1);
         
@@ -242,17 +236,14 @@ async function verifyDatabaseSchema() {
         }
       }
       
-      // Check for information schema access without using RPC
+      // Check for information schema access
       try {
         const { data, error } = await supabase
-          .from('_columns_info')
-          .select('*')
-          .eq('table_name', 'companies')
-          .limit(10);
+          .rpc('get_table_columns', { table_name: 'companies' });
           
         if (error) {
           console.log('❌ Cannot access column information: ', error.message);
-        } else if (data && data.length > 0) {
+        } else if (data && Array.isArray(data) && data.length > 0) {
           console.log(`✅ Column information accessible: Found ${data.length} columns for companies table`);
           
           if (data.length > 0) {
@@ -278,9 +269,8 @@ async function verifyDatabaseSchema() {
       for (const relationship of tableInfo.relationships) {
         try {
           // Get a sample record from the table
-          const tableNameTyped = tableInfo.name as SupabaseTable;
           const { data: sampleData, error: sampleError } = await supabase
-            .from(tableNameTyped)
+            .from(tableInfo.name as SupabaseTable)
             .select(`${relationship.column}`)
             .not(relationship.column, 'is', null)
             .limit(1);
@@ -297,12 +287,9 @@ async function verifyDatabaseSchema() {
           if (sampleRecord && relationship.column in sampleRecord) {
             const foreignKeyValue = sampleRecord[relationship.column];
             
-            // Cast to proper type
-            const referencedTableName = relationship.referencesTable as SupabaseTable;
-            
             // Use a simpler approach to query the referenced table
             const { data: referencedData, error: referencedError } = await supabase
-              .from(referencedTableName)
+              .from(relationship.referencesTable as SupabaseTable)
               .select('*')
               .eq(relationship.referencesColumn, foreignKeyValue)
               .limit(1);
@@ -388,7 +375,7 @@ async function verifyDatabaseSchema() {
             const { data: company, error: companyError } = await supabase
               .from('companies' as SupabaseTable)
               .select('id, name')
-              .eq('id', user.company_id as string)  // Type assertion here
+              .eq('id', user.company_id as string)
               .limit(1);
             
             if (companyError || !company || company.length === 0) {
@@ -419,30 +406,35 @@ async function verifyDatabaseSchema() {
 // Add a function to create the stored procedure for getting table columns if it doesn't exist
 async function setupDatabaseHelpers() {
   try {
-    // First, check if information_schema is accessible
-    const { data: infoSchemaTest, error: infoSchemaError } = await supabase
-      .from('_info_schema_test')
-      .select('*')
-      .limit(1);
+    // Check if we can run the get_table_columns function
+    const { data: testFunctionData, error: testFunctionError } = await supabase
+      .rpc('get_table_columns', { table_name: 'companies' });
       
-    if (infoSchemaError) {
-      console.log(chalk.yellow('Creating information schema access view...'));
-      
-      // We need a view or function to access column information
-      console.log(chalk.yellow('Note: You may need to manually create a view for column information with:'));
+    if (testFunctionError) {
+      console.log(chalk.yellow('Note: The get_table_columns function is not available.'));
+      console.log(chalk.yellow('You may need to create a function for column information with:'));
       console.log(chalk.gray(`
-        CREATE OR REPLACE VIEW _columns_info AS
-        SELECT 
-          table_name,
-          column_name,
-          data_type
-        FROM 
-          information_schema.columns
-        WHERE 
-          table_schema = 'public';
-          
-        -- Then grant access to the view
-        GRANT SELECT ON _columns_info TO anon, authenticated;
+        -- Create a function to get table columns
+        CREATE OR REPLACE FUNCTION get_table_columns(table_name text)
+        RETURNS TABLE(column_name text, data_type text)
+        LANGUAGE plpgsql
+        SECURITY DEFINER
+        AS $$
+        BEGIN
+          RETURN QUERY
+          SELECT 
+            columns.column_name::text,
+            columns.data_type::text
+          FROM 
+            information_schema.columns
+          WHERE 
+            columns.table_schema = 'public' 
+            AND columns.table_name = table_name;
+        END;
+        $$;
+        
+        -- Grant access to the function
+        GRANT EXECUTE ON FUNCTION get_table_columns TO anon, authenticated;
       `));
     }
   } catch (error) {

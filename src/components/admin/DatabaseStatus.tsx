@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle, XCircle, Database, RefreshCw } from 'lucide-react';
-import { SupabaseTable } from '@/types/supabase';
+import { SupabaseTable, rawQuery } from '@/types/supabase';
 
 interface TableStatus {
   name: string;
@@ -37,7 +38,7 @@ export function DatabaseStatus() {
     try {
       // Check basic connection
       const { data, error } = await supabase
-        .from('companies' as SupabaseTable)
+        .from('companies')
         .select('count()', { count: 'exact', head: true });
       
       if (error) {

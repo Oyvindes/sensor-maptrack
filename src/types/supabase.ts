@@ -13,8 +13,7 @@ export type SupabaseTable =
   | "purchases" 
   | "sensor_values" 
   | "tracking_objects" 
-  | "users"
-  | "_columns_info";  // Added for internal column information access
+  | "users";
 
 // Type for valid Supabase function names
 export type SupabaseFunction = 
@@ -22,3 +21,8 @@ export type SupabaseFunction =
   | "migrate_mock_devices"
   | "get_table_columns"
   | "create_users_table_if_not_exists";
+
+// Helper for metadata access - used for bypassing type checking
+export const rawQuery = (supabaseClient: any, tableName: string) => {
+  return supabaseClient.from(tableName);
+};
