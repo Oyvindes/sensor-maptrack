@@ -187,7 +187,7 @@ export const updateExistingSensorFolder = async (
 /**
  * Delete a sensor folder from the database
  */
-export const deleteSensorFolder = async (folderId: string): Promise<boolean> => {
+export const deleteProject = async (folderId: string): Promise<{ success: boolean; message: string }> => {
   try {
     // First, delete all sensor assignments for this folder
     const { error: sensorError } = await supabase
@@ -205,10 +205,87 @@ export const deleteSensorFolder = async (folderId: string): Promise<boolean> => 
 
     if (error) throw error;
 
-    return true;
+    return {
+      success: true,
+      message: "Project deleted successfully"
+    };
   } catch (error) {
     console.error("Error deleting sensor folder:", error);
-    toast.error("Failed to delete project");
-    return false;
+    return {
+      success: false,
+      message: `Failed to delete project: ${error.message}`
+    };
+  }
+};
+
+// For backward compatibility
+export const deleteSensorFolder = deleteProject;
+
+// Save sensor folder (handles both create and update)
+export const saveSensorFolder = async (
+  folder: SensorFolder
+): Promise<{ success: boolean; data?: SensorFolder; message: string }> => {
+  try {
+    // Check if this is a new folder or an update to an existing one
+    const isNewFolder = folder.id.startsWith('temp-');
+    
+    if (isNewFolder) {
+      // This is a new folder, so create it
+      const newFolder = await createNewSensorFolder(folder);
+      
+      if (!newFolder) {
+        throw new Error('Failed to create new project');
+      }
+      
+      return {
+        success: true,
+        data: newFolder,
+        message: 'Project created successfully'
+      };
+    } else {
+      // This is an existing folder, so update it
+      const success = await updateExistingSensorFolder(folder.id, folder);
+      
+      if (!success) {
+        throw new Error('Failed to update project');
+      }
+      
+      return {
+        success: true,
+        message: 'Project updated successfully'
+      };
+    }
+  } catch (error) {
+    console.error('Error saving sensor folder:', error);
+    return {
+      success: false,
+      message: `Error saving project: ${error.message}`
+    };
+  }
+};
+
+// Update project status
+export const updateProjectStatus = async (
+  projectId: string,
+  status: 'running' | 'stopped'
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const { error } = await supabase
+      .from('sensor_folders')
+      .update({ status })
+      .eq('id', projectId);
+      
+    if (error) throw error;
+    
+    return {
+      success: true,
+      message: `Project status updated to ${status}`
+    };
+  } catch (error) {
+    console.error('Error updating project status:', error);
+    return {
+      success: false,
+      message: `Failed to update project status: ${error.message}`
+    };
   }
 };
