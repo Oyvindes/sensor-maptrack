@@ -6,5 +6,5 @@ export {
   fetchSensorFolders as getSensorFolders,
   saveSensorFolder as createSensorFolder,
   saveSensorFolder as updateSensorFolder,
-  deleteSensorFolder as deleteFolder
+  deleteProject as deleteFolder
 } from './supabaseFolderService';

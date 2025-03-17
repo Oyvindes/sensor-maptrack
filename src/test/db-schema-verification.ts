@@ -254,7 +254,7 @@ async function verifyDatabaseSchema() {
           
           const foreignKeyValue = sampleData[relationship.column];
           
-          // Type handling for the checking of relationships
+          // Type handling for the checking of relationships using as cast
           const tblName = relationship.referencesTable as SupabaseTable;
           const { data: referencedData, error: referencedError } = await supabase
             .from(tblName)

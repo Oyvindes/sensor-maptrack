@@ -70,7 +70,20 @@ const FoldersTab: React.FC<FoldersTabProps> = ({
         data = otherData;
       }
       
-      const response = await updateSensorFolder(folderId);
+      // Find the existing folder to update
+      const folderToUpdate = sensorFolders.find(folder => folder.id === folderId);
+      
+      if (!folderToUpdate) {
+        throw new Error("Folder not found");
+      }
+      
+      // Merge the existing folder with the updates
+      const updatedFolder = {
+        ...folderToUpdate,
+        ...data
+      };
+      
+      const response = await updateSensorFolder(updatedFolder);
       if (response.success) {
         toast.success("Folder updated successfully");
         return Promise.resolve();
