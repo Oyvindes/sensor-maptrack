@@ -13,7 +13,8 @@ export type SupabaseTable =
   | "purchases" 
   | "sensor_values" 
   | "tracking_objects" 
-  | "users";
+  | "users"
+  | "_columns_info";  // Added for internal column information access
 
 // Type for valid Supabase function names
 export type SupabaseFunction = 
