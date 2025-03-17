@@ -19,5 +19,7 @@ export {
   getMockSensorFolders, 
   createSensorFolder, 
   updateSensorFolder,
-  deleteProject 
+  deleteProject,
+  deleteFolder,
+  getSensorFolders
 } from './folder/folderService';

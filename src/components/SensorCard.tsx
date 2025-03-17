@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import SensorCardHeader from './sensor/SensorCardHeader';
 import SensorValueDisplay from './sensor/SensorValueDisplay';
+import { SensorValue, SensorDataValues, convertToSensorValue } from '@/types/sensor';
 
 export type SensorType =
 	| 'temperature'
@@ -20,31 +22,6 @@ export type SensorData = {
 	imei?: string;
 	folderId?: string;
 	projectName?: string;
-};
-
-export type SensorDataValues = {
-	1: any[];
-	2: any[];
-	3: any[];
-	4: any[];
-	5: any[];
-	6: any[];
-	7: any[];
-	8: any[];
-	DS18B20_Temp: number;
-	IMEI: string;
-	IMSI: string;
-	Model: string;
-	adc1: number;
-	battery: number;
-	digital_in: number;
-	humidity: number;
-	interrupt: number;
-	interrupt_level: number;
-	mod: number;
-	signal: number;
-	temperature: number;
-	time: string;
 };
 
 type SensorCardProps = {
@@ -92,7 +69,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
 					{values.map((sensorValue, index) => (
 						<SensorValueDisplay
 							key={index}
-							sensorValue={sensorValue}
+							sensorValue={convertToSensorValue(sensorValue)}
 						/>
 					))}
 				</div>

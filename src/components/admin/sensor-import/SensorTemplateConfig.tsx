@@ -16,7 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import SensorValueEditor from '@/components/sensor-editor/SensorValueEditor';
 import { Plus } from 'lucide-react';
 import { getDefaultUnit } from '@/components/sensor-editor/utils';
-import { SensorValue } from '@/types/sensor';
+import { SensorValue, SensorDataValues, convertToSensorValue, convertToSensorDataValues } from '@/types/sensor';
 
 interface SensorTemplateConfigProps {
 	template: Omit<SensorData, 'id'> & { companyId?: string };
@@ -58,48 +58,87 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 
 	const [usePrefix, setUsePrefix] = useState(true);
 
+	// Convert SensorDataValues to SensorValue for the UI
+	const simplifiedValues = template.values.map(value => convertToSensorValue(value));
+
 	const handleValueChange = (
 		index: number,
 		field: keyof SensorValue,
 		value: any
 	) => {
-		const newValues = [...template.values];
+		const newValues = [...simplifiedValues];
 		newValues[index] = {
 			...newValues[index],
 			[field]: field === 'value' ? parseFloat(value) : value
-		} as SensorValue;
+		};
+
+		// Convert back to SensorDataValues
+		const updatedDataValues = template.values.map((original, i) => 
+			i === index 
+				? { ...original, ...convertToSensorDataValues(newValues[i]) }
+				: original
+		);
 
 		onTemplateChange({
 			...template,
-			values: newValues
+			values: updatedDataValues
 		});
 	};
 
 	const handleTypeChange = (index: number, value: string) => {
-		const newValues = [...template.values];
+		const newValues = [...simplifiedValues];
 		newValues[index] = {
 			...newValues[index],
 			type: value,
 			unit: getDefaultUnit(value)
-		} as SensorValue;
+		};
+
+		// Convert back to SensorDataValues
+		const updatedDataValues = template.values.map((original, i) => 
+			i === index 
+				? { ...original, ...convertToSensorDataValues(newValues[i]) }
+				: original
+		);
 
 		onTemplateChange({
 			...template,
-			values: newValues
+			values: updatedDataValues
 		});
 	};
 
 	const addSensorValue = () => {
+		// Create new value with default properties
+		const defaultValue: SensorDataValues = {
+			1: [],
+			2: [],
+			3: [],
+			4: [],
+			5: [],
+			6: [],
+			7: [],
+			8: [],
+			DS18B20_Temp: 0,
+			IMEI: '',
+			IMSI: '',
+			Model: '',
+			adc1: 0,
+			battery: 0,
+			digital_in: 0,
+			humidity: 0,
+			interrupt: 0,
+			interrupt_level: 0,
+			mod: 0,
+			signal: 0,
+			temperature: 0,
+			time: new Date().toISOString(),
+			type: "temperature",
+			value: 0,
+			unit: "°C"
+		};
+
 		onTemplateChange({
 			...template,
-			values: [
-				...template.values,
-				{
-					type: 'temperature',
-					value: 0,
-					unit: '°C'
-				} as SensorValue
-			]
+			values: [...template.values, defaultValue]
 		});
 	};
 

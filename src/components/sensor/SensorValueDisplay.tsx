@@ -4,20 +4,22 @@ import { cn } from "@/lib/utils";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
 import { sensorRanges, calculatePercentage } from "@/utils/sensorCardUtils";
 import { SensorValue } from "@/types/sensor";
+import { SensorType } from "@/components/SensorCard";
 
 type SensorValueDisplayProps = {
   sensorValue: SensorValue;
 };
 
 const SensorValueDisplay: React.FC<SensorValueDisplayProps> = ({ sensorValue }) => {
-  const valueColor = getSensorColor(sensorValue.type);
-  const ValueIcon = getSensorIconComponent(sensorValue.type);
-  const range = sensorRanges[sensorValue.type];
+  const sensorType = sensorValue.type as SensorType;
+  const valueColor = getSensorColor(sensorType as any);
+  const ValueIcon = getSensorIconComponent(sensorType as any);
+  const range = sensorRanges[sensorType] || { min: 0, max: 100 };
   const formattedValue = typeof sensorValue.value === "number" 
     ? sensorValue.value.toFixed(1) 
     : sensorValue.value;
   
-  const percentage = calculatePercentage(sensorValue.value, sensorValue.type);
+  const percentage = calculatePercentage(sensorValue.value, sensorType);
   
   return (
     <div className="border-t pt-3 first:border-t-0 first:pt-0">

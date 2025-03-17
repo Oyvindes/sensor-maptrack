@@ -8,7 +8,7 @@ import { SensorData } from "@/components/SensorCard";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Company } from "@/types/users";
-import { SensorValue } from "@/types/sensor";
+import { SensorDataValues, convertToSensorDataValues } from "@/types/sensor";
 
 interface SensorImporterProps {
   companies: Company[];
@@ -23,17 +23,39 @@ const SensorImporter: React.FC<SensorImporterProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("template");
   
+  const defaultSensorValue: SensorDataValues = {
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+    DS18B20_Temp: 0,
+    IMEI: '',
+    IMSI: '',
+    Model: '',
+    adc1: 0,
+    battery: 0,
+    digital_in: 0,
+    humidity: 0,
+    interrupt: 0,
+    interrupt_level: 0,
+    mod: 0,
+    signal: 0,
+    temperature: 0,
+    time: new Date().toISOString(),
+    type: "temperature",
+    value: 0,
+    unit: "°C"
+  };
+  
   const [template, setTemplate] = useState<Omit<SensorData, "id"> & { companyId?: string }>({
     name: "Sensor {imei}",
     status: "online",
     lastUpdated: new Date().toLocaleString(),
-    values: [
-      {
-        type: "temperature",
-        value: 0,
-        unit: "°C"
-      } as SensorValue
-    ],
+    values: [defaultSensorValue],
     companyId: companies[0]?.id
   });
 

@@ -18,4 +18,6 @@ export type SupabaseTable =
 // Type for valid Supabase function names
 export type SupabaseFunction = 
   | "check_rls_enabled" 
-  | "migrate_mock_devices";
+  | "migrate_mock_devices"
+  | "get_table_columns"
+  | "create_users_table_if_not_exists";
