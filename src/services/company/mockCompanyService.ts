@@ -1,3 +1,4 @@
+
 import { Company, CompanyCreateInput, CompanyFilters, CompanyUpdateInput, ValidationResult } from './types';
 import { CompanyService } from './companyService';
 
@@ -25,6 +26,9 @@ const mockCompanies: Company[] = [
     createdAt: '2023-03-05T09:15:00Z'
   }
 ];
+
+// Export the mock data directly
+export const getAllCompanies = () => [...mockCompanies];
 
 // Class implementation of CompanyService for mock data
 export class MockCompanyService implements CompanyService {
@@ -111,5 +115,8 @@ export class MockCompanyService implements CompanyService {
   }
 }
 
-// Export utility function for getting mock data
-export const getMockCompanies = () => [...mockCompanies];
+// Export utility function for getting mock data and updating company
+export const updateCompany = async (id: string, input: CompanyUpdateInput): Promise<Company> => {
+  const service = new MockCompanyService();
+  return service.update(id, input);
+};

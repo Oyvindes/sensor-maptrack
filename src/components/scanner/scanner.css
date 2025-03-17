@@ -1,3 +1,4 @@
+
 /* Scanner styles */
 
 /* Class to hide elements during barcode scanning */
@@ -35,4 +36,73 @@ body.scanning .scanner-container {
   width: 100vw;
   height: 100vh;
   z-index: 9999;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  /* Improve touch targets on mobile */
+  button, 
+  a, 
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Adjust font sizes for better readability on mobile */
+  body {
+    font-size: 16px; /* Base font size for mobile */
+  }
+  
+  /* Prevent text from being too small */
+  .text-xs {
+    font-size: 0.75rem !important;
+  }
+  
+  /* Adjust spacing for mobile */
+  .mobile-spacing {
+    padding: 0.5rem !important;
+    margin: 0.5rem !important;
+  }
+  
+  /* Make sure inputs are large enough for touch */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    padding: 0.5rem !important;
+  }
+  
+  /* Fix for iOS 100vh issue */
+  .h-screen {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Prevent horizontal scroll */
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+/* Add mobile safe area insets */
+.safe-area-inset {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Bottom navigation padding for mobile */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Top navigation padding for mobile */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
 }
