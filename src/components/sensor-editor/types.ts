@@ -1,6 +1,7 @@
 
-import { SensorData, SensorType, SensorValue } from "@/components/SensorCard";
+import { SensorData } from "@/components/SensorCard";
 import { Company } from "@/types/users";
+import { SensorValue } from "@/types/sensor";
 
 export interface SensorEditorProps {
   sensor: SensorData & { companyId?: string; imei?: string };

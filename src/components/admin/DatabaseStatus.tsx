@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle, XCircle, Database, RefreshCw } from 'lucide-react';
+import { SupabaseTable } from '@/types/supabase';
 
 interface TableStatus {
   name: string;
@@ -19,7 +20,7 @@ export function DatabaseStatus() {
   const [tableStatuses, setTableStatuses] = useState<TableStatus[]>([]);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
-  const tables = [
+  const tables: SupabaseTable[] = [
     'companies',
     'folder_sensors',
     'pdf_records',
@@ -36,7 +37,7 @@ export function DatabaseStatus() {
     try {
       // Check basic connection
       const { data, error } = await supabase
-        .from('companies')
+        .from('companies' as SupabaseTable)
         .select('count()', { count: 'exact', head: true });
       
       if (error) {

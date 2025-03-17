@@ -1,3 +1,4 @@
+
 import { CompanyService } from './companyService';
 import { MockCompanyService } from './mockCompanyService';
 import { SupabaseCompanyService } from './supabaseCompanyService';
@@ -15,4 +16,4 @@ export * from './types';
 export * from './companyService';
 
 // For backwards compatibility during transition
-export { getMockCompanies } from './mockCompanyService';
+export { getAllCompanies as getMockCompanies } from './mockCompanyService';

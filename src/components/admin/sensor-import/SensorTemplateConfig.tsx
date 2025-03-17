@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { SensorData, SensorValue } from '@/components/SensorCard';
+import { SensorData } from '@/components/SensorCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import SensorValueEditor from '@/components/sensor-editor/SensorValueEditor';
 import { Plus } from 'lucide-react';
 import { getDefaultUnit } from '@/components/sensor-editor/utils';
+import { SensorValue } from '@/types/sensor';
 
 interface SensorTemplateConfigProps {
 	template: Omit<SensorData, 'id'> & { companyId?: string };
@@ -65,7 +67,7 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 		newValues[index] = {
 			...newValues[index],
 			[field]: field === 'value' ? parseFloat(value) : value
-		};
+		} as SensorValue;
 
 		onTemplateChange({
 			...template,
@@ -77,9 +79,9 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 		const newValues = [...template.values];
 		newValues[index] = {
 			...newValues[index],
-			type: value as any,
-			unit: getDefaultUnit(value as any)
-		};
+			type: value,
+			unit: getDefaultUnit(value)
+		} as SensorValue;
 
 		onTemplateChange({
 			...template,
@@ -96,7 +98,7 @@ const SensorTemplateConfig: React.FC<SensorTemplateConfigProps> = ({
 					type: 'temperature',
 					value: 0,
 					unit: '°C'
-				}
+				} as SensorValue
 			]
 		});
 	};

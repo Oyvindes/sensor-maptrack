@@ -1,9 +1,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { SensorValue } from "@/components/SensorCard";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
 import { sensorRanges, calculatePercentage } from "@/utils/sensorCardUtils";
+import { SensorValue } from "@/types/sensor";
 
 type SensorValueDisplayProps = {
   sensorValue: SensorValue;

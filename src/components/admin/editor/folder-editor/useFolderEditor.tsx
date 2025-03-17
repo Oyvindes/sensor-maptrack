@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { SensorFolder } from '@/types/users';
 import { toast } from 'sonner';
@@ -32,7 +33,8 @@ export const useFolderEditor = (
 					if (isValidUUID(formData.companyId)) {
 						companyUuid = formData.companyId;
 					} else {
-						companyUuid = mapCompanyIdToUUID(formData.companyId);
+						// Make sure the function returns a string instead of a Promise
+						companyUuid = await Promise.resolve(mapCompanyIdToUUID(formData.companyId));
 					}
 				}
 

@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Device } from '@/types/sensors';
+import { Device, Location } from '@/types/sensors';
 import { toast } from 'sonner';
 import { safeQuery } from '@/utils/databaseUtils';
 import { mapCompanyIdToUUIDSync, mapCompanyUUIDToId } from '@/utils/uuidUtils';
@@ -186,7 +186,7 @@ export const saveDevice = async (
           .insert({
             id: updatedDevice.id,
             name: updatedDevice.name,
-            position: updatedDevice.location || { lat: 0, lng: 0 },
+            position: updatedDevice.location ? JSON.stringify(updatedDevice.location) : JSON.stringify({ lat: 0, lng: 0 }),
             speed: 0,
             direction: 0,
             battery_level: 100,

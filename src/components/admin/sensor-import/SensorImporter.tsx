@@ -8,6 +8,7 @@ import { SensorData } from "@/components/SensorCard";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Company } from "@/types/users";
+import { SensorValue } from "@/types/sensor";
 
 interface SensorImporterProps {
   companies: Company[];
@@ -31,7 +32,7 @@ const SensorImporter: React.FC<SensorImporterProps> = ({
         type: "temperature",
         value: 0,
         unit: "°C"
-      }
+      } as SensorValue
     ],
     companyId: companies[0]?.id
   });

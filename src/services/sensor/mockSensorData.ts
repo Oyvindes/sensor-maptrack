@@ -1,5 +1,5 @@
-
 import { SensorData } from "@/components/SensorCard";
+import { SensorValue } from "@/types/sensor";
 
 export const getMockSensors = (): (SensorData & { folderId?: string, companyId: string })[] => {
   return [
@@ -12,17 +12,17 @@ export const getMockSensors = (): (SensorData & { folderId?: string, companyId: 
           type: "temperature",
           value: 21.3,
           unit: "°C",
-        },
+        } as SensorValue,
         {
           type: "humidity",
           value: 48.7,
           unit: "%",
-        },
+        } as SensorValue,
         {
           type: "battery",
           value: 95,
           unit: "%",
-        }
+        } as SensorValue
       ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
@@ -36,12 +36,12 @@ export const getMockSensors = (): (SensorData & { folderId?: string, companyId: 
           type: "temperature",
           value: 23.5,
           unit: "°C",
-        },
+        } as SensorValue,
         {
           type: "humidity",
           value: 45.2,
           unit: "%",
-        }
+        } as SensorValue
       ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
@@ -56,12 +56,12 @@ export const getMockSensors = (): (SensorData & { folderId?: string, companyId: 
           type: "battery",
           value: 87,
           unit: "%",
-        },
+        } as SensorValue,
         {
           type: "signal",
           value: 68,
           unit: "dBm",
-        }
+        } as SensorValue
       ],
       status: "warning",
       lastUpdated: new Date().toLocaleTimeString(),
@@ -91,22 +91,22 @@ export const getMockSensors = (): (SensorData & { folderId?: string, companyId: 
           type: "temperature",
           value: 26.7,
           unit: "°C",
-        },
+        } as SensorValue,
         {
           type: "humidity",
           value: 52.8,
           unit: "%",
-        },
+        } as SensorValue,
         {
           type: "battery",
           value: 92,
           unit: "%",
-        },
+        } as SensorValue,
         {
           type: "signal",
           value: 74,
           unit: "dBm",
-        }
+        } as SensorValue
       ],
       status: "online",
       lastUpdated: new Date().toLocaleTimeString(),
