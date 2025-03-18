@@ -17,9 +17,10 @@ const ProjectInfoFields: React.FC<ProjectInfoFieldsProps> = ({
 }) => {
   return (
     <>
-      <BasicProjectInfo 
+      <BasicProjectInfo
         name={formData.name}
         projectNumber={formData.projectNumber}
+        insuranceCompany={formData.insuranceCompany}
         onChange={onChange}
       />
 

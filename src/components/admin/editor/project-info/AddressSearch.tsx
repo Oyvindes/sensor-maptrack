@@ -159,9 +159,10 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
         <Input
           id="address"
           value={address || ""}
-          onChange={(e) => onChange("address" as keyof SensorFolder, e.target.value)}
+          readOnly
+          disabled
           placeholder="Full address of the project location"
-          className="mt-2"
+          className="mt-2 bg-muted cursor-not-allowed"
         />
       </div>
     </div>

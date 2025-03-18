@@ -65,7 +65,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <PageContainer>
-      <DashboardHeader />
+      <DashboardHeader onViewChange={handleViewChange} />
       
       <DashboardNavigation 
         currentView={currentView} 

@@ -71,20 +71,21 @@ export function useProjectManagement() {
 		setEditingProject: React.Dispatch<React.SetStateAction<boolean>>
 	) => {
 		const newProject: SensorFolder = {
-			id: `temp-${Date.now()}`,
-			name: '',
-			description: '',
-			companyId: currentUser?.companyId || '',
-			createdAt: new Date().toISOString().split('T')[0],
-			createdBy: currentUser?.id,
-			creatorName: currentUser?.name,
-			projectNumber: `PRJ-${new Date().getFullYear()}-${Math.floor(
-				Math.random() * 1000
-			)
-				.toString()
-				.padStart(3, '0')}`,
-			address: '',
-			assignedSensorImeis: []
+		  id: `temp-${Date.now()}`,
+		  name: '',
+		  description: '',
+		  companyId: currentUser?.companyId || '',
+		  createdAt: new Date().toISOString().split('T')[0],
+		  createdBy: currentUser?.id,
+		  creatorName: currentUser?.name,
+		  projectNumber: `PRJ-${new Date().getFullYear()}-${Math.floor(
+		    Math.random() * 1000
+		  )
+		    .toString()
+		    .padStart(3, '0')}`,
+		  address: '',
+		  assignedSensorImeis: [],
+		  insuranceCompany: undefined
 		};
 
 		setSelectedProject(newProject);

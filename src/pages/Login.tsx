@@ -47,7 +47,17 @@ const Login = () => {
 				<ThemeToggle />
 			</div>
 			<div className="max-w-md w-full p-4 sm:p-6 md:p-8 glass-card rounded-lg shadow-lg">
-				<h2 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">
+			  <div className="flex justify-center mb-6">
+			    <a href="https://www.briks.no" target="_blank" rel="noopener noreferrer">
+			      <img
+			        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVMWkqNKdveNspJcP3FiCLMniKSRfrV-pMSQ&s"
+			        alt="Company Logo"
+			        className="h-16 max-w-[200px] rounded-md object-contain hover:opacity-90 transition-opacity cursor-pointer [-webkit-font-smoothing:antialiased]"
+			        style={{ aspectRatio: 'auto' }}
+			      />
+			    </a>
+			  </div>
+			  <h2 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">
 					Briks Environment Monitoring
 				</h2>
 
