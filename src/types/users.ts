@@ -64,6 +64,8 @@ export interface SensorFolder {
   status?: 'running' | 'stopped'; // Project running status
   startedAt?: string; // Timestamp when project was last started
   stoppedAt?: string; // Timestamp when project was last stopped
+  projectStartDate?: string; // Calendar date when project is scheduled to start
+  projectEndDate?: string; // Calendar date when project is scheduled to end
   pdfHistory?: PdfRecord[]; // History of generated PDF reports
   sensorPlacementImages?: SensorPlacementImage[]; // Images showing sensor placements
   sensorImages?: string[]; // Simple array of image URLs for sensor placements

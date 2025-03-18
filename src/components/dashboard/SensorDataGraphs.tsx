@@ -62,7 +62,8 @@ const valueConfigs = {
 
 const generateData = (
   allValues: Record<string, SensorInfo>,
-  imei: string
+  imei: string,
+  project: SensorFolder
 ): SensorReading[] => {
   const data: SensorReading[] = [];
 
@@ -73,6 +74,16 @@ const generateData = (
   ) {
     return data;
   }
+
+  // Get project start date if available
+  const projectStartDate = project.projectStartDate
+    ? new Date(project.projectStartDate)
+    : null;
+  
+  // Get project end date if available
+  const projectEndDate = project.projectEndDate
+    ? new Date(project.projectEndDate)
+    : null;
 
   allValues[imei].values.forEach((v) => {
     let dataPoint: SensorDataPoint;
@@ -89,8 +100,20 @@ const generateData = (
     }
 
     if (dataPoint && dataPoint.time) {
+      const dataPointDate = new Date(dataPoint.time);
+      
+      // Skip data points before project start date
+      if (projectStartDate && dataPointDate < projectStartDate) {
+        return;
+      }
+      
+      // Skip data points after project end date (if specified)
+      if (projectEndDate && dataPointDate > projectEndDate) {
+        return;
+      }
+
       data.push({
-        timestamp: new Date(dataPoint.time).toISOString(),
+        timestamp: dataPointDate.toISOString(),
         values: {
           temperature: {
             value: dataPoint.temperature || 0,
@@ -226,7 +249,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 
       <div className="grid grid-cols-1 gap-8">
         {project.assignedSensorImeis.map((sensorImei) => {
-          const data = generateData(sensorInfoMap, sensorImei).reverse();
+          const data = generateData(sensorInfoMap, sensorImei, project).reverse();
           const latestData = data.length > 0 ? data[data.length - 1] : null;
           const sensorName = sensorInfoMap[sensorImei]?.name || `Sensor ${sensorImei}`;
 

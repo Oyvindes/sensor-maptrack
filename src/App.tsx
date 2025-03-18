@@ -1,10 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
@@ -13,6 +12,7 @@ import SensorHealthCheck from "./pages/SensorHealthCheck";
 import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "./services/authService";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { hasAdminAccess } from "./utils/authUtils";
+import StatePreserver from "@/components/StatePreserver";
 
 // Authentication guard component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -49,11 +49,26 @@ const App = () => {
     }
   }, []);
 
+  // State to track if we're restoring from a refresh
+  const [isRestoringState, setIsRestoringState] = useState(false);
+
+  // Check if we need to restore state from a refresh
+  useEffect(() => {
+    const preserved = sessionStorage.getItem('appStatePreserved');
+    if (preserved === 'true') {
+      setIsRestoringState(true);
+      // Clear the flag
+      sessionStorage.removeItem('appStatePreserved');
+    }
+  }, []);
+
   return (
     <ThemeProvider defaultTheme="system">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BrowserRouter>
+            {/* Add our StatePreserver component */}
+            <StatePreserver />
             <Toaster />
             <Sonner />
             <Routes>

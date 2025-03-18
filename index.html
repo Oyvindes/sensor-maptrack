@@ -3,10 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#000000" />
+    <!-- Prevent iOS from detecting phone numbers and creating unwanted links -->
+    <meta name="format-detection" content="telephone=no" />
+    <!-- Disable automatic detection of addresses -->
+    <meta name="format-detection" content="address=no" />
     <title>sensor-maptrack</title>
     <meta name="description" content="Lovable Generated Project" />
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
+    <!-- Add a manifest for PWA capabilities -->
+    <link rel="manifest" href="/manifest.json" />
   </head>
 
   <body>
@@ -14,5 +24,20 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Only prevent pull-to-refresh at the top of the page -->
+    <script>
+      // Only prevent the pull-to-refresh behavior, not normal scrolling
+      document.addEventListener('touchstart', function(e) {
+        // Store the initial touch position
+        window.startY = e.touches[0].clientY;
+      }, { passive: true });
+      
+      document.addEventListener('touchmove', function(e) {
+        // Only prevent pull-to-refresh at the top of the page
+        if (window.scrollY === 0 && e.touches[0].clientY > window.startY && e.cancelable) {
+          e.preventDefault(); // Prevent only pull-down at the top
+        }
+      }, { passive: false });
+    </script>
   </body>
 </html>

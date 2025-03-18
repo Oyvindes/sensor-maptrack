@@ -104,6 +104,15 @@
 	body {
 		@apply bg-background text-foreground antialiased;
 		font-feature-settings: 'rlig' 1, 'calt' 1;
+		/* Ensure scrolling works properly on mobile */
+		-webkit-overflow-scrolling: touch;
+		overflow-y: auto;
+	}
+
+	/* Fix for mobile scrolling issues */
+	html, body, #root {
+		height: 100%;
+		position: relative;
 	}
 }
 

@@ -64,6 +64,19 @@ export const startProjectDataCollection = (project: SensorFolder) => {
 		return;
 	}
 
+	// Check if project has defined start/end dates and if current date is within that period
+	const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+	
+	if (project.projectStartDate && currentDate < project.projectStartDate) {
+		console.log(`Project ${project.id} has not started yet. Scheduled to start on ${project.projectStartDate}`);
+		return;
+	}
+	
+	if (project.projectEndDate && currentDate > project.projectEndDate) {
+		console.log(`Project ${project.id} has ended on ${project.projectEndDate}`);
+		return;
+	}
+
 	// If already collecting, stop first
 	if (collectionStatus[project.id]?.isCollecting) {
 		stopProjectDataCollection(project.id);
@@ -71,6 +84,15 @@ export const startProjectDataCollection = (project: SensorFolder) => {
 
 	// Start collection for each sensor
 	const interval = setInterval(async () => {
+		// Check if project is still within date range on each collection cycle
+		const now = new Date().toISOString().split('T')[0];
+		if ((project.projectStartDate && now < project.projectStartDate) ||
+			(project.projectEndDate && now > project.projectEndDate)) {
+			console.log(`Project ${project.id} is outside scheduled period. Stopping data collection.`);
+			stopProjectDataCollection(project.id);
+			return;
+		}
+		
 		for (const sensorImei of project.assignedSensorImeis) {
 			await collectSensorData(sensorImei);
 		}

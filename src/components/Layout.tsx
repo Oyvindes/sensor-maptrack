@@ -9,7 +9,7 @@ type LayoutProps = {
 
 export const PageContainer = ({ children, className }: LayoutProps) => {
   return (
-    <div className={cn("min-h-screen bg-background px-4 py-4 sm:px-6 sm:py-6 md:px-10 md:py-8", className)}>
+    <div className={cn("min-h-screen bg-background px-4 py-4 sm:px-6 sm:py-6 md:px-10 md:py-8 overflow-y-auto", className)}>
       {children}
     </div>
   );
@@ -46,7 +46,7 @@ export const PageSubtitle = ({ children, className }: LayoutProps) => {
 
 export const ContentContainer = ({ children, className }: LayoutProps) => {
   return (
-    <main className={cn("space-y-6 sm:space-y-8 md:space-y-10 animate-fade-up [animation-delay:200ms]", className)}>
+    <main className={cn("space-y-6 sm:space-y-8 md:space-y-10 animate-fade-up [animation-delay:200ms] overflow-y-auto", className)}>
       {children}
     </main>
   );
