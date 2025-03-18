@@ -8,7 +8,11 @@ export const useFolderEditor = (
 	folder: SensorFolder,
 	onSave: (folder: SensorFolder) => void
 ) => {
-	const [formData, setFormData] = useState<SensorFolder>(folder);
+	const [formData, setFormData] = useState<SensorFolder>({
+		...folder,
+		sensorLocations: folder.sensorLocations || {},
+		sensorZones: folder.sensorZones || {}
+	});
 	const [availableSensors, setAvailableSensors] = useState<
 		Array<{ imei: string; name: string }>
 	>([]);
@@ -32,7 +36,7 @@ export const useFolderEditor = (
 					if (isValidUUID(formData.companyId)) {
 						companyUuid = formData.companyId;
 					} else {
-						companyUuid = mapCompanyIdToUUID(formData.companyId);
+						companyUuid = await mapCompanyIdToUUID(formData.companyId);
 					}
 				}
 
@@ -41,43 +45,42 @@ export const useFolderEditor = (
 				);
 
 				const allSensors = await fetchSensors();
+				const filteredSensors: Array<{ imei: string; name: string }> = [];
 
-				const filteredSensors = allSensors
-					.filter((sensor) => {
-						// For debugging
-						console.log(
-							`Sensor ${sensor.imei} has companyId: ${sensor.companyId}`
-						);
+				// Process each sensor
+				for (const sensor of allSensors) {
+					// For debugging
+					console.log(`Sensor ${sensor.imei} has companyId: ${sensor.companyId}`);
 
-						if (!sensor.companyId || !formData.companyId) {
-							console.log(
-								`Sensor ${sensor.imei} or form has no companyId`
-							);
-							return false;
-						}
+					if (!sensor.companyId || !formData.companyId) {
+						console.log(`Sensor ${sensor.imei} or form has no companyId`);
+						continue;
+					}
 
-						// Get UUID for sensor's company ID
-						const sensorCompanyUuid = isValidUUID(sensor.companyId)
-							? sensor.companyId
-							: mapCompanyIdToUUID(sensor.companyId);
+					// Get UUID for sensor's company ID
+					let sensorCompanyUuid: string;
+					if (isValidUUID(sensor.companyId)) {
+						sensorCompanyUuid = sensor.companyId;
+					} else {
+						sensorCompanyUuid = await mapCompanyIdToUUID(sensor.companyId);
+					}
 
-						// Check against both the original ID and the UUID
-						const isMatch =
-							sensor.companyId === formData.companyId ||
-							sensor.companyId === companyUuid ||
-							sensorCompanyUuid === companyUuid ||
-							sensorCompanyUuid === formData.companyId;
+					// Check against both the original ID and the UUID
+					const isMatch =
+						sensor.companyId === formData.companyId ||
+						sensor.companyId === companyUuid ||
+						sensorCompanyUuid === companyUuid ||
+						sensorCompanyUuid === formData.companyId;
 
-						console.log(
-							`Sensor ${sensor.imei} match status: ${isMatch}`
-						);
+					console.log(`Sensor ${sensor.imei} match status: ${isMatch}`);
 
-						return isMatch;
-					})
-					.map((sensor) => ({
-						imei: sensor.imei,
-						name: sensor.name
-					}));
+					if (isMatch) {
+						filteredSensors.push({
+							imei: sensor.imei,
+							name: sensor.name
+						});
+					}
+				}
 
 				console.log(
 					`Found ${filteredSensors.length} sensors for company ${formData.companyId}`
@@ -169,7 +172,27 @@ export const useFolderEditor = (
 				updatedSensors = currentAssignedSensors.filter(
 					(imei) => imei !== sensorImei
 				);
+				
+				// Remove sensor location and zone when sensor is removed
+				const updatedLocations = { ...prev.sensorLocations };
+				const updatedZones = { ...prev.sensorZones };
+				
+				if (updatedLocations && sensorImei in updatedLocations) {
+					delete updatedLocations[sensorImei];
+				}
+				
+				if (updatedZones && sensorImei in updatedZones) {
+					delete updatedZones[sensorImei];
+				}
+				
 				toast.info('Sensor removed from project');
+				
+				return {
+					...prev,
+					assignedSensorImeis: updatedSensors,
+					sensorLocations: updatedLocations,
+					sensorZones: updatedZones
+				};
 			}
 
 			return { ...prev, assignedSensorImeis: updatedSensors };
@@ -202,8 +225,26 @@ export const useFolderEditor = (
 		setFormData((prev) => ({
 			...prev,
 			companyId,
-			assignedSensorImeis: []
+			assignedSensorImeis: [],
+			sensorLocations: {},
+			sensorZones: {}
 		}));
+	};
+	
+	const handleSensorLocationChange = (sensorImei: string, location: string) => {
+		setFormData((prev) => {
+			const updatedLocations = { ...(prev.sensorLocations || {}) };
+			updatedLocations[sensorImei] = location;
+			return { ...prev, sensorLocations: updatedLocations };
+		});
+	};
+	
+	const handleSensorZoneChange = (sensorImei: string, zone: 'wet' | 'dry') => {
+		setFormData((prev) => {
+			const updatedZones = { ...(prev.sensorZones || {}) };
+			updatedZones[sensorImei] = zone;
+			return { ...prev, sensorZones: updatedZones };
+		});
 	};
 
 	return {
@@ -216,6 +257,8 @@ export const useFolderEditor = (
 		handleChange,
 		handleSensorToggle,
 		handleSubmit,
-		handleCompanyChange
+		handleCompanyChange,
+		handleSensorLocationChange,
+		handleSensorZoneChange
 	};
 };

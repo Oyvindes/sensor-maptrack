@@ -269,8 +269,26 @@ export async function downloadProjectReport(
     
     // Add data for each sensor
     for (const sensor of projectSensors) {
+      // Get sensor location and zone if available
+      const sensorLocation = project.sensorLocations?.[sensor.imei] || '';
+      const sensorZone = project.sensorZones?.[sensor.imei] || '';
+      
+      // Create a display name that includes location and zone if available
+      let displayName = `Sensor: ${sensor.name} (${sensor.imei})`;
+      if (sensorLocation || sensorZone) {
+        displayName += ' - ';
+        if (sensorLocation) {
+          displayName += sensorLocation;
+          if (sensorZone) {
+            displayName += `, ${sensorZone} zone`;
+          }
+        } else if (sensorZone) {
+          displayName += `${sensorZone} zone`;
+        }
+      }
+      
       doc.setFontSize(11);
-      doc.text(`Sensor: ${sensor.name} (${sensor.imei})`, leftMargin, currentY);
+      doc.text(displayName, leftMargin, currentY);
       currentY += 8;
       
       // Check if sensor has values
@@ -345,10 +363,26 @@ export async function downloadProjectReport(
           doc.addPage();
           currentY = 20;
           
-          // Add a title for the graphs page
+          // Add a title for the graphs page that includes location and zone
+          const sensorLocation = project.sensorLocations?.[sensor.imei] || '';
+          const sensorZone = project.sensorZones?.[sensor.imei] || '';
+          
+          let graphTitle = `Sensor Data Graphs: ${sensor.name}`;
+          if (sensorLocation || sensorZone) {
+            graphTitle += ' - ';
+            if (sensorLocation) {
+              graphTitle += sensorLocation;
+              if (sensorZone) {
+                graphTitle += `, ${sensorZone} zone`;
+              }
+            } else if (sensorZone) {
+              graphTitle += `${sensorZone} zone`;
+            }
+          }
+          
           doc.setFontSize(14);
           doc.setTextColor(40, 40, 40);
-          doc.text(`Sensor Data Graphs: ${sensor.name}`, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+          doc.text(graphTitle, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
           currentY += 15;
           
           // Display one graph per page for maximum size and detail
@@ -367,10 +401,26 @@ export async function downloadProjectReport(
               doc.addPage();
               currentY = 20;
               
-              // Add a title for the graphs page
+              // Add a title for the graphs page that includes location and zone
+              const sensorLocation = project.sensorLocations?.[sensor.imei] || '';
+              const sensorZone = project.sensorZones?.[sensor.imei] || '';
+              
+              let graphTitle = `Sensor Data Graphs: ${sensor.name}`;
+              if (sensorLocation || sensorZone) {
+                graphTitle += ' - ';
+                if (sensorLocation) {
+                  graphTitle += sensorLocation;
+                  if (sensorZone) {
+                    graphTitle += `, ${sensorZone} zone`;
+                  }
+                } else if (sensorZone) {
+                  graphTitle += `${sensorZone} zone`;
+                }
+              }
+              
               doc.setFontSize(14);
               doc.setTextColor(40, 40, 40);
-              doc.text(`Sensor Data Graphs: ${sensor.name}`, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
+              doc.text(graphTitle, doc.internal.pageSize.width / 2, currentY, { align: 'center' });
               currentY += 15;
             }
             

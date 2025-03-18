@@ -69,6 +69,8 @@ export interface SensorFolder {
   sensorImages?: string[]; // Simple array of image URLs for sensor placements
   hasImageIssues?: boolean; // Flag indicating if there are issues with sensor images
   insuranceCompany?: InsuranceCompany; // Insurance company handling the project
+  sensorLocations?: Record<string, string>; // Map of sensor IMEI to location name (e.g., livingroom, kitchen)
+  sensorZones?: Record<string, 'wet' | 'dry'>; // Map of sensor IMEI to zone type
 }
 
 export interface LoginCredentials {

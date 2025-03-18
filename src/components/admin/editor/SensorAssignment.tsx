@@ -14,13 +14,21 @@ interface SensorAssignmentProps {
 	assignedSensorImeis: string[];
 	onSensorToggle: (sensorImei: string, checked: boolean) => void;
 	companyId: string;
+	sensorLocations?: Record<string, string>;
+	sensorZones?: Record<string, 'wet' | 'dry'>;
+	onSensorLocationChange?: (sensorImei: string, location: string) => void;
+	onSensorZoneChange?: (sensorImei: string, zone: 'wet' | 'dry') => void;
 }
 
 const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 	availableSensors,
 	assignedSensorImeis,
 	onSensorToggle,
-	companyId
+	companyId,
+	sensorLocations = {},
+	sensorZones = {},
+	onSensorLocationChange,
+	onSensorZoneChange
 }) => {
 	const [imeiInput, setImeiInput] = useState('');
 	const [showScanner, setShowScanner] = useState(false);
@@ -179,6 +187,10 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 					<AssignedSensorsList
 						assignedSensors={assignedSensors}
 						onRemoveSensor={handleRemoveSensor}
+						sensorLocations={sensorLocations}
+						sensorZones={sensorZones}
+						onLocationChange={onSensorLocationChange}
+						onZoneChange={onSensorZoneChange}
 					/>
 
 					{companyId ? (

@@ -248,9 +248,25 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
             );
           }
 
+          // Get sensor location and zone if available
+          const sensorLocation = project.sensorLocations?.[sensorImei] || '';
+          const sensorZone = project.sensorZones?.[sensorImei] || '';
+          
+          // Create a display name that includes location and zone if available
+          let displayName = sensorName;
+          if (sensorLocation) {
+            displayName += ` (${sensorLocation}`;
+            if (sensorZone) {
+              displayName += `, ${sensorZone} zone`;
+            }
+            displayName += ')';
+          } else if (sensorZone) {
+            displayName += ` (${sensorZone} zone)`;
+          }
+          
           return (
             <div key={sensorImei} className="space-y-4">
-              <h3 className="text-xl font-semibold">{sensorName}</h3>
+              <h3 className="text-xl font-semibold">{displayName}</h3>
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 {Object.entries(valueConfigs).map(([key, config]) => {
                   const currentValue = latestData.values[key as keyof typeof latestData.values];
