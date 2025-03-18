@@ -5,25 +5,25 @@
 @layer base {
 	:root {
 		--background: 210 40% 99%;
-		--foreground: #1f1;
+		--foreground: 222 47% 11%;
 
 		--card: 0 0% 100%;
-		--card-foreground: #1f1;
+		--card-foreground: 222 47% 11%;
 
 		--popover: 0 0% 100%;
-		--popover-foreground: #1f1;
+		--popover-foreground: 222 47% 11%;
 
 		--primary: 210 100% 62%;
-		--primary-foreground: #ceccd9;
+		--primary-foreground: 0 0% 100%;
 
 		--secondary: 210 20% 96%;
-		--secondary-foreground: #1f1;
+		--secondary-foreground: 222 47% 11%;
 
 		--muted: 210 20% 96%;
 		--muted-foreground: 215 16% 47%;
 
 		--accent: 210 40% 96%;
-		--accent-foreground: #1f1;
+		--accent-foreground: 222 47% 11%;
 
 		--destructive: 0 84% 60%;
 		--destructive-foreground: #ceccd9;
@@ -63,20 +63,20 @@
 		--primary: #e5e4f0;
 		--primary-foreground: #2d2c33;
 
-		--secondary: #1f1e24;
-		--secondary-foreground: #ceccd9;
+		--secondary: #2d2c33;
+		--secondary-foreground: #ffffff;
+		
+		--muted: #2d2c33;
+		--muted-foreground: #aeadba;
 
-		--muted: #1f1e24;
-		--muted-foreground: #e5e4f0;
-
-		--accent: #1f1e24;
-		--accent-foreground: #ceccd9;
-
+		--accent: #2d2c33;
+		--accent-foreground: #ffffff;
+		
 		--destructive: #bf264c;
-		--destructive-foreground: #ceccd9;
-
-		--border: #2d2c33;
-		--input: #1f1e24;
+		--destructive-foreground: #ffffff;
+		
+		--border: #3d3c44;
+		--input: #2d2c33;
 		--ring: 224.3 76.3% 48%;
 
 		--sidebar-background: 222 47% 10%;
@@ -109,7 +109,7 @@
 
 @layer components {
 	.glass-card {
-		@apply bg-white/70 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10 shadow-lg;
+		@apply bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 shadow-lg;
 	}
 
 	.sensor-pulse {

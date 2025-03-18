@@ -573,7 +573,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                             Invoice
                           </Button>
                           <select
-                            className="text-xs border rounded p-1"
+                            className="text-xs border rounded p-1.5 bg-background text-foreground min-w-[120px] dark:border-gray-700"
                             value={purchase.status}
                             onChange={async (e) => {
                               try {
@@ -680,7 +680,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                             <label className="text-xs text-muted-foreground">Customer Reference</label>
                             <input
                               type="text"
-                              className="w-full text-xs border rounded p-1"
+                              className="w-full text-xs border rounded p-1.5 bg-background text-foreground dark:border-gray-700"
                               placeholder="Enter customer reference"
                               defaultValue={purchase.customerReference || ''}
                               id={`customer-reference-${purchase.id}`}
@@ -726,7 +726,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                                 <label className="text-xs text-muted-foreground">Tracking Number</label>
                                 <input
                                   type="text"
-                                  className="w-full text-xs border rounded p-1"
+                                  className="w-full text-xs border rounded p-1.5 bg-background text-foreground dark:border-gray-700"
                                   placeholder="Enter tracking number"
                                   defaultValue={purchase.trackingNumber || ''}
                                   id={`tracking-number-${purchase.id}`}
@@ -736,7 +736,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                               <div>
                                 <label className="text-xs text-muted-foreground">Carrier</label>
                                 <select
-                                  className="w-full text-xs border rounded p-1"
+                                  className="w-full text-xs border rounded p-1.5 bg-background text-foreground dark:border-gray-700"
                                   defaultValue={purchase.carrier || ''}
                                   id={`carrier-${purchase.id}`}
                                 >

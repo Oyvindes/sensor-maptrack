@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { SensorFolder } from "@/types/users";
 import ProjectsMap from "./ProjectsMap";
@@ -21,15 +21,26 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   onProjectStatusChange,
   onProjectDelete
 }) => {
+  const [currentTab, setCurrentTab] = useState<string>("map");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   // Filter projects for different views
   const runningProjects = projects.filter(p => p.status === "running");
   const stoppedProjects = projects.filter(p => p.status === "stopped");
+
+  // Handle dialog state changes
+  const handleDialogChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (open && currentTab === "map") {
+      setCurrentTab("list");
+    }
+  };
   
   return (
     <SectionContainer>
       <SectionTitle className="text-lg sm:text-xl md:text-2xl">Projects Overview</SectionTitle>
       
-      <Tabs defaultValue="map" className="w-full">
+      <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
         <TabsList className="mb-2 sm:mb-4 h-8 sm:h-10">
           <TabsTrigger value="map" className="text-xs sm:text-sm h-7 sm:h-9">Map View</TabsTrigger>
           <TabsTrigger value="list" className="text-xs sm:text-sm h-7 sm:h-9">List View</TabsTrigger>
@@ -56,6 +67,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   onProjectSelect={onProjectSelect}
                   onProjectStatusChange={onProjectStatusChange}
                   onProjectDelete={onProjectDelete}
+                  onDialogChange={handleDialogChange}
                   className="h-full overflow-auto animate-fade-up [animation-delay:400ms]"
                 />
               </div>
@@ -76,6 +88,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   onProjectSelect={onProjectSelect}
                   onProjectStatusChange={onProjectStatusChange}
                   onProjectDelete={onProjectDelete}
+                  onDialogChange={handleDialogChange}
                   className="h-full overflow-auto animate-fade-up [animation-delay:400ms]"
                 />
               </div>
@@ -92,6 +105,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   onProjectSelect={onProjectSelect}
                   onProjectStatusChange={onProjectStatusChange}
                   onProjectDelete={onProjectDelete}
+                  onDialogChange={handleDialogChange}
                   className="h-full overflow-auto animate-fade-up [animation-delay:400ms]"
                 />
               </div>

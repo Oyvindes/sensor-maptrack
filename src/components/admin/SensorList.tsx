@@ -43,7 +43,7 @@ const SensorList: React.FC<SensorListProps> = ({
 							onClick={onImport}
 							size="sm"
 							variant="outline"
-							className="h-12 px-4"
+							className="h-12 w-16 px-4"
 						>
 							<span className="flex flex-col items-center gap-1">
 							  <FileUp className="h-4 w-4" />
@@ -54,7 +54,7 @@ const SensorList: React.FC<SensorListProps> = ({
 							onClick={onDelete}
 							size="sm"
 							variant="outline"
-							className="h-12 px-4 text-destructive"
+							className="h-12 w-16 px-4 text-destructive"
 						>
 							<span className="flex flex-col items-center gap-1">
 							  <Trash2 className="h-4 w-4" />
@@ -63,10 +63,10 @@ const SensorList: React.FC<SensorListProps> = ({
 						</Button>
 					</>
 				)}
-				<Button onClick={onAddNew} size="sm" className="h-12 px-4">
+				<Button onClick={onAddNew} size="sm" className="h-12 w-16 px-4">
 					<span className="flex flex-col items-center gap-1">
-					  <Plus className="h-4 w-4" />
-					  <span className="text-[10px]">New</span>
+						 <Plus className="h-4 w-4" />
+						 <span className="text-[10px]">New</span>
 					</span>
 				</Button>
 			</div>

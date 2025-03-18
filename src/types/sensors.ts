@@ -4,14 +4,15 @@ export interface Location {
 }
 
 export interface TrackingObject {
-	id: string;
-	name: string;
-	position: Location;
-	lastUpdated: string;
-	speed: number;
-	direction: number;
-	batteryLevel: number;
-	folderId?: string;
+id: string;
+name: string;
+position: Location;
+lastUpdated: string;
+speed: number;
+direction: number;
+batteryLevel: number;
+folderId?: string;
+companyId: string;
 }
 
 export interface Device {

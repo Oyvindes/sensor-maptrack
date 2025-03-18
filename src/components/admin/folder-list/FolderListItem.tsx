@@ -27,11 +27,21 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
     return company ? company.name : 'Unknown Company';
   };
 
-  const hasLocation = folder.location && (
-    typeof folder.location === 'string' 
-      ? JSON.parse(folder.location).lat && JSON.parse(folder.location).lng
-      : folder.location.lat && folder.location.lng
-  );
+  const getLocationData = () => {
+    if (!folder.location) return null;
+    try {
+      if (typeof folder.location === 'string') {
+        const parsed = JSON.parse(folder.location);
+        return parsed.lat && parsed.lng ? parsed : null;
+      }
+      return folder.location.lat && folder.location.lng ? folder.location : null;
+    } catch (e) {
+      console.error('Error parsing location:', e);
+      return null;
+    }
+  };
+
+  const locationData = getLocationData();
 
   return (
     <div
@@ -73,7 +83,26 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
           <div className="flex items-center gap-1 text-xs text-muted-foreground md:col-span-2">
             <MapPin className="h-3 w-3" />
             <span>{folder.address}</span>
-            {hasLocation && <MapIcon className="h-3 w-3 ml-1 text-blue-500" />}
+            {locationData && (
+              <>
+                <MapIcon className="h-3 w-3 text-blue-500" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 h-6 px-2 py-0 ml-1 text-xs border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(
+                      `https://www.google.com/maps/dir/?api=1&destination=${locationData.lat},${locationData.lng}`,
+                      '_blank'
+                    );
+                  }}
+                >
+                  <MapPin className="h-3 w-3" />
+                  Directions
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

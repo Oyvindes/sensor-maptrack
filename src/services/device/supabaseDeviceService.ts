@@ -16,14 +16,20 @@ const bypassRowLevelSecurity = async () => {
  */
 export const fetchDevices = async (): Promise<Device[]> => {
   try {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentUser.companyId) {
+      console.warn('No current user or company ID available');
+      return [];
+    }
+
     // Try to bypass row-level security
     await bypassRowLevelSecurity();
 
-    console.log('Fetching devices from database...');
+    console.log('Fetching devices from database for company:', currentUser.companyId);
 
     const result = await safeQuery<Device[]>(
       async () => {
-        // Get devices with their latest values
+        // Get devices with their latest values, filtered by company
         const devicesResult = await supabase
           .from('devices')
           .select(`
@@ -35,7 +41,8 @@ export const fetchDevices = async (): Promise<Device[]> => {
             last_seen,
             created_at,
             updated_at
-          `);
+          `)
+          .eq('company_id', mapCompanyIdToUUIDSync(currentUser.companyId));
 
         if (devicesResult.error) {
           console.error('Error fetching devices:', devicesResult.error);

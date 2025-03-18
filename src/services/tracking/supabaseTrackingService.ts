@@ -2,18 +2,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { TrackingObject, Device } from '@/types/sensors';
 import { toast } from 'sonner';
 import { safeQuery } from '@/utils/databaseUtils';
+import { getCurrentUser } from '@/services/authService';
+import { mapCompanyIdToUUIDSync, mapCompanyUUIDToId } from '@/utils/uuidUtils';
 
 /**
  * Get all tracking objects from the database
  */
 export const fetchTrackingObjects = async (): Promise<TrackingObject[]> => {
   try {
-    console.log('Fetching tracking objects from database...');
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentUser.companyId) {
+      console.warn('No current user or company ID available');
+      return [];
+    }
+
+    console.log('Fetching tracking objects from database for company:', currentUser.companyId);
     
     // Get tracking objects from the database
     const result = await safeQuery<any[]>(
       async () => {
-        // Use a query with columns we know exist
+        // Use a query with columns we know exist, filtered by company
         const trackingResult = await supabase
           .from('tracking_objects')
           .select(`
@@ -26,7 +34,8 @@ export const fetchTrackingObjects = async (): Promise<TrackingObject[]> => {
             last_updated,
             company_id,
             folder_id
-          `);
+          `)
+          .eq('company_id', mapCompanyIdToUUIDSync(currentUser.companyId));
         return trackingResult;
       },
       'fetchTrackingObjects'
@@ -60,6 +69,7 @@ export const fetchTrackingObjects = async (): Promise<TrackingObject[]> => {
         }
       }
 
+      const companyId = item.company_id ? mapCompanyUUIDToId(item.company_id) : currentUser.companyId;
       return {
         id: item.id,
         name: item.name,
@@ -68,7 +78,8 @@ export const fetchTrackingObjects = async (): Promise<TrackingObject[]> => {
         speed: typeof item.speed === 'number' ? item.speed : 0,
         direction: typeof item.direction === 'number' ? item.direction : 0,
         batteryLevel: typeof item.battery_level === 'number' ? item.battery_level : 100,
-        folderId: item.folder_id || undefined
+        folderId: item.folder_id || undefined,
+        companyId: companyId
       };
     });
 
@@ -145,6 +156,7 @@ export const mapDeviceToTrackingObject = (device: Device): TrackingObject => {
     speed: 0,
     direction: 0,
     batteryLevel: 100,
-    folderId: device.folderId
+    folderId: device.folderId,
+    companyId: device.companyId
   };
 };
