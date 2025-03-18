@@ -3,8 +3,8 @@ import { SensorFolder, PdfRecord } from "@/types/users";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileIcon, Download, Eye } from "lucide-react";
-import { viewPdfFromHistory } from "@/services/pdfViewerService";
 import { toast } from "sonner";
+import { getPdfContent } from "@/services/pdf/supabasePdfService";
 
 interface ProjectPdfHistoryProps {
   project: SensorFolder;
@@ -34,10 +34,29 @@ const ProjectPdfHistory: React.FC<ProjectPdfHistoryProps> = ({
     );
   }
 
-  const handleViewPdf = (pdfRecord: PdfRecord) => {
-    const success = viewPdfFromHistory(pdfRecord);
-    if (!success) {
-      toast.error("PDF is no longer available. Please regenerate the report.");
+  const handleViewPdf = async (pdfRecord: PdfRecord) => {
+    try {
+      toast.loading("Loading PDF...");
+      const result = await getPdfContent(pdfRecord.id);
+      
+      if (!result || !result.blob) {
+        toast.error("PDF is no longer available. Please regenerate the report.");
+        return;
+      }
+      
+      // Create a blob URL and open it in a new tab
+      const blobUrl = URL.createObjectURL(result.blob);
+      window.open(blobUrl, '_blank');
+      
+      // Clean up the blob URL after opening
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+      
+      toast.dismiss();
+    } catch (error) {
+      console.error("Error viewing PDF:", error);
+      toast.error("Failed to load PDF. Please try again.");
     }
   };
 
