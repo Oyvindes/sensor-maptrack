@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/services/authService";
+import { Building2, Users, Radar, Database } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { useAdminState } from "@/hooks/useAdminState";
@@ -98,11 +99,33 @@ const Admin = () => {
         </SectionContainer>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="mb-2 sm:mb-4 h-8 sm:h-10 overflow-x-auto flex-wrap">
-            {isMaster && <TabsTrigger value="companies" className="text-xs sm:text-sm h-7 sm:h-9">Companies</TabsTrigger>}
-            <TabsTrigger value="users" className="text-xs sm:text-sm h-7 sm:h-9">Users</TabsTrigger>
-            <TabsTrigger value="sensors" className="text-xs sm:text-sm h-7 sm:h-9">Sensors</TabsTrigger>
-            <TabsTrigger value="devices" className="text-xs sm:text-sm h-7 sm:h-9">Asset Tracking</TabsTrigger>
+          <TabsList className="mb-2 sm:mb-4 h-16 overflow-x-auto flex-wrap p-2">
+            {isMaster && (
+              <TabsTrigger value="companies" className="h-12 px-4">
+                <span className="flex flex-col items-center gap-1">
+                  <Building2 className="w-4 h-4" />
+                  <span className="text-[10px]">Company</span>
+                </span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="users" className="h-12 px-4">
+              <span className="flex flex-col items-center gap-1">
+                <Users className="w-4 h-4" />
+                <span className="text-[10px]">Users</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="sensors" className="h-12 px-4">
+              <span className="flex flex-col items-center gap-1">
+                <Database className="w-4 h-4" />
+                <span className="text-[10px]">Sensors</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="devices" className="h-12 px-4">
+              <span className="flex flex-col items-center gap-1">
+                <Radar className="w-4 h-4" />
+                <span className="text-[10px]">Track</span>
+              </span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="companies">

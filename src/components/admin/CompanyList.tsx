@@ -1,6 +1,5 @@
-
 import React from "react";
-import { Plus, Building, Users } from "lucide-react";
+import { Plus, Building, Users, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { Company } from "@/types/users";
@@ -23,19 +22,19 @@ const CompanyList: React.FC<CompanyListProps> = ({
 }) => {
   return (
     <SectionContainer>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-2 sm:mb-4">
-        <SectionTitle className="text-lg sm:text-xl md:text-2xl">Manage Companies</SectionTitle>
-        {canCreateCompany && (
+      <SectionTitle className="mb-2">Manage Companies</SectionTitle>
+      {canCreateCompany && (
+        <div className="flex justify-start mb-6">
           <Button
             onClick={onAddNew}
             size="sm"
-            className="gap-1 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm self-end sm:self-auto"
+            className="h-12 px-4"
           >
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>Add Company</span>
+            <Plus className="h-4 w-4" />
+            <span className="text-[10px] mt-1">New</span>
           </Button>
-        )}
-      </div>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
         {companies.map(company => (
@@ -56,24 +55,17 @@ const CompanyList: React.FC<CompanyListProps> = ({
             <div className="text-[10px] sm:text-xs text-muted-foreground mb-2 sm:mb-4">
               Created: {company.createdAt}
             </div>
-            <div className="flex justify-between mt-1 sm:mt-2 gap-2">
+            <div className="flex justify-start mt-1 sm:mt-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-7 sm:h-8 px-2 sm:px-3"
+                className="h-12 px-4"
                 onClick={() => onCompanySelect(company)}
               >
-                Edit
+                <Pencil className="h-4 w-4" />
+                <span className="text-[10px] mt-1">Edit</span>
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-1 text-xs h-7 sm:h-8 px-2 sm:px-3"
-                onClick={() => onViewUsers(company.id)}
-              >
-                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                Users
-              </Button>
+              {/* Users button removed */}
             </div>
           </div>
         ))}

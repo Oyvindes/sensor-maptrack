@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -10,12 +9,17 @@ interface FolderListHeaderProps {
 
 const FolderListHeader: React.FC<FolderListHeaderProps> = ({ onAddNew }) => {
   return (
-    <div className="flex justify-between items-center mb-4">
-      <SectionTitle>Projects</SectionTitle>
-      <Button size="sm" onClick={onAddNew}>
-        <Plus className="h-4 w-4 mr-1" /> Add Project
-      </Button>
-    </div>
+    <>
+      <SectionTitle className="mb-2">Projects</SectionTitle>
+      <div className="flex justify-start mb-6">
+        <Button size="sm" onClick={onAddNew} className="h-12 px-4">
+          <span className="flex flex-col items-center gap-1">
+            <Plus className="h-4 w-4" />
+            <span className="text-[10px]">New</span>
+          </span>
+        </Button>
+      </div>
+    </>
   );
 };
 

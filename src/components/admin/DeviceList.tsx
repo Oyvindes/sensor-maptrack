@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TrackingObject } from "@/types/sensors";
 import { Plus, Pencil, Trash, Folder, AlertOctagon } from "lucide-react";
@@ -76,24 +75,28 @@ const DeviceList: React.FC<DeviceListProps> = ({
   return (
     <>
       <SectionContainer>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-2 sm:mb-4">
-          <SectionTitle className="text-lg sm:text-xl md:text-2xl">Manage Tracking Devices</SectionTitle>
+        <SectionTitle className="mb-2">Manage Tracking Devices</SectionTitle>
+        <div className="flex justify-start gap-2 mb-6">
           <Button
             onClick={onAddNew}
             size="sm"
-            className="gap-1 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm self-end sm:self-auto"
+            className="h-12 px-4"
           >
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>Add Device</span>
+            <span className="flex flex-col items-center gap-1">
+              <Plus className="h-4 w-4" />
+              <span className="text-[10px]">New</span>
+            </span>
           </Button>
         </div>
         
         {devices.length === 0 ? (
           <div className="p-4 sm:p-8 text-center border border-dashed rounded-lg">
             <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4">No tracking objects found in the database.</p>
-            <Button onClick={onAddNew} variant="outline" className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9">
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Add your first device</span>
+            <Button onClick={onAddNew} variant="outline" className="h-12 px-4">
+              <span className="flex flex-col items-center gap-1">
+                <Plus className="h-4 w-4" />
+                <span className="text-[10px]">Start</span>
+              </span>
             </Button>
           </div>
         ) : (
@@ -110,23 +113,29 @@ const DeviceList: React.FC<DeviceListProps> = ({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 w-6 sm:h-8 sm:w-8 p-0"
+                      className="h-12 px-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeviceSelect(device);
                       }}
                     >
-                      <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="flex flex-col items-center gap-1">
+                        <Pencil className="h-4 w-4" />
+                        <span className="text-[10px]">Edit</span>
+                      </span>
                     </Button>
                     
                     {onDelete && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 sm:h-8 sm:w-8 p-0"
+                        className="h-12 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={(e) => handleDeleteClick(device.id, device.name, e)}
                       >
-                        <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="flex flex-col items-center gap-1">
+                          <Trash className="h-4 w-4" />
+                          <span className="text-[10px]">Del</span>
+                        </span>
                       </Button>
                     )}
                   </div>
@@ -177,10 +186,14 @@ const DeviceList: React.FC<DeviceListProps> = ({
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>
-              Cancel
+              <span className="flex flex-col items-center gap-1">
+                <span className="text-[10px]">Cancel</span>
+              </span>
             </Button>
             <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
-              {isDeleting ? "Deleting..." : "Delete"}
+              <span className="flex flex-col items-center gap-1">
+                <span className="text-[10px]">{isDeleting ? "Deleting..." : "Delete"}</span>
+              </span>
             </Button>
           </DialogFooter>
         </DialogContent>

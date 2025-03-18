@@ -13,6 +13,8 @@ import TrackingSection from "./dashboard/TrackingSection";
 import HelpSection from "./dashboard/HelpSection";
 import StoreSection from "./dashboard/StoreSection";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 // View types for the dashboard
 type DashboardView = "dashboard" | "projects" | "tracking" | "help" | "store";
@@ -63,10 +65,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <PageContainer>
-      <DashboardHeader 
-        onRefresh={handleRefresh} 
-        onAddNewProject={currentView === "projects" ? handleAddNewProject : undefined} 
-      />
+      <DashboardHeader />
       
       <DashboardNavigation 
         currentView={currentView} 
@@ -109,7 +108,19 @@ const Dashboard: React.FC = () => {
           <StoreSection className="w-full animate-fade-up [animation-delay:300ms]" />
         ) : (
           <div className="w-full animate-fade-up [animation-delay:300ms]">
-            <h2 className="text-xl font-semibold mb-4">Projects</h2>
+            <h2 className="text-xl font-semibold mb-2">Projects</h2>
+            <div className="flex justify-start mb-6">
+              <Button
+                onClick={handleAddNewProject}
+                size="sm"
+                className="h-12 px-4"
+              >
+                <span className="flex flex-col items-center gap-1">
+                  <Plus className="h-4 w-4" />
+                  <span className="text-[10px]">New</span>
+                </span>
+              </Button>
+            </div>
             <ProjectsList
               projects={projects}
               isLoading={isLoading}

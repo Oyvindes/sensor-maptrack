@@ -289,40 +289,42 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
 
   return (
     <div className={`w-full animate-fade-up [animation-delay:300ms] ${className}`}>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Sensor Store</h1>
-        {isSiteAdmin && (
-          <Button onClick={handleCreateProduct} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Product
-          </Button>
-        )}
-      </div>
+      <h1 className="text-2xl font-bold mb-2">Sensor Store</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="products" className="gap-2">
+        <TabsList className="mb-4 flex flex-wrap">
+          <TabsTrigger value="products" className="flex flex-col">
             <Tag className="h-4 w-4" />
-            Products
+            <span className="text-[10px] mt-1">Products</span>
           </TabsTrigger>
-          <TabsTrigger value="cart" className="gap-2">
+          <TabsTrigger value="cart" className="flex flex-col">
             <ShoppingCartIcon className="h-4 w-4" />
-            Cart {cartItems.length > 0 && `(${cartItems.length})`}
+            <span className="text-[10px] mt-1">Cart {cartItems.length > 0 && `(${cartItems.length})`}</span>
           </TabsTrigger>
-          <TabsTrigger value="purchases" className="gap-2">
+          <TabsTrigger value="purchases" className="flex flex-col">
             <Package className="h-4 w-4" />
-            My Purchases
+            <span className="text-[10px] mt-1">Purchases</span>
           </TabsTrigger>
           {isSiteAdmin && (
-            <TabsTrigger value="all-purchases" className="gap-2">
+            <TabsTrigger value="all-purchases" className="flex flex-col">
               <ShoppingCartIcon className="h-4 w-4" />
-              All Purchases
+              <span className="text-[10px] mt-1">All</span>
             </TabsTrigger>
           )}
         </TabsList>
         
         {storeView === 'products' && (
           <TabsContent value="products" className="space-y-4">
+            {isSiteAdmin && (
+              <div className="flex justify-start mb-6">
+                <Button onClick={handleCreateProduct} className="h-12 px-4">
+                  <span className="flex flex-col items-center gap-1">
+                    <Plus className="h-4 w-4" />
+                    <span className="text-[10px]">New</span>
+                  </span>
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {products.map(product => (
                 <Card key={product.id} className="overflow-hidden">

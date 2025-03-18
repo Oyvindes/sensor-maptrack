@@ -35,36 +35,40 @@ const SensorList: React.FC<SensorListProps> = ({
 
 	return (
 		<SectionContainer>
-			<div className="flex justify-between items-center mb-4">
-				<SectionTitle>Manage Sensors</SectionTitle>
-				<div className="flex gap-2">
-					{isSiteAdmin && (
-						<>
-							<Button
-								onClick={onImport}
-								size="sm"
-								variant="outline"
-								className="gap-2"
-							>
-								<FileUp className="h-4 w-4" />
-								<span>Import CSV</span>
-							</Button>
-							<Button
-								onClick={onDelete}
-								size="sm"
-								variant="outline"
-								className="gap-2 text-destructive"
-							>
-								<Trash2 className="h-4 w-4" />
-								<span>Delete by CSV</span>
-							</Button>
-						</>
-					)}
-					<Button onClick={onAddNew} size="sm" className="gap-2">
-						<Plus className="h-4 w-4" />
-						<span>Add Sensor</span>
-					</Button>
-				</div>
+			<SectionTitle className="mb-2">Manage Sensors</SectionTitle>
+			<div className="flex justify-start gap-2 mb-6">
+				{isSiteAdmin && (
+					<>
+						<Button
+							onClick={onImport}
+							size="sm"
+							variant="outline"
+							className="h-12 px-4"
+						>
+							<span className="flex flex-col items-center gap-1">
+							  <FileUp className="h-4 w-4" />
+							  <span className="text-[10px]">Import</span>
+							</span>
+						</Button>
+						<Button
+							onClick={onDelete}
+							size="sm"
+							variant="outline"
+							className="h-12 px-4 text-destructive"
+						>
+							<span className="flex flex-col items-center gap-1">
+							  <Trash2 className="h-4 w-4" />
+							  <span className="text-[10px]">Delete</span>
+							</span>
+						</Button>
+					</>
+				)}
+				<Button onClick={onAddNew} size="sm" className="h-12 px-4">
+					<span className="flex flex-col items-center gap-1">
+					  <Plus className="h-4 w-4" />
+					  <span className="text-[10px]">New</span>
+					</span>
+				</Button>
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -99,7 +103,10 @@ const SensorList: React.FC<SensorListProps> = ({
 									variant="ghost"
 									onClick={() => onSensorSelect(sensor)}
 								>
-									<Pencil className="h-4 w-4" />
+									<span className="flex flex-col items-center gap-1">
+										<Pencil className="h-4 w-4" />
+										<span className="text-[10px]">Edit</span>
+									</span>
 								</Button>
 							</div>
 							<div className="text-sm text-muted-foreground">

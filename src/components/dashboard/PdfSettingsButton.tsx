@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,8 +43,10 @@ const PdfSettingsButton = () => {
         className="flex items-center gap-1 h-7 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
         onClick={() => setOpen(true)}
       >
-        <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-        <span className="hidden xs:inline">PDF Settings</span>
+        <span className="flex flex-col items-center gap-1">
+          <FileText className="h-4 w-4" />
+          <span className="text-[10px]">Export</span>
+        </span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

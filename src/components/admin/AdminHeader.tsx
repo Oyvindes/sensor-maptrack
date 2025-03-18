@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { LogOut, User, LayoutDashboard } from "lucide-react";
+import { LogOut, User, Home } from "lucide-react";
 import { logout, getCurrentUser } from '@/services/authService';
 import { toast } from 'sonner';
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -45,13 +45,17 @@ const AdminHeader: React.FC = () => {
         <ThemeToggle />
         <Button variant="ghost" size="sm" asChild className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2 p-0 sm:gap-2">
           <Link to="/index">
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="hidden sm:inline">Dashboard</span>
+            <span className="flex flex-col items-center gap-1">
+              <Home className="h-4 w-4" />
+              <span className="text-[10px]">Home</span>
+            </span>
           </Link>
         </Button>
         <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 w-8 sm:h-auto sm:w-auto sm:px-2 p-0 sm:gap-2">
-          <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline">Logout</span>
+          <span className="flex flex-col items-center gap-1">
+            <LogOut className="h-4 w-4" />
+            <span className="text-[10px]">Exit</span>
+          </span>
         </Button>
       </div>
     </header>

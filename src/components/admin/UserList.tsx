@@ -69,50 +69,57 @@ const UserList: React.FC<UserListProps> = ({
 
   return (
     <SectionContainer>
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          {onBack && (
-            <Button variant="ghost" size="sm" onClick={onBack}>
+      <div className="flex items-center gap-2 mb-2">
+        {onBack && (
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <span className="flex flex-col items-center gap-1">
               <ArrowLeft className="h-4 w-4" />
-            </Button>
-          )}
-          <SectionTitle>
-            {currentCompany 
-              ? `Users for ${currentCompany.name}` 
-              : "All Users"}
-          </SectionTitle>
-        </div>
-        <div className="flex items-center gap-2">
-          {availableCompanies.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select
-                value={companyFilter}
-                onValueChange={setCompanyFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by company" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Companies</SelectItem>
-                  {availableCompanies.map(company => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+              <span className="text-[10px]">Back</span>
+            </span>
+          </Button>
+        )}
+        <SectionTitle>
+          {currentCompany 
+            ? `Users for ${currentCompany.name}` 
+            : "All Users"}
+        </SectionTitle>
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-2 mb-6">
+        <div className="flex justify-start">
           <Button 
             onClick={onAddNew} 
             size="sm" 
-            className="gap-2"
+            className="h-12 px-4"
           >
-            <Plus className="h-4 w-4" />
-            <span>Add User</span>
+            <span className="flex flex-col items-center gap-1">
+              <Plus className="h-4 w-4" />
+              <span className="text-[10px]">New</span>
+            </span>
           </Button>
         </div>
+        
+        {availableCompanies.length > 0 && (
+          <div className="flex items-center gap-2 ml-0 sm:ml-4">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select
+              value={companyFilter}
+              onValueChange={setCompanyFilter}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by company" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Companies</SelectItem>
+                {availableCompanies.map(company => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -1,0 +1,5 @@
+/* Custom styles for Sonner toast notifications */
+.sonner-toast [data-close-button] svg {
+  width: 18px !important;
+  height: 18px !important;
+}

@@ -208,13 +208,18 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
             className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm
                       hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isGeneratingPdf ? 'Generating...' : 'Generate PDF Report'}
+            <span className="flex flex-col items-center gap-1">
+              <span className="text-[10px]">{isGeneratingPdf ? 'Generating...' : 'PDF'}</span>
+            </span>
           </button>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
+            className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md text-sm
+                      hover:bg-secondary/90 transition-colors"
           >
-            Close
+            <span className="flex flex-col items-center gap-1">
+              <span className="text-[10px]">Close</span>
+            </span>
           </button>
         </div>
       </div>
