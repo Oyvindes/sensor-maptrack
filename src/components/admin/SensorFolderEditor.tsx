@@ -7,6 +7,7 @@ import CompanySelector from './editor/CompanySelector';
 import SensorAssignment from './editor/SensorAssignment';
 import ProjectMetadata from './editor/ProjectMetadata';
 import EditorHeader from './editor/folder-editor/EditorHeader';
+import ProjectPdfHistory from '@/components/dashboard/ProjectPdfHistory';
 import MapDisplay from './editor/folder-editor/MapDisplay';
 import EditorActionButtons from './editor/folder-editor/EditorActionButtons';
 import { useFolderEditor } from './editor/folder-editor/useFolderEditor';
@@ -80,10 +81,14 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
 				</div>
 
 				<ProjectMetadata
-					creatorName={formData.creatorName}
-					createdAt={formData.createdAt}
+				creatorName={formData.creatorName}
+				createdAt={formData.createdAt}
 				/>
-
+				
+				<div className="pt-4 border-t">
+				  <ProjectPdfHistory project={formData} />
+				</div>
+				
 				<EditorActionButtons onCancel={onCancel} />
 			</form>
 		</SectionContainer>
