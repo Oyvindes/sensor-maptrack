@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Tag, Package, ShoppingCart as ShoppingCartIcon, CheckCircle, Pencil, FileText } from 'lucide-react';
+import { Loader2, Plus, Tag, Package, ShoppingCart as ShoppingCartIcon, CheckCircle, Pencil, FileText, Trash2 } from 'lucide-react';
 import { getCurrentUser } from '@/services/authService';
 import { toast } from 'sonner';
 import { storeService } from '@/services/store';
@@ -213,6 +213,23 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
     setShowProductForm(false);
   };
   
+  const handleDeleteProduct = async (product: Product) => {
+    if (window.confirm(`Are you sure you want to delete ${product.name}?`)) {
+      try {
+        await storeService.deleteProduct(product.id);
+        
+        // Refresh products
+        const productsData = await storeService.listProducts();
+        setProducts(productsData);
+        
+        toast.success(`Product deleted successfully!`);
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        toast.error('Failed to delete product');
+      }
+    }
+  };
+  
   const handleGenerateProformaInvoice = async (purchase: Purchase) => {
     try {
       // Generate the PDF without showing a loading indicator
@@ -355,15 +372,26 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                       Add to Cart
                     </Button>
                     {isSiteAdmin && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditProduct(product)}
-                        className="gap-2"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditProduct(product)}
+                          className="gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteProduct(product)}
+                          className="gap-2 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </div>
                     )}
                   </CardFooter>
                 </Card>
