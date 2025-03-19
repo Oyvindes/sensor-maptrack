@@ -22,6 +22,8 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
       updated_at,
       project_start_date,
       project_end_date,
+      sensor_locations,
+      sensor_zones,
       pdf_records (
         id,
         filename,
@@ -114,6 +116,8 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         projectStartDate: folder.project_start_date?.split('T')[0] || '',
         projectEndDate: folder.project_end_date?.split('T')[0] || '',
         assignedSensorImeis,
+        sensorLocations: folder.sensor_locations || {},
+        sensorZones: folder.sensor_zones || {},
         pdfHistory
       };
     });
@@ -185,7 +189,9 @@ export const saveSensorFolder = async (
       project_start_date: folder.projectStartDate || null,
       project_end_date: folder.projectEndDate || null,
       status: folder.status || 'stopped',
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      sensor_locations: folder.sensorLocations || {},
+      sensor_zones: folder.sensorZones || {}
     };
 
     // Verify the company exists in the database
@@ -316,6 +322,8 @@ export const saveSensorFolder = async (
         status,
         created_at,
         updated_at,
+        sensor_locations,
+        sensor_zones,
         pdf_records (
           id,
           filename,
@@ -335,6 +343,8 @@ export const saveSensorFolder = async (
         ...folder,
         id: folderId,
         companyId: folderData.company_id,
+        sensorLocations: updatedFolder.sensor_locations || {},
+        sensorZones: updatedFolder.sensor_zones || {},
         pdfHistory: updatedFolder.pdf_records?.map(record => ({
           id: record.id,
           filename: record.filename,
