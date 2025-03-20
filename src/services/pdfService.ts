@@ -137,11 +137,21 @@ class PdfService implements PdfServiceInterface {
       // Table data for each item
       currentY += 8;
       purchase.items.forEach((item, index) => {
+        // Set color based on pricing type
+        if (item.pricing_type === 'monthly') {
+          doc.setTextColor(0, 0, 255); // Blue for monthly items
+        } else {
+          doc.setTextColor(40, 40, 40); // Default dark gray for one-time items
+        }
+
         doc.text((index + 1).toString(), colItem, currentY);
-        doc.text(`${item.productName} (${item.pricing_type === 'monthly' ? 'Monthly' : 'One-time'})`, colDesc, currentY);
+        doc.text(`${item.productName} (${item.pricing_type === 'monthly' ? '📅 Monthly' : '💰 One-time'})`, colDesc, currentY);
         doc.text(item.quantity.toString(), colQty, currentY);
-        doc.text(`${item.pricePerUnit.toFixed(2)}  kr`, colPrice, currentY); // Added extra space before kr
-        doc.text(`${item.totalPrice.toFixed(2)}  kr`, colTotal, currentY); // Added extra space before kr
+        doc.text(`${item.pricePerUnit.toFixed(2)}  kr${item.pricing_type === 'monthly' ? '/month' : ''}`, colPrice, currentY);
+        doc.text(`${item.totalPrice.toFixed(2)}  kr${item.pricing_type === 'monthly' ? '/month' : ''}`, colTotal, currentY);
+
+        // Reset text color
+        doc.setTextColor(40, 40, 40);
         currentY += 6;
       });
       
@@ -159,17 +169,23 @@ class PdfService implements PdfServiceInterface {
       // Add totals section
       currentY += 8;
       
+      // Set default color
+      doc.setTextColor(40, 40, 40);
+      
       if (onetimeItems.length > 0) {
-        doc.text('One-time Costs:', summaryLabelX, currentY);
+        doc.text('💰 One-time Costs:', summaryLabelX, currentY);
         doc.text(`${onetimeTotal.toFixed(2)}  kr`, summaryValueX, currentY);
         currentY += 5;
       }
       
       if (monthlyItems.length > 0) {
-        doc.text('Monthly Fees:', summaryLabelX, currentY);
-        // Adjust position to ensure text fits within the frame
+        // Set blue color for monthly items
+        doc.setTextColor(0, 0, 255);
+        doc.text('📅 Monthly Fees:', summaryLabelX, currentY);
         doc.text(`${monthlyTotal.toFixed(2)}  kr/month`, summaryValueX, currentY);
         currentY += 5;
+        // Reset color
+        doc.setTextColor(40, 40, 40);
       }
       
       // Only add tax line and total if there are one-time costs
