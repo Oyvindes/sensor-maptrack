@@ -145,7 +145,7 @@ class PdfService implements PdfServiceInterface {
         }
 
         doc.text((index + 1).toString(), colItem, currentY);
-        doc.text(`${item.productName} (${item.pricing_type === 'monthly' ? '📅 Monthly' : '💰 One-time'})`, colDesc, currentY);
+        doc.text(`${item.productName} (${item.pricing_type === 'monthly' ? 'Monthly' : 'One-time'})`, colDesc, currentY);
         doc.text(item.quantity.toString(), colQty, currentY);
         doc.text(`${item.pricePerUnit.toFixed(2)}  kr${item.pricing_type === 'monthly' ? '/month' : ''}`, colPrice, currentY);
         doc.text(`${item.totalPrice.toFixed(2)}  kr${item.pricing_type === 'monthly' ? '/month' : ''}`, colTotal, currentY);
@@ -173,7 +173,7 @@ class PdfService implements PdfServiceInterface {
       doc.setTextColor(40, 40, 40);
       
       if (onetimeItems.length > 0) {
-        doc.text('💰 One-time Costs:', summaryLabelX, currentY);
+        doc.text('One-time Costs:', summaryLabelX, currentY);
         doc.text(`${onetimeTotal.toFixed(2)}  kr`, summaryValueX, currentY);
         currentY += 5;
       }
@@ -181,7 +181,7 @@ class PdfService implements PdfServiceInterface {
       if (monthlyItems.length > 0) {
         // Set blue color for monthly items
         doc.setTextColor(0, 0, 255);
-        doc.text('📅 Monthly Fees:', summaryLabelX, currentY);
+        doc.text('Monthly Fees:', summaryLabelX, currentY);
         doc.text(`${monthlyTotal.toFixed(2)}  kr/month`, summaryValueX, currentY);
         currentY += 5;
         // Reset color
