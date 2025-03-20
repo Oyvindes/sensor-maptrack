@@ -33,7 +33,11 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch products');
     }
     
-    return data as Product[];
+    // Map the data to ensure both image_url and imageUrl are set
+    return data.map(product => ({
+      ...product,
+      imageUrl: product.image_url // Ensure imageUrl is set from image_url
+    })) as Product[];
   }
   
   async getProduct(id: string): Promise<Product | null> {
@@ -48,7 +52,11 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to fetch product');
     }
     
-    return data as Product;
+    // Ensure both image_url and imageUrl are set
+    return {
+      ...data,
+      imageUrl: data.image_url
+    } as Product;
   }
   
   async createProduct(data: CreateProductDto): Promise<Product> {
@@ -75,7 +83,11 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to create product');
     }
     
-    return createdProduct as Product;
+    // Ensure both image_url and imageUrl are set
+    return {
+      ...createdProduct,
+      imageUrl: createdProduct.image_url
+    } as Product;
   }
   
   async updateProduct(id: string, data: UpdateProductDto): Promise<Product | null> {
@@ -97,7 +109,11 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to update product');
     }
     
-    return updatedProduct as Product;
+    // Ensure both image_url and imageUrl are set
+    return {
+      ...updatedProduct,
+      imageUrl: updatedProduct.image_url
+    } as Product;
   }
   
   async deleteProduct(id: string): Promise<boolean> {
@@ -130,7 +146,13 @@ class StoreService implements StoreServiceInterface {
     
     const { data, error } = await supabase
       .from('purchases')
-      .select('*, products(name)')
+      .select(`
+        *,
+        items:purchase_items(
+          *,
+          product:products(name, pricing_type)
+        )
+      `)
       .order('purchased_at', { ascending: false });
     
     if (error) {
@@ -140,10 +162,18 @@ class StoreService implements StoreServiceInterface {
     
     return data.map(purchase => ({
       id: purchase.id,
-      productId: purchase.product_id,
-      productName: purchase.products?.name || 'Unknown Product',
-      quantity: purchase.quantity || 0,
-      totalPrice: purchase.total_price || 0,
+      items: purchase.items.map((item: any) => ({
+        id: item.id,
+        purchaseId: item.purchase_id,
+        productId: item.product_id,
+        productName: item.product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        pricePerUnit: item.price_per_unit,
+        totalPrice: item.total_price,
+        createdAt: item.created_at,
+        pricing_type: item.product?.pricing_type || 'one_time'
+      })),
+      itemsTotalPrice: purchase.items_total_price || 0,
       status: purchase.status || 'pending',
       purchasedAt: purchase.purchased_at,
       purchasedBy: purchase.purchased_by || 'Unknown User',
@@ -161,7 +191,12 @@ class StoreService implements StoreServiceInterface {
       shippedDate: purchase.shipped_date,
       notes: purchase.notes || '',
       customerReference: purchase.customer_reference || '',
-      orderReference: purchase.order_reference || ''
+      orderReference: purchase.order_reference || '',
+      // Backward compatibility
+      productId: purchase.items[0]?.product_id,
+      productName: purchase.items[0]?.product?.name,
+      quantity: purchase.items[0]?.quantity,
+      totalPrice: purchase.items_total_price
     })) as Purchase[];
   }
   
@@ -177,7 +212,13 @@ class StoreService implements StoreServiceInterface {
     // Get all purchases without filtering by purchased_by
     const { data, error } = await supabase
       .from('purchases')
-      .select('*, products(name)')
+      .select(`
+        *,
+        items:purchase_items(
+          *,
+          product:products(name, pricing_type)
+        )
+      `)
       .order('purchased_at', { ascending: false });
     
     if (error) {
@@ -234,10 +275,18 @@ class StoreService implements StoreServiceInterface {
     
     return userPurchases.map(purchase => ({
       id: purchase.id,
-      productId: purchase.product_id,
-      productName: purchase.products?.name || 'Unknown Product',
-      quantity: purchase.quantity || 0,
-      totalPrice: purchase.total_price || 0,
+      items: purchase.items.map((item: any) => ({
+        id: item.id,
+        purchaseId: item.purchase_id,
+        productId: item.product_id,
+        productName: item.product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        pricePerUnit: item.price_per_unit,
+        totalPrice: item.total_price,
+        createdAt: item.created_at,
+        pricing_type: item.product?.pricing_type || 'one_time'
+      })),
+      itemsTotalPrice: purchase.items_total_price || 0,
       status: purchase.status || 'pending',
       purchasedAt: purchase.purchased_at,
       purchasedBy: purchase.purchased_by || 'Unknown User',
@@ -255,7 +304,12 @@ class StoreService implements StoreServiceInterface {
       shippedDate: purchase.shipped_date,
       notes: purchase.notes || '',
       customerReference: purchase.customer_reference || '',
-      orderReference: purchase.order_reference || ''
+      orderReference: purchase.order_reference || '',
+      // Backward compatibility
+      productId: purchase.items[0]?.product_id,
+      productName: purchase.items[0]?.product?.name,
+      quantity: purchase.items[0]?.quantity,
+      totalPrice: purchase.items_total_price
     })) as Purchase[];
   }
   
@@ -268,7 +322,13 @@ class StoreService implements StoreServiceInterface {
     
     const { data, error } = await supabase
       .from('purchases')
-      .select('*, products(name)')
+      .select(`
+        *,
+        items:purchase_items(
+          *,
+          product:products(name)
+        )
+      `)
       .eq('id', id)
       .single();
     
@@ -284,10 +344,17 @@ class StoreService implements StoreServiceInterface {
     
     return {
       id: data.id,
-      productId: data.product_id,
-      productName: data.products?.name || 'Unknown Product',
-      quantity: data.quantity || 0,
-      totalPrice: data.total_price || 0,
+      items: data.items.map((item: any) => ({
+        id: item.id,
+        purchaseId: item.purchase_id,
+        productId: item.product_id,
+        productName: item.product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        pricePerUnit: item.price_per_unit,
+        totalPrice: item.total_price,
+        createdAt: item.created_at
+      })),
+      itemsTotalPrice: data.items_total_price || 0,
       status: data.status || 'pending',
       purchasedAt: data.purchased_at,
       purchasedBy: data.purchased_by || 'Unknown User',
@@ -302,10 +369,15 @@ class StoreService implements StoreServiceInterface {
       orderDetails: data.order_details || '',
       trackingNumber: data.tracking_number || '',
       carrier: data.carrier || '',
-      shippedDate: data.shipped_date,
+      shippedDate: data.shipping_date,
       notes: data.notes || '',
       customerReference: data.customer_reference || '',
-      orderReference: data.order_reference || ''
+      orderReference: data.order_reference || '',
+      // Backward compatibility
+      productId: data.items[0]?.product_id,
+      productName: data.items[0]?.product?.name,
+      quantity: data.items[0]?.quantity,
+      totalPrice: data.items_total_price
     } as Purchase;
   }
   
@@ -316,57 +388,51 @@ class StoreService implements StoreServiceInterface {
       throw new Error('User not authenticated');
     }
     
-    // Get the product to calculate the total price
-    const { data: product, error: productError } = await supabase
+    // Get all products to calculate total prices
+    const { data: products, error: productsError } = await supabase
       .from('products')
-      .select('*')
-      .eq('id', data.productId)
-      .single();
+      .select('*, pricing_type')
+      .in('id', data.items.map(item => item.productId));
     
-    if (productError) {
-      console.error('Error fetching product for purchase:', productError);
-      throw new Error('Failed to fetch product for purchase');
+    if (productsError || !products) {
+      console.error('Error fetching products for purchase:', productsError);
+      throw new Error('Failed to fetch products for purchase');
     }
+    
+    // Create a map of product prices
+    const productPrices = new Map(products.map(p => [p.id, p.price]));
+    
+    // Calculate items and total price
+    const purchaseItems = data.items.map(item => ({
+      product_id: item.productId,
+      quantity: item.quantity,
+      price_per_unit: productPrices.get(item.productId) || 0,
+      total_price: (productPrices.get(item.productId) || 0) * item.quantity
+    }));
+    
+    const totalPrice = purchaseItems.reduce((sum, item) => sum + item.total_price, 0);
     
     // Use the company name provided by the user, or a default if not provided
     const realCompanyName = data.companyName || 'Unknown Company';
-    console.log('Using company name from form:', realCompanyName);
     
-    // Find a valid company ID to use for the database foreign key
-    let companyId;
+    // Find a valid company ID
+    const { data: anyCompany } = await supabase
+      .from('companies')
+      .select('id')
+      .limit(1)
+      .single();
     
-    try {
-      // First, try to get any company from the database to use as a fallback
-      const { data: anyCompany } = await supabase
-        .from('companies')
-        .select('id')
-        .limit(1)
-        .single();
-      
-      if (anyCompany) {
-        companyId = anyCompany.id;
-        console.log('Using company ID from database:', companyId);
-      }
-    } catch (error) {
-      console.warn('Error handling company information:', error);
-    }
-    
-    // If we still don't have a valid company ID, we can't proceed
-    if (!companyId) {
-      console.error('No valid company ID found, cannot create purchase');
+    if (!anyCompany) {
       throw new Error('Failed to create purchase: No valid company ID available');
     }
     
-    const totalPrice = product.price * data.quantity;
-    
+    // Create the purchase
     const newPurchase = {
-      product_id: data.productId,
-      quantity: data.quantity,
-      total_price: totalPrice,
+      items_total_price: totalPrice,
       status: 'pending',
       purchased_at: new Date().toISOString(),
       purchased_by: currentUser.name,
-      company_id: companyId,
+      company_id: anyCompany.id,
       company_name: realCompanyName,
       shipping_address: data.shippingAddress,
       shipping_city: data.shippingCity,
@@ -376,45 +442,92 @@ class StoreService implements StoreServiceInterface {
       contact_phone: data.contactPhone,
       order_details: data.orderDetails,
       customer_reference: data.customerReference
-      // Note: order_reference will be auto-generated by the database trigger
     };
     
-    const { data: createdPurchase, error } = await supabase
+    // Start a transaction
+    const { data: createdPurchase, error: purchaseError } = await supabase
       .from('purchases')
       .insert(newPurchase)
       .select()
       .single();
     
-    if (error) {
-      console.error('Error creating purchase:', error);
+    if (purchaseError || !createdPurchase) {
+      console.error('Error creating purchase:', purchaseError);
       throw new Error('Failed to create purchase');
     }
     
+    // Create purchase items
+    const purchaseItemsWithId = purchaseItems.map(item => ({
+      ...item,
+      purchase_id: createdPurchase.id
+    }));
+    
+    const { error: itemsError } = await supabase
+      .from('purchase_items')
+      .insert(purchaseItemsWithId);
+    
+    if (itemsError) {
+      console.error('Error creating purchase items:', itemsError);
+      throw new Error('Failed to create purchase items');
+    }
+    
+    // Fetch the complete purchase with items
+    const { data: purchase, error: fetchError } = await supabase
+      .from('purchases')
+      .select(`
+        *,
+        items:purchase_items(
+          *,
+          product:products(name)
+        )
+      `)
+      .eq('id', createdPurchase.id)
+      .single();
+    
+    if (fetchError || !purchase) {
+      console.error('Error fetching created purchase:', fetchError);
+      throw new Error('Failed to fetch created purchase');
+    }
+    
+    // Map the response to our Purchase type
     return {
-      id: createdPurchase.id,
-      productId: createdPurchase.product_id,
-      productName: product.name || 'Unknown Product',
-      quantity: createdPurchase.quantity || 0,
-      totalPrice: createdPurchase.total_price || 0,
-      status: createdPurchase.status || 'pending',
-      purchasedAt: createdPurchase.purchased_at,
-      purchasedBy: createdPurchase.purchased_by || 'Unknown User',
-      companyId: createdPurchase.company_id,
-      companyName: realCompanyName, // Use the real company name here
-      shippingAddress: createdPurchase.shipping_address || '',
-      shippingCity: createdPurchase.shipping_city || '',
-      shippingPostalCode: createdPurchase.shipping_postal_code || '',
-      shippingCountry: createdPurchase.shipping_country || '',
-      contactEmail: createdPurchase.contact_email || '',
-      contactPhone: createdPurchase.contact_phone || '',
-      orderDetails: createdPurchase.order_details || '',
-      trackingNumber: createdPurchase.tracking_number || '',
-      carrier: createdPurchase.carrier || '',
-      shippedDate: createdPurchase.shipped_date,
-      notes: createdPurchase.notes || '',
-      customerReference: createdPurchase.customer_reference || '',
-      orderReference: createdPurchase.order_reference || ''
-    } as Purchase;
+      id: purchase.id,
+      items: purchase.items.map(item => ({
+        id: item.id,
+        purchaseId: item.purchase_id,
+        productId: item.product_id,
+        productName: item.product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        pricePerUnit: item.price_per_unit,
+        totalPrice: item.total_price,
+        createdAt: item.created_at,
+        pricing_type: item.product?.pricing_type || 'one_time'
+      })),
+      itemsTotalPrice: purchase.items_total_price,
+      status: purchase.status,
+      purchasedAt: purchase.purchased_at,
+      purchasedBy: purchase.purchased_by,
+      companyId: purchase.company_id,
+      companyName: purchase.company_name,
+      shippingAddress: purchase.shipping_address || '',
+      shippingCity: purchase.shipping_city || '',
+      shippingPostalCode: purchase.shipping_postal_code || '',
+      shippingCountry: purchase.shipping_country || '',
+      contactEmail: purchase.contact_email || '',
+      contactPhone: purchase.contact_phone || '',
+      orderDetails: purchase.order_details || '',
+      trackingNumber: purchase.tracking_number || '',
+      carrier: purchase.carrier || '',
+      shippedDate: purchase.shipped_date,
+      notes: purchase.notes || '',
+      customerReference: purchase.customer_reference || '',
+      orderReference: purchase.order_reference || '',
+      // Backward compatibility
+      productId: purchase.items[0]?.product_id,
+      productName: purchase.items[0]?.product?.name,
+      quantity: purchase.items[0]?.quantity,
+      totalPrice: purchase.items_total_price
+    };
   }
   
   async updatePurchaseStatus(id: string, data: UpdatePurchaseStatusDto): Promise<Purchase | null> {
@@ -445,7 +558,13 @@ class StoreService implements StoreServiceInterface {
       .from('purchases')
       .update(updateData)
       .eq('id', id)
-      .select('*, products(name)')
+      .select(`
+        *,
+        items:purchase_items(
+          *,
+          product:products(name, pricing_type)
+        )
+      `)
       .single();
     
     if (error) {
@@ -453,31 +572,43 @@ class StoreService implements StoreServiceInterface {
       throw new Error('Failed to update purchase status');
     }
     
-    return {
-      id: updatedPurchase.id,
-      productId: updatedPurchase.product_id,
-      productName: updatedPurchase.products?.name || 'Unknown Product',
-      quantity: updatedPurchase.quantity || 0,
-      totalPrice: updatedPurchase.total_price || 0,
-      status: updatedPurchase.status || 'pending',
-      purchasedAt: updatedPurchase.purchased_at,
-      purchasedBy: updatedPurchase.purchased_by || 'Unknown User',
-      companyId: updatedPurchase.company_id,
-      companyName: updatedPurchase.company_name || 'Unknown Company',
-      shippingAddress: updatedPurchase.shipping_address || '',
-      shippingCity: updatedPurchase.shipping_city || '',
-      shippingPostalCode: updatedPurchase.shipping_postal_code || '',
-      shippingCountry: updatedPurchase.shipping_country || '',
-      contactEmail: updatedPurchase.contact_email || '',
-      contactPhone: updatedPurchase.contact_phone || '',
-      orderDetails: updatedPurchase.order_details || '',
-      trackingNumber: updatedPurchase.tracking_number || '',
-      carrier: updatedPurchase.carrier || '',
-      shippedDate: updatedPurchase.shipped_date,
-      notes: updatedPurchase.notes || '',
-      customerReference: updatedPurchase.customer_reference || '',
-      orderReference: updatedPurchase.order_reference || ''
-    } as Purchase;
+   return {
+     id: updatedPurchase.id,
+     items: updatedPurchase.items.map((item: any) => ({
+       id: item.id,
+       purchaseId: item.purchase_id,
+       productId: item.product_id,
+       productName: item.product?.name || 'Unknown Product',
+       quantity: item.quantity,
+       pricePerUnit: item.price_per_unit,
+       totalPrice: item.total_price,
+       createdAt: item.created_at
+     })),
+     itemsTotalPrice: updatedPurchase.items_total_price || 0,
+     status: updatedPurchase.status || 'pending',
+     purchasedAt: updatedPurchase.purchased_at,
+     purchasedBy: updatedPurchase.purchased_by || 'Unknown User',
+     companyId: updatedPurchase.company_id,
+     companyName: updatedPurchase.company_name || 'Unknown Company',
+     shippingAddress: updatedPurchase.shipping_address || '',
+     shippingCity: updatedPurchase.shipping_city || '',
+     shippingPostalCode: updatedPurchase.shipping_postal_code || '',
+     shippingCountry: updatedPurchase.shipping_country || '',
+     contactEmail: updatedPurchase.contact_email || '',
+     contactPhone: updatedPurchase.contact_phone || '',
+     orderDetails: updatedPurchase.order_details || '',
+     trackingNumber: updatedPurchase.tracking_number || '',
+     carrier: updatedPurchase.carrier || '',
+     shippedDate: updatedPurchase.shipped_date,
+     notes: updatedPurchase.notes || '',
+     customerReference: updatedPurchase.customer_reference || '',
+     orderReference: updatedPurchase.order_reference || '',
+     // Backward compatibility
+     productId: updatedPurchase.items[0]?.product_id,
+     productName: updatedPurchase.items[0]?.product?.name,
+     quantity: updatedPurchase.items[0]?.quantity,
+     totalPrice: updatedPurchase.items_total_price
+   };
   }
 }
 

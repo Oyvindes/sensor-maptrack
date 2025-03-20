@@ -63,7 +63,13 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
           // This is a workaround for the issue where purchases don't show up
           purchasesData = await supabase
             .from('purchases')
-            .select('*, products(name)')
+            .select(`
+              *,
+              items:purchase_items(
+                *,
+                product:products(name)
+              )
+            `)
             .order('purchased_at', { ascending: false })
             .then(({ data, error }) => {
               if (error) {
@@ -71,14 +77,20 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                 return [];
               }
               
-              // Map the data to match the Purchase type
+              // Map the data to match the Purchase type with items
               return data.map(purchase => ({
-                ...purchase,
-                productName: purchase.products?.name || 'Unknown Product',
                 id: purchase.id,
-                productId: purchase.product_id,
-                quantity: purchase.quantity || 0,
-                totalPrice: purchase.total_price || 0,
+                items: purchase.items.map((item: any) => ({
+                  id: item.id,
+                  purchaseId: item.purchase_id,
+                  productId: item.product_id,
+                  productName: item.product?.name || 'Unknown Product',
+                  quantity: item.quantity,
+                  pricePerUnit: item.price_per_unit,
+                  totalPrice: item.total_price,
+                  createdAt: item.created_at
+                })),
+                itemsTotalPrice: purchase.items_total_price || 0,
                 status: purchase.status || 'pending',
                 purchasedAt: purchase.purchased_at,
                 purchasedBy: purchase.purchased_by || 'Unknown User',
@@ -96,7 +108,12 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                 shippedDate: purchase.shipped_date,
                 notes: purchase.notes || '',
                 customerReference: purchase.customer_reference || '',
-                orderReference: purchase.order_reference || ''
+                orderReference: purchase.order_reference || '',
+                // Backward compatibility
+                productId: purchase.items[0]?.product_id,
+                productName: purchase.items[0]?.product?.name,
+                quantity: purchase.items[0]?.quantity,
+                totalPrice: purchase.items_total_price
               }));
             });
           
@@ -188,6 +205,22 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
   const handleCancelCheckout = () => {
     setStoreView('cart');
   };
+
+  // Handle modal open/close effects
+  useEffect(() => {
+    if (showProductForm) {
+      // Prevent background scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore scroll when modal is closed
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showProductForm]);
 
   const handleCreateProduct = () => {
     setProductToEdit(null);
@@ -346,11 +379,11 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
               {products.map(product => (
                 <Card key={product.id} className="overflow-hidden">
                   {product.imageUrl && (
-                    <div className="aspect-video w-full overflow-hidden">
+                    <div className="relative aspect-square w-full overflow-hidden">
                       <img
                         src={product.imageUrl}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-contain bg-muted p-2"
                       />
                     </div>
                   )}
@@ -359,7 +392,12 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                     <CardDescription>{product.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">${product.price}</p>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-2xl font-bold">{product.price} kr</p>
+                      <p className="text-sm text-muted-foreground">
+                        {product.pricing_type === 'monthly' ? 'Monthly Fee' : 'One-time Cost'}
+                      </p>
+                    </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
                     <Button
@@ -467,7 +505,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>{purchase.productName}</CardTitle>
+                      <CardTitle>Purchase #{purchase.orderReference || purchase.id.substring(0, 8)}</CardTitle>
                       <CardDescription>
                         Purchased on {new Date(purchase.purchasedAt).toLocaleDateString()}
                       </CardDescription>
@@ -477,9 +515,23 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between">
-                    <div>
-                      <p>Quantity: {purchase.quantity}</p>
-                      <p>Total: ${purchase.totalPrice}</p>
+                    <div className="w-full">
+                      <div className="space-y-2">
+                        <h3 className="font-medium">Order Items:</h3>
+                        {purchase.items.map((item) => (
+                          <div key={item.id} className="flex justify-between py-2 border-b last:border-0">
+                            <div>
+                              <p className="font-medium">{item.productName}</p>
+                              <p className="text-sm text-muted-foreground">{item.quantity} × {item.pricePerUnit} kr</p>
+                            </div>
+                            <p>{item.totalPrice} kr</p>
+                          </div>
+                        ))}
+                        <div className="flex justify-between pt-2 font-bold">
+                          <p>Total</p>
+                          <p>{purchase.itemsTotalPrice} kr</p>
+                        </div>
+                      </div>
                       
                       {(purchase.shippingAddress || purchase.shippingCity || purchase.shippingPostalCode || purchase.shippingCountry) && (
                         <div className="mt-2">
@@ -580,7 +632,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle>{purchase.productName || 'Unknown Product'}</CardTitle>
+                        <CardTitle>Order #{purchase.orderReference || purchase.id.substring(0, 8)}</CardTitle>
                         <CardDescription>
                           Purchased by {purchase.purchasedBy || 'Unknown User'} ({purchase.companyName || 'Unknown Company'})
                           <br />
@@ -654,9 +706,23 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between">
-                      <div>
-                        <p>Quantity: {purchase.quantity || 0}</p>
-                        <p>Total: ${typeof purchase.totalPrice === 'number' ? purchase.totalPrice.toFixed(2) : '0.00'}</p>
+                      <div className="w-full">
+                        <div className="space-y-2">
+                          <h3 className="font-medium">Order Items:</h3>
+                          {purchase.items.map((item) => (
+                            <div key={item.id} className="flex justify-between py-2 border-b last:border-0">
+                              <div>
+                                <p className="font-medium">{item.productName}</p>
+                                <p className="text-sm text-muted-foreground">{item.quantity} × {item.pricePerUnit} kr</p>
+                              </div>
+                              <p>{item.totalPrice} kr</p>
+                            </div>
+                          ))}
+                          <div className="flex justify-between pt-2 font-bold">
+                            <p>Total</p>
+                            <p>{purchase.itemsTotalPrice} kr</p>
+                          </div>
+                        </div>
                         
                         {/* Always show shipping address section for site-wide admins */}
                         <div className="mt-2">
@@ -864,8 +930,8 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
       
       {/* Product Form Modal */}
       {showProductForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100]">
-          <div className="w-full max-w-3xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100] overflow-hidden">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <ProductForm
               onSuccess={handleProductFormSuccess}
               onCancel={handleProductFormCancel}

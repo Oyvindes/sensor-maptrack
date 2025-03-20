@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Product, CreateProductDto } from '@/types/store';
+import { Product, CreateProductDto, PricingType } from '@/types/store';
 import { storeService } from '@/services/store';
 import { storageService } from '@/services/storage/storageService';
 import { toast } from 'sonner';
@@ -28,6 +28,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     name: initialProduct?.name || '',
     description: initialProduct?.description || '',
     price: initialProduct?.price || 0,
+    pricing_type: initialProduct?.pricing_type || 'one_time',
     image_url: initialProduct?.imageUrl || ''  // Map from camelCase to snake_case
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,11 +37,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' ? parseFloat(value) || 0 : value
+      [name]: name === 'price' ? parseFloat(value) || 0 :
+              name === 'pricing_type' ? (value as 'monthly' | 'one_time') :
+              value
     }));
     
     // Clear error when field is edited
@@ -77,11 +80,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
     
-    // Clear any previous image URL from the form data
-    setFormData(prev => ({
-      ...prev,
-      image_url: ''
-    }));
+    // Don't clear the image_url here - we'll only update it if the upload succeeds
     
     // Clear any errors
     if (errors.image_url) {
@@ -107,12 +106,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
     if (!formData.description.trim()) {
       newErrors.description = 'Product description is required';
     }
-    
     if (formData.price <= 0) {
       newErrors.price = 'Price must be greater than 0';
     }
+
+    if (!formData.pricing_type || !['monthly', 'one_time'].includes(formData.pricing_type)) {
+      newErrors.pricing_type = 'Please select a pricing type';
+    }
     
     setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
     return Object.keys(newErrors).length === 0;
   };
 
@@ -126,18 +129,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Prepare the data to submit
+      let dataToSubmit = { ...formData };
+      
       // If there's a selected file, try to upload it
-      let uploadSuccess = false;
       if (selectedFile) {
         setIsUploading(true);
         try {
           const imageUrl = await storageService.uploadProductImage(selectedFile);
-          // Update the form data with the image URL
-          setFormData(prev => ({
-            ...prev,
+          // Update the data to submit with the new image URL
+          dataToSubmit = {
+            ...dataToSubmit,
             image_url: imageUrl
-          }));
-          uploadSuccess = true;
+          };
         } catch (error) {
           console.error('Error uploading image:', error);
           toast.error('Failed to upload image. Using direct URL if provided.');
@@ -159,11 +163,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
       }
       
       let product: Product;
-      const dataToSubmit = {
-        ...formData,
-        // Use the current image_url value (either from upload or direct input)
-        image_url: formData.image_url
-      };
       
       if (isEdit && initialProduct?.id) {
         // Update existing product
@@ -241,7 +240,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="price" className="required">Price ($)</Label>
+            <Label htmlFor="price" className="required">Price (NOK)</Label>
             <Input
               id="price"
               name="price"
@@ -254,6 +253,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
               className={errors.price ? 'border-destructive' : ''}
             />
             {errors.price && <p className="text-sm text-destructive">{errors.price}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pricing_type" className="required">Pricing Type</Label>
+            <select
+              id="pricing_type"
+              name="pricing_type"
+              value={formData.pricing_type}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 rounded-md border ${errors.pricing_type ? 'border-destructive' : 'border-input'} bg-background text-foreground`}
+            >
+              <option value="one_time">One-time Cost</option>
+              <option value="monthly">Monthly Fee</option>
+            </select>
+            {errors.pricing_type && <p className="text-sm text-destructive">{errors.pricing_type}</p>}
           </div>
           
           <div className="space-y-2">

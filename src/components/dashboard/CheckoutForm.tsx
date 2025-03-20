@@ -31,7 +31,8 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   onRemoveItem
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Omit<CreatePurchaseDto, 'productId' | 'quantity' | 'items'>>({
+  const [formData, setFormData] = useState<CreatePurchaseDto>({
+    items: [], // Will be set during submission
     companyName: '',
     shippingAddress: '',
     shippingCity: '',
@@ -66,29 +67,34 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // For multi-item checkout, we'll create multiple purchases with the same shipping info
-      const purchasePromises = items.map(item =>
-        storeService.createPurchase({
-          productId: item.product.id,
-          quantity: item.quantity,
-          ...formData
-        })
-      );
-      
-      await Promise.all(purchasePromises);
+      // Convert cart items to purchase items format
+      const purchaseItems = items.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity
+      }));
 
-      toast.success('Purchases completed successfully!');
+      // Create a single purchase with all items
+      await storeService.createPurchase({
+        ...formData,
+        items: purchaseItems
+      });
+
+      toast.success('Purchase completed successfully!');
       onSuccess();
     } catch (error) {
-      console.error('Error creating purchases:', error);
-      toast.error('Failed to complete purchases. Please try again.');
+      console.error('Error creating purchase:', error);
+      toast.error('Failed to complete purchase. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Calculate total price of all items
-  const totalPrice = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  // Calculate separate totals for monthly and one-time items
+  const monthlyItems = items.filter(item => item.product.pricing_type === 'monthly');
+  const onetimeItems = items.filter(item => item.product.pricing_type !== 'monthly');
+  
+  const monthlyTotal = monthlyItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const onetimeTotal = onetimeItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -106,7 +112,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
               <div key={item.product.id} className="flex items-center justify-between py-2 border-b">
                 <div className="flex-1">
                   <span className="font-medium">{item.product.name}</span>
-                  <div className="text-sm text-muted-foreground">${item.product.price} each</div>
+                  <div className="text-sm text-muted-foreground">
+                    {item.product.price} kr each
+                    <span className={item.product.pricing_type === 'monthly' ? 'text-blue-600 ml-2' : 'text-muted-foreground ml-2'}>
+                      ({item.product.pricing_type === 'monthly' ? 'Monthly Fee' : 'One-time Cost'})
+                    </span>
+                  </div>
                 </div>
                 {onUpdateQuantity && onRemoveItem ? (
                   <div className="flex items-center gap-2">
@@ -144,17 +155,40 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                   </div>
                 ) : (
                   <div className="text-right">
-                    <span>{item.quantity} × ${item.product.price}</span>
+                    <span>{item.quantity} × {item.product.price} kr</span>
                   </div>
                 )}
                 <div className="w-24 text-right">
-                  ${(item.product.price * item.quantity).toFixed(2)}
+                  {(item.product.price * item.quantity).toFixed(2)} kr
                 </div>
               </div>
             ))}
-            <div className="flex justify-between py-2 font-bold">
-              <span>Total</span>
-              <span>${totalPrice.toFixed(2)}</span>
+            <div className="space-y-2 py-2">
+              {onetimeTotal > 0 && (
+                <div className="flex justify-between">
+                  <span>One-time Costs</span>
+                  <span>{onetimeTotal.toFixed(2)} kr</span>
+                </div>
+              )}
+              {monthlyTotal > 0 && (
+                <div className="flex justify-between text-blue-600">
+                  <span>Monthly Fees</span>
+                  <span>{monthlyTotal.toFixed(2)} kr/month</span>
+                </div>
+              )}
+              {/* Only show total if there are one-time costs */}
+              {onetimeTotal > 0 && (
+                <div className="flex justify-between font-bold pt-2 border-t">
+                  <span>Total (One-time)</span>
+                  <span>{onetimeTotal.toFixed(2)} kr</span>
+                </div>
+              )}
+              {/* Add note about monthly fees if present */}
+              {monthlyTotal > 0 && (
+                <div className="text-sm text-muted-foreground pt-2">
+                  * Monthly fees will be billed separately
+                </div>
+              )}
             </div>
           </div>
 

@@ -1,12 +1,16 @@
 // Types for the store functionality
 
+export type PricingType = 'monthly' | 'one_time';
+
 // Interface for the products table
-// Database columns: id, name, description, price, image_url, created_at, created_by, updated_at
+// Database columns: id, name, description, price, pricing_type, image_url, created_at, created_by, updated_at
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
+  pricing_type: PricingType;  // Using snake_case to match DB column
+  pricingType?: PricingType;  // Keeping for backward compatibility
   image_url?: string;  // Using snake_case to match DB column
   imageUrl?: string;   // Keeping for backward compatibility
   createdAt: string;   // maps to created_at in DB
@@ -14,16 +18,33 @@ export interface Product {
   updatedAt?: string;  // maps to updated_at in DB
 }
 
+// Interface for purchase items
+export interface PurchaseItem {
+  id: string;
+  purchaseId: string;        // maps to purchase_id in DB
+  productId: string;         // maps to product_id in DB
+  productName?: string;      // joined from products table
+  quantity: number;
+  pricePerUnit: number;      // maps to price_per_unit in DB
+  totalPrice: number;        // maps to total_price in DB
+  createdAt: string;         // maps to created_at in DB
+  pricing_type: PricingType; // joined from products table
+}
+
 // Interface for the purchases table
-// Database columns: id, product_id, quantity, total_price, status, purchased_at, purchased_by, company_id, company_name,
+// Database columns: id, items_total_price, status, purchased_at, purchased_by, company_id, company_name,
 // shipping_address, shipping_city, shipping_postal_code, shipping_country, contact_email, contact_phone, order_details,
 // tracking_number, carrier, shipped_date, updated_at, notes, customer_reference, order_reference
 export interface Purchase {
   id: string;
-  productId: string;          // maps to product_id in DB
-  productName: string;        // joined from products table
-  quantity: number;
-  totalPrice: number;         // maps to total_price in DB
+  items: PurchaseItem[];     // joined from purchase_items table
+  itemsTotalPrice: number;   // maps to items_total_price in DB
+  
+  // For backward compatibility
+  productId?: string;        // deprecated: use items[0].productId instead
+  productName?: string;      // deprecated: use items[0].productName instead
+  quantity?: number;         // deprecated: use items[0].quantity instead
+  totalPrice?: number;       // deprecated: use itemsTotalPrice instead
   status: PurchaseStatus;
   purchasedAt: string;        // maps to purchased_at in DB
   purchasedBy: string;        // maps to purchased_by in DB
@@ -51,6 +72,7 @@ export interface CreateProductDto {
   name: string;
   description: string;
   price: number;
+  pricing_type: PricingType;  // Using snake_case to match DB column
   image_url?: string;  // Using snake_case to match DB column
 }
 
@@ -58,13 +80,19 @@ export interface UpdateProductDto {
   name?: string;
   description?: string;
   price?: number;
+  pricing_type?: PricingType;  // Using snake_case to match DB column
   image_url?: string;  // Using snake_case to match DB column
 }
 
-export interface CreatePurchaseDto {
+// Interface for creating a purchase item
+export interface CreatePurchaseItemDto {
   productId: string;
   quantity: number;
-  companyName?: string;     // Added company name field
+}
+
+export interface CreatePurchaseDto {
+  items: CreatePurchaseItemDto[];  // Array of items to purchase
+  companyName?: string;            // Added company name field
   shippingAddress?: string;
   shippingCity?: string;
   shippingPostalCode?: string;
@@ -72,7 +100,7 @@ export interface CreatePurchaseDto {
   contactEmail?: string;
   contactPhone?: string;
   orderDetails?: string;
-  customerReference?: string; // Customer-provided reference for invoicing
+  customerReference?: string;      // Customer-provided reference for invoicing
 }
 
 export interface UpdatePurchaseStatusDto {
