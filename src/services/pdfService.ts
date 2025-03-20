@@ -20,11 +20,17 @@ class PdfService implements PdfServiceInterface {
       doc.setTextColor(40, 40, 40);
       doc.text('PROFORMA INVOICE', 105, 20, { align: 'center' });
       
-      // Set up coordinates
+      // Set up coordinates with proper margins
       const leftMargin = 20;
+      const rightMargin = 20;
+      const pageWidth = doc.internal.pageSize.width;
       const rightColumnStart = 120;
       const startY = 40;
       let currentY = startY;
+      
+      // Calculate positions for summary section
+      const summaryLabelX = 110; // Move labels left
+      const summaryValueX = 165; // Move values left to avoid right margin
       
       // Add company details (left column)
       doc.setFontSize(12);
@@ -110,12 +116,12 @@ class PdfService implements PdfServiceInterface {
       doc.setFontSize(10);
       doc.setTextColor(40, 40, 40);
       
-      // Table headers
+      // Table headers with better spacing
       const colItem = leftMargin;
       const colDesc = leftMargin + 15;
-      const colQty = 140;
-      const colPrice = 160;
-      const colTotal = 180;
+      const colQty = 120;
+      const colPrice = 140;
+      const colTotal = 170; // Give more space between price and total
       
       doc.text('Item', colItem, currentY);
       doc.text('Description', colDesc, currentY);
@@ -126,32 +132,67 @@ class PdfService implements PdfServiceInterface {
       // Draw a line under headers
       currentY += 2;
       doc.setDrawColor(200, 200, 200);
-      doc.line(leftMargin, currentY, 190, currentY);
+      doc.line(leftMargin, currentY, pageWidth - rightMargin, currentY);
       
-      // Table data
+      // Table data for each item
       currentY += 8;
-      doc.text('1', colItem, currentY);
-      doc.text(purchase.productName, colDesc, currentY);
-      doc.text(purchase.quantity.toString(), colQty, currentY);
-      doc.text(`$${(purchase.totalPrice / purchase.quantity).toFixed(2)}`, colPrice, currentY);
-      doc.text(`$${purchase.totalPrice.toFixed(2)}`, colTotal, currentY);
+      purchase.items.forEach((item, index) => {
+        doc.text((index + 1).toString(), colItem, currentY);
+        doc.text(`${item.productName} (${item.pricing_type === 'monthly' ? 'Monthly' : 'One-time'})`, colDesc, currentY);
+        doc.text(item.quantity.toString(), colQty, currentY);
+        doc.text(`${item.pricePerUnit.toFixed(2)}  kr`, colPrice, currentY); // Added extra space before kr
+        doc.text(`${item.totalPrice.toFixed(2)}  kr`, colTotal, currentY); // Added extra space before kr
+        currentY += 6;
+      });
       
       // Draw a line under data
-      currentY += 5;
-      doc.line(leftMargin, currentY, 190, currentY);
+      currentY += 2;
+      doc.line(leftMargin, currentY, pageWidth - rightMargin, currentY);
       
-      // Add total
-      currentY += 15;
-      doc.text('Subtotal:', 140, currentY);
-      doc.text(`$${purchase.totalPrice.toFixed(2)}`, 180, currentY);
+      // Calculate totals with proper spacing
+      const monthlyItems = purchase.items.filter(item => item.pricing_type === 'monthly');
+      const onetimeItems = purchase.items.filter(item => item.pricing_type !== 'monthly');
       
-      currentY += 5;
-      doc.text('Tax (0%):', 140, currentY);
-      doc.text('$0.00', 180, currentY);
+      const monthlyTotal = monthlyItems.reduce((sum, item) => sum + item.totalPrice, 0);
+      const onetimeTotal = onetimeItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
+      // Add totals section
+      currentY += 8;
       
+      if (onetimeItems.length > 0) {
+        doc.text('One-time Costs:', summaryLabelX, currentY);
+        doc.text(`${onetimeTotal.toFixed(2)}  kr`, summaryValueX, currentY);
+        currentY += 5;
+      }
+      
+      if (monthlyItems.length > 0) {
+        doc.text('Monthly Fees:', summaryLabelX, currentY);
+        // Adjust position to ensure text fits within the frame
+        doc.text(`${monthlyTotal.toFixed(2)}  kr/month`, summaryValueX, currentY);
+        currentY += 5;
+      }
+      
+      // Only add tax line and total if there are one-time costs
+      if (onetimeTotal > 0) {
+        doc.text('Tax (0%):', summaryLabelX, currentY);
+        doc.text('0.00  kr', summaryValueX, currentY);
+        currentY += 5;
+        
+        doc.text('Total (One-time):', summaryLabelX, currentY);
+        doc.text(`${onetimeTotal.toFixed(2)}  kr`, summaryValueX, currentY);
+        currentY += 5;
+      }
+      
+      // Add summary note
       currentY += 5;
-      doc.text('Total:', 140, currentY);
-      doc.text(`$${purchase.totalPrice.toFixed(2)}`, 180, currentY);
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      if (monthlyTotal > 0) {
+        doc.text(`* Monthly fees of ${monthlyTotal.toFixed(2)} kr will be billed separately`, leftMargin, currentY);
+        currentY += 4;
+      }
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
       
       // Add notes
       currentY += 15;
@@ -169,7 +210,7 @@ class PdfService implements PdfServiceInterface {
       // Add a border around the entire invoice
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.5);
-      doc.rect(10, 10, 190, currentY + 10);
+      doc.rect(leftMargin - 10, 10, pageWidth - (2 * (leftMargin - 10)), currentY + 10);
       
       // Add footer
       const pageCount = doc.getNumberOfPages();
