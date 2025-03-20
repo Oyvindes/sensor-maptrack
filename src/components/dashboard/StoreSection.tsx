@@ -521,16 +521,55 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                         {purchase.items.map((item) => (
                           <div key={item.id} className="flex justify-between py-2 border-b last:border-0">
                             <div>
-                              <p className="font-medium">{item.productName}</p>
-                              <p className="text-sm text-muted-foreground">{item.quantity} × {item.pricePerUnit} kr</p>
+                              <p className="font-medium">
+                                {item.productName}
+                                <span className={item.pricing_type === 'monthly' ? 'text-blue-600 ml-2' : 'text-muted-foreground ml-2'}>
+                                  ({item.pricing_type === 'monthly' ? '📅 Monthly' : '💰 One-time'})
+                                </span>
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {item.quantity} × {item.pricePerUnit} kr{item.pricing_type === 'monthly' ? '/month' : ''}
+                              </p>
                             </div>
                             <p>{item.totalPrice} kr</p>
                           </div>
                         ))}
-                        <div className="flex justify-between pt-2 font-bold">
-                          <p>Total</p>
-                          <p>{purchase.itemsTotalPrice} kr</p>
-                        </div>
+                        {/* Calculate and show separate totals */}
+                        {(() => {
+                          const monthlyItems = purchase.items.filter(item => item.pricing_type === 'monthly');
+                          const onetimeItems = purchase.items.filter(item => item.pricing_type !== 'monthly');
+                          
+                          const monthlyTotal = monthlyItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                          const onetimeTotal = onetimeItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                          
+                          return (
+                            <div className="space-y-2 pt-2">
+                              {onetimeTotal > 0 && (
+                                <div className="flex justify-between">
+                                  <span>One-time Costs</span>
+                                  <span>{onetimeTotal.toFixed(2)} kr</span>
+                                </div>
+                              )}
+                              {monthlyTotal > 0 && (
+                                <div className="flex justify-between text-blue-600">
+                                  <span>Monthly Fees</span>
+                                  <span>{monthlyTotal.toFixed(2)} kr/month</span>
+                                </div>
+                              )}
+                              {onetimeTotal > 0 && (
+                                <div className="flex justify-between font-bold pt-2 border-t">
+                                  <span>Total (One-time)</span>
+                                  <span>{onetimeTotal.toFixed(2)} kr</span>
+                                </div>
+                              )}
+                              {monthlyTotal > 0 && (
+                                <div className="text-sm text-muted-foreground pt-2">
+                                  * Monthly fees will be billed separately
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                       
                       {(purchase.shippingAddress || purchase.shippingCity || purchase.shippingPostalCode || purchase.shippingCountry) && (
@@ -712,16 +751,55 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                           {purchase.items.map((item) => (
                             <div key={item.id} className="flex justify-between py-2 border-b last:border-0">
                               <div>
-                                <p className="font-medium">{item.productName}</p>
-                                <p className="text-sm text-muted-foreground">{item.quantity} × {item.pricePerUnit} kr</p>
+                                <p className="font-medium">
+                                  {item.productName}
+                                  <span className={item.pricing_type === 'monthly' ? 'text-blue-600 ml-2' : 'text-muted-foreground ml-2'}>
+                                    ({item.pricing_type === 'monthly' ? '📅 Monthly' : '💰 One-time'})
+                                  </span>
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {item.quantity} × {item.pricePerUnit} kr{item.pricing_type === 'monthly' ? '/month' : ''}
+                                </p>
                               </div>
                               <p>{item.totalPrice} kr</p>
                             </div>
                           ))}
-                          <div className="flex justify-between pt-2 font-bold">
-                            <p>Total</p>
-                            <p>{purchase.itemsTotalPrice} kr</p>
-                          </div>
+                          {/* Calculate and show separate totals */}
+                          {(() => {
+                            const monthlyItems = purchase.items.filter(item => item.pricing_type === 'monthly');
+                            const onetimeItems = purchase.items.filter(item => item.pricing_type !== 'monthly');
+                            
+                            const monthlyTotal = monthlyItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                            const onetimeTotal = onetimeItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                            
+                            return (
+                              <div className="space-y-2 pt-2">
+                                {onetimeTotal > 0 && (
+                                  <div className="flex justify-between">
+                                    <span>One-time Costs</span>
+                                    <span>{onetimeTotal.toFixed(2)} kr</span>
+                                  </div>
+                                )}
+                                {monthlyTotal > 0 && (
+                                  <div className="flex justify-between text-blue-600">
+                                    <span>Monthly Fees</span>
+                                    <span>{monthlyTotal.toFixed(2)} kr/month</span>
+                                  </div>
+                                )}
+                                {onetimeTotal > 0 && (
+                                  <div className="flex justify-between font-bold pt-2 border-t">
+                                    <span>Total (One-time)</span>
+                                    <span>{onetimeTotal.toFixed(2)} kr</span>
+                                  </div>
+                                )}
+                                {monthlyTotal > 0 && (
+                                  <div className="text-sm text-muted-foreground pt-2">
+                                    * Monthly fees will be billed separately
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                         
                         {/* Always show shipping address section for site-wide admins */}
