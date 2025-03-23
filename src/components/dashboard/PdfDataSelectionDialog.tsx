@@ -33,11 +33,11 @@ const PdfDataSelectionDialog: React.FC<PdfDataSelectionDialogProps> = ({
 }) => {
   // Define available data types with default selection
   const defaultDataTypes: SensorDataType[] = [
-    { id: "temperature", label: "Temperature", color: "#ff4444", isSelected: true },
     { id: "humidity", label: "Concrete", color: "#4444ff", isSelected: true },
+    { id: "adc1", label: "Wood", color: "#8B4513", isSelected: true },
+    { id: "temperature", label: "Temperature", color: "#ff4444", isSelected: true },
     { id: "battery", label: "Battery", color: "#44ff44", isSelected: true },
-    { id: "signal", label: "Signal", color: "#ff44ff", isSelected: true },
-    { id: "adc1", label: "Wood", color: "#8B4513", isSelected: true }
+    { id: "signal", label: "Signal", color: "#ff44ff", isSelected: true }
   ];
 
   const [dataTypes, setDataTypes] = useState<SensorDataType[]>(defaultDataTypes);

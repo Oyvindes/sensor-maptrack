@@ -157,8 +157,9 @@ export function useProjectManagement() {
 							selectedDataTypesForReport.length > 0
 								? selectedDataTypesForReport
 								: [
-										'temperature',
 										'humidity',
+										'adc1',
+										'temperature',
 										'battery',
 										'signal'
 								  ];

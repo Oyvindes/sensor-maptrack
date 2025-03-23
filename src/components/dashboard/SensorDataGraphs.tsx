@@ -56,11 +56,11 @@ interface SensorInfo {
 
 // Value type configurations
 const valueConfigs = {
-  temperature: { color: '#ff4444', label: 'Temperature' },
   humidity: { color: '#4444ff', label: 'Concrete' },
+  adc1: { color: '#8B4513', label: 'Wood' },
+  temperature: { color: '#ff4444', label: 'Temperature' },
   battery: { color: '#44ff44', label: 'Battery' },
-  signal: { color: '#ff44ff', label: 'Signal' },
-  adc1: { color: '#8B4513', label: 'Wood' }
+  signal: { color: '#ff44ff', label: 'Signal' }
 };
 
 const generateData = (

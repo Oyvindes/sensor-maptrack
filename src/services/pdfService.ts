@@ -258,7 +258,7 @@ class PdfService implements PdfServiceInterface {
  */
 export async function downloadProjectReport(
   project: SensorFolder,
-  dataTypes: string[] = ['temperature', 'humidity', 'battery', 'signal', 'adc1']
+  dataTypes: string[] = ['humidity', 'adc1', 'temperature', 'battery', 'signal']
 ): Promise<SensorFolder> {
   try {
     // Fetch sensor data for the project
@@ -318,11 +318,11 @@ export async function downloadProjectReport(
     
     // Value type configurations
     const valueConfigs = {
-      temperature: { color: '#ff4444', label: 'Temperature', unit: '°C' },
       humidity: { color: '#4444ff', label: 'Concrete', unit: '%' },
+      adc1: { color: '#8B4513', label: 'Wood', unit: '%' },
+      temperature: { color: '#ff4444', label: 'Temperature', unit: '°C' },
       battery: { color: '#44ff44', label: 'Battery', unit: '%' },
-      signal: { color: '#ff44ff', label: 'Signal', unit: '%' },
-      adc1: { color: '#8B4513', label: 'Wood', unit: '%' }
+      signal: { color: '#ff44ff', label: 'Signal', unit: '%' }
     };
     
     // Add data for each sensor
