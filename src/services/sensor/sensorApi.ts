@@ -8,15 +8,23 @@ export const sendCommandToSensor = async (
 ): Promise<{ success: boolean; message: string }> => {
 	console.log(`Sending command "${command}" to sensor ${sensorImei}`, params);
 
-	// Simulate API call
-	return new Promise((resolve) => {
-		setTimeout(() => {
-			resolve({
-				success: true,
-				message: `Command "${command}" sent to sensor ${sensorImei} successfully`
-			});
-		}, 800);
-	});
+	try {
+		// Simulate API call
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				resolve({
+					success: true,
+					message: `Command "${command}" sent to sensor ${sensorImei} successfully`
+				});
+			}, 800);
+		});
+	} catch (error) {
+		console.error(`Error sending command "${command}" to sensor ${sensorImei}:`, error);
+		return {
+			success: false,
+			message: `Failed to send command to sensor: ${error instanceof Error ? error.message : 'Unknown error'}`
+		};
+	}
 };
 
 // Mock API call to create a new sensor

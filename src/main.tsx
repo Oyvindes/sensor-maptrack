@@ -60,6 +60,30 @@ if (root) {
   console.error("Root element not found");
 }
 
+// Add global error handler to catch unhandled errors
+window.addEventListener('error', (event) => {
+  console.error('GLOBAL ERROR HANDLER:', event.error);
+  // Log to a visible element on the page so we can see errors even if the console is not open
+  const errorDiv = document.createElement('div');
+  errorDiv.style.position = 'fixed';
+  errorDiv.style.top = '0';
+  errorDiv.style.left = '0';
+  errorDiv.style.right = '0';
+  errorDiv.style.backgroundColor = 'red';
+  errorDiv.style.color = 'white';
+  errorDiv.style.padding = '10px';
+  errorDiv.style.zIndex = '9999';
+  errorDiv.textContent = `ERROR: ${event.error?.message || 'Unknown error'}`;
+  document.body.appendChild(errorDiv);
+  
+  // Try to prevent black screen by reloading after 5 seconds
+  setTimeout(() => {
+    if (document.body.style.backgroundColor === 'black' || document.body.innerHTML === '') {
+      window.location.reload();
+    }
+  }, 5000);
+});
+
 // Add TypeScript declaration for our custom window property
 declare global {
   interface Window {

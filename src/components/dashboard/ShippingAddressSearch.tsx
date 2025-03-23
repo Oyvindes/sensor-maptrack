@@ -136,7 +136,7 @@ const ShippingAddressSearch: React.FC<ShippingAddressSearchProps> = ({
         </div>
         
         {showSuggestions && suggestions.length > 0 && (
-          <Card className="absolute z-10 mt-1 w-full max-h-64 overflow-auto">
+          <Card className="absolute z-10 mt-1 w-full max-h-64 overflow-auto bg-white dark:bg-[#1f1e24]">
             <div className="p-2">
               {suggestions.map((suggestion, index) => (
                 <div

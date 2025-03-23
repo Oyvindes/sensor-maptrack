@@ -27,9 +27,18 @@ const AdminHeader: React.FC = () => {
 
   return (
     <>
-      <div className="fixed top-2 right-2 z-50">
-        <ThemeToggle />
-      </div>
+    <div className="fixed top-2 right-2 z-50 flex items-center gap-2">
+      <ThemeToggle />
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleLogout}
+        className="rounded-full h-8 w-8 p-0 flex items-center justify-center"
+        title="Logout"
+      >
+        <LogOut className="h-4 w-4" />
+      </Button>
+    </div>
       <div className="sticky top-0 z-10 w-full backdrop-blur-md bg-background/80">
         <div className="container py-2 sm:py-3 px-2 sm:px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
           <div className="flex items-center gap-3">
@@ -49,26 +58,7 @@ const AdminHeader: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="rounded-full h-9 px-4"
-            >
-              <Link to="/index">
-                <Home className="mr-2 h-4 w-4" />
-                Home
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="rounded-full h-9 px-4"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Exit
-            </Button>
+            {/* Exit Admin button moved to tab navigation */}
           </div>
         </div>
       </div>

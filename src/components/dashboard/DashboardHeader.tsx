@@ -37,9 +37,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   
   return (
     <>
-      <div className="fixed top-2 right-2 z-50">
-        <ThemeToggle />
-      </div>
+    <div className="fixed top-2 right-2 z-50 flex items-center gap-2">
+      <ThemeToggle />
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleLogout}
+        className="rounded-full h-8 w-8 p-0 flex items-center justify-center"
+        title="Logout"
+      >
+        <LogOut className="h-4 w-4" />
+      </Button>
+    </div>
       <div className="sticky top-0 z-10 w-full backdrop-blur-md bg-background/80">
         <div className="container py-2 sm:py-3 px-2 sm:px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
           <div className="flex items-center gap-3">
@@ -73,16 +82,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <span className="text-[10px] mt-1">New</span>
               </Button>
             )}
-            {/* Admin button removed as requested */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="h-7 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 gap-1"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-[10px] mt-1">Exit</span>
-            </Button>
+            {/* Logout button moved to top-right corner */}
           </div>
         </div>
       </div>

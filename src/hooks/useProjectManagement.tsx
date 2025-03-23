@@ -111,6 +111,12 @@ export function useProjectManagement() {
 				throw new Error('Project not found');
 			}
 
+			// Check if user has permission to update this project
+			const currentUser = getCurrentUser();
+			if (!currentUser) {
+				throw new Error('User not authenticated');
+			}
+
 			// Update status in database
 			const result = await updateProjectStatus(projectId, newStatus);
 
@@ -127,11 +133,11 @@ export function useProjectManagement() {
 							startedAt:
 								newStatus === 'running'
 									? new Date().toISOString()
-									: undefined,
+									: p.startedAt,
 							stoppedAt:
 								newStatus === 'stopped'
 									? new Date().toISOString()
-									: undefined
+									: p.stoppedAt
 					  }
 					: p
 			);
@@ -183,6 +189,7 @@ export function useProjectManagement() {
 						error
 					);
 					toast.error('Failed to generate project report');
+					// Continue even if PDF generation fails
 				} finally {
 					setIsGeneratingReportOnStop(false);
 				}
@@ -191,7 +198,13 @@ export function useProjectManagement() {
 			return true;
 		} catch (error) {
 			console.error('Error updating project status:', error);
-			toast.error('Failed to update project status: ' + error.message);
+			toast.error('Failed to update project status: ' + (error instanceof Error ? error.message : 'Unknown error'));
+			
+			// If we get a black screen error, reload the page
+			if (error instanceof Error && error.message.includes('black screen')) {
+				window.location.reload();
+			}
+			
 			return false;
 		}
 	};

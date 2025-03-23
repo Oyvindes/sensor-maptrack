@@ -72,41 +72,95 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 
   const handleStatusChange = (e: React.MouseEvent, project: SensorFolder) => {
     e.stopPropagation(); // Prevent card click event
-    if (!onProjectStatusChange) return;
+    console.log('DEBUG: handleStatusChange called for project:', project.id, project.name);
+    
+    if (!onProjectStatusChange) {
+      console.log('DEBUG: onProjectStatusChange is not defined');
+      return;
+    }
 
     const newStatus = project.status === 'running' ? 'stopped' : 'running';
+    console.log('DEBUG: Attempting to change project status to:', newStatus);
 
     if (newStatus === 'running' && !project.assignedSensorImeis?.length) {
+      console.log('DEBUG: Cannot start project without assigned sensors');
       toast.error('Cannot start project without assigned sensors');
       return;
     }
 
+    console.log('DEBUG: Setting confirmingStatusChange to project:', project.id);
     setConfirmingStatusChange(project);
   };
 
-  const confirmStatusChange = useCallback(() => {
-    if (!confirmingStatusChange || !onProjectStatusChange) return;
+  const confirmStatusChange = useCallback(async () => {
+    console.log('DEBUG: confirmStatusChange called');
+    
+    if (!confirmingStatusChange) {
+      console.log('DEBUG: confirmingStatusChange is null');
+      return;
+    }
+    
+    if (!onProjectStatusChange) {
+      console.log('DEBUG: onProjectStatusChange is not defined');
+      return;
+    }
 
     const newStatus = confirmingStatusChange.status === 'running' ? 'stopped' : 'running';
+    const projectName = confirmingStatusChange.name;
+    const projectId = confirmingStatusChange.id;
+    
+    console.log('DEBUG: Changing project status', {
+      projectId,
+      projectName,
+      currentStatus: confirmingStatusChange.status,
+      newStatus,
+      assignedSensors: confirmingStatusChange.assignedSensorImeis
+    });
 
+    // Create a unique ID for the loading toast so we can dismiss it later
+    const toastId = `status-change-${projectId}-${Date.now()}`;
+    
     try {
+      // First update the UI to show we're processing
+      console.log('DEBUG: Showing loading toast');
+      toast.loading(`${newStatus === 'running' ? 'Starting' : 'Stopping'} project...`, {
+        id: toastId,
+        duration: 2000 // Auto-dismiss after 2 seconds to match global setting
+      });
+      
+      // Start or stop data collection
       if (newStatus === 'running') {
+        console.log('DEBUG: Calling startProjectDataCollection');
         startProjectDataCollection(confirmingStatusChange);
-        toast.success(
-          `Started data collection for ${confirmingStatusChange.name}`
-        );
+        console.log('DEBUG: startProjectDataCollection completed');
       } else {
-        stopProjectDataCollection(confirmingStatusChange.id);
-        toast.success(
-          `Stopped data collection for ${confirmingStatusChange.name}`
-        );
+        console.log('DEBUG: Calling stopProjectDataCollection');
+        stopProjectDataCollection(projectId);
+        console.log('DEBUG: stopProjectDataCollection completed');
       }
 
-      onProjectStatusChange(confirmingStatusChange.id, newStatus);
+      // Update the project status in the database
+      console.log('DEBUG: Calling onProjectStatusChange');
+      await onProjectStatusChange(projectId, newStatus);
+      console.log('DEBUG: onProjectStatusChange completed');
+      
+      // Dismiss the loading toast and show success toast
+      toast.dismiss(toastId);
+      toast.success(`${newStatus === 'running' ? 'Started' : 'Stopped'} data collection for ${projectName}`);
     } catch (error) {
-      console.error('Error changing project status:', error);
-      toast.error('Failed to change project status');
+      console.error('DEBUG: Error changing project status:', error);
+      
+      // Dismiss the loading toast and show error toast
+      toast.dismiss(toastId);
+      toast.error(`Failed to change project status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Force reload the page if we're in an inconsistent state
+      if (error instanceof Error && error.message.includes('black screen')) {
+        console.log('DEBUG: Detected black screen error, reloading page');
+        window.location.reload();
+      }
     } finally {
+      console.log('DEBUG: Setting confirmingStatusChange to null');
       setConfirmingStatusChange(null);
     }
   }, [confirmingStatusChange, onProjectStatusChange]);

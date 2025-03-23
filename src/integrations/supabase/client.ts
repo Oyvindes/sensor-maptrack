@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Default configuration (for development only)
-const DEFAULT_SUPABASE_URL = 'localhost:808080';
+const DEFAULT_SUPABASE_URL = 'http://localhost:8080';
 
 // Get environment variables with fallbacks
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;

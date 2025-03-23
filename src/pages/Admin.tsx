@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/services/authService";
-import { Building2, Users, Radar, Database } from "lucide-react";
+import { Building2, Users, Radar, Database, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageContainer, ContentContainer } from "@/components/Layout";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
@@ -155,6 +156,19 @@ const Admin = () => {
             >
               <Radar className="w-4 h-4 mr-2" />
               <span className="text-[10px] mt-1">Track</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+                'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+              asChild
+            >
+              <Link to="/index">
+                <Home className="w-4 h-4 mr-2" />
+                <span className="text-[10px] mt-1">Exit Admin</span>
+              </Link>
             </Button>
           </div>
         </div>

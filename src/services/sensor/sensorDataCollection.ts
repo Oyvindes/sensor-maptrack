@@ -53,6 +53,7 @@ const collectSensorData = async (sensorImei: string) => {
 			`Error collecting data from sensor ${sensorImei}:`,
 			error
 		);
+		// Log the error but don't throw it further to prevent breaking the collection loop
 		return false;
 	}
 };
@@ -82,52 +83,85 @@ export const startProjectDataCollection = (project: SensorFolder) => {
 		stopProjectDataCollection(project.id);
 	}
 
-	// Start collection for each sensor
-	const interval = setInterval(async () => {
-		// Check if project is still within datetime range on each collection cycle
-		const now = new Date().toISOString();
-		if ((project.projectStartDate && now < project.projectStartDate) ||
-			(project.projectEndDate && now > project.projectEndDate)) {
-			console.log(`Project ${project.id} is outside scheduled datetime period. Stopping data collection.`);
-			stopProjectDataCollection(project.id);
-			return;
+	try {
+		// Start collection for each sensor
+		const interval = setInterval(async () => {
+			try {
+				// Check if project is still within datetime range on each collection cycle
+				const now = new Date().toISOString();
+				if ((project.projectStartDate && now < project.projectStartDate) ||
+					(project.projectEndDate && now > project.projectEndDate)) {
+					console.log(`Project ${project.id} is outside scheduled datetime period. Stopping data collection.`);
+					stopProjectDataCollection(project.id);
+					return;
+				}
+				
+				for (const sensorImei of project.assignedSensorImeis) {
+					await collectSensorData(sensorImei);
+				}
+			} catch (error) {
+				console.error(`Error in data collection interval for project ${project.id}:`, error);
+				// Don't stop collection on error, just log it
+			}
+		}, 5000); // Collect data every 5 seconds
+
+		collectionStatus[project.id] = {
+			isCollecting: true,
+			interval
+		};
+
+		// Send command to each sensor to start sending data
+		project.assignedSensorImeis.forEach((sensorImei) => {
+			sendCommandToSensor(sensorImei, 'startDataTransmission');
+		});
+
+		console.log(`Started data collection for project ${project.id}`);
+	} catch (error) {
+		console.error(`Failed to start data collection for project ${project.id}:`, error);
+		// Make sure we clean up any interval that might have been created
+		if (collectionStatus[project.id]?.interval) {
+			clearInterval(collectionStatus[project.id].interval);
 		}
-		
-		for (const sensorImei of project.assignedSensorImeis) {
-			await collectSensorData(sensorImei);
-		}
-	}, 5000); // Collect data every 5 seconds
-
-	collectionStatus[project.id] = {
-		isCollecting: true,
-		interval
-	};
-
-	// Send command to each sensor to start sending data
-	project.assignedSensorImeis.forEach((sensorImei) => {
-		sendCommandToSensor(sensorImei, 'startDataTransmission');
-	});
-
-	console.log(`Started data collection for project ${project.id}`);
+		collectionStatus[project.id] = {
+			isCollecting: false,
+			interval: null
+		};
+	}
 };
 
 // Stop collecting data for a project
 export const stopProjectDataCollection = (projectId: string) => {
-	const status = collectionStatus[projectId];
-	if (!status?.isCollecting) {
-		return;
+	try {
+		const status = collectionStatus[projectId];
+		if (!status?.isCollecting) {
+			return;
+		}
+
+		if (status.interval) {
+			clearInterval(status.interval);
+		}
+
+		collectionStatus[projectId] = {
+			isCollecting: false,
+			interval: null
+		};
+
+		console.log(`Stopped data collection for project ${projectId}`);
+	} catch (error) {
+		console.error(`Error stopping data collection for project ${projectId}:`, error);
+		// Ensure we clean up the interval even if there's an error
+		try {
+			if (collectionStatus[projectId]?.interval) {
+				clearInterval(collectionStatus[projectId].interval);
+			}
+			collectionStatus[projectId] = {
+				isCollecting: false,
+				interval: null
+			};
+		} catch (cleanupError) {
+			console.error(`Failed to clean up resources for project ${projectId}:`, cleanupError);
+		}
 	}
-
-	if (status.interval) {
-		clearInterval(status.interval);
-	}
-
-	collectionStatus[projectId] = {
-		isCollecting: false,
-		interval: null
-	};
-
-	console.log(`Stopped data collection for project ${projectId}`);
 };
 
 // Check if a project is currently collecting data

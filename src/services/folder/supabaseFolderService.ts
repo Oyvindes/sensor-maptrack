@@ -381,6 +381,29 @@ export const updateProjectStatus = async (
   status: 'running' | 'stopped'
 ): Promise<{ success: boolean; message: string }> => {
   try {
+    // First check if the project exists
+    const { data: existingProject, error: checkError } = await supabase
+      .from('sensor_folders')
+      .select('id, name, status')
+      .eq('id', projectId)
+      .single();
+
+    if (checkError || !existingProject) {
+      console.error('Project not found:', checkError);
+      return {
+        success: false,
+        message: `Project not found or access denied: ${checkError?.message || 'Unknown error'}`
+      };
+    }
+
+    // Don't update if status is already the same
+    if (existingProject.status === status) {
+      return {
+        success: true,
+        message: `Project already in ${status} state`
+      };
+    }
+
     const updateData = {
       status,
       updated_at: new Date().toISOString()
@@ -401,7 +424,7 @@ export const updateProjectStatus = async (
     console.error('Error updating project status:', error);
     return {
       success: false,
-      message: `Failed to update project status: ${error.message}`
+      message: `Failed to update project status: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
   }
 };
