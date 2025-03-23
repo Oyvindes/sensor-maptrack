@@ -27,8 +27,8 @@ const mockProducts: Product[] = [
   },
   {
     id: '2',
-    name: 'Humidity Sensor',
-    description: 'Accurate humidity sensor with long battery life',
+    name: 'Concrete Sensor',
+    description: 'Accurate concrete humidity sensor with long battery life',
     price: 349,
     imageUrl: '/placeholder.svg',
     createdAt: new Date().toISOString(),
@@ -38,7 +38,7 @@ const mockProducts: Product[] = [
   {
     id: '3',
     name: 'Combo Sensor Pack',
-    description: 'Bundle of temperature and humidity sensors at a discounted price',
+    description: 'Bundle of temperature and concrete humidity sensors at a discounted price',
     price: 599,
     imageUrl: '/placeholder.svg',
     createdAt: new Date().toISOString(),
@@ -72,7 +72,7 @@ const mockPurchases: Purchase[] = [
   {
     id: '2',
     productId: '2',
-    productName: 'Humidity Sensor',
+    productName: 'Concrete Sensor',
     quantity: 3,
     totalPrice: 1047,
     status: 'pending',

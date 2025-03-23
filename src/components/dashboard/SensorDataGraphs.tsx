@@ -35,6 +35,7 @@ interface SensorReading {
     humidity: SensorValueDisplay;
     battery: SensorValueDisplay;
     signal: SensorValueDisplay;
+    adc1: SensorValueDisplay;
   };
 }
 
@@ -44,6 +45,7 @@ interface SensorDataPoint {
   humidity: number;
   battery: number;
   signal: number;
+  adc1: number;
 }
 
 interface SensorInfo {
@@ -55,9 +57,10 @@ interface SensorInfo {
 // Value type configurations
 const valueConfigs = {
   temperature: { color: '#ff4444', label: 'Temperature' },
-  humidity: { color: '#4444ff', label: 'Humidity' },
+  humidity: { color: '#4444ff', label: 'Concrete' },
   battery: { color: '#44ff44', label: 'Battery' },
-  signal: { color: '#ff44ff', label: 'Signal' }
+  signal: { color: '#ff44ff', label: 'Signal' },
+  adc1: { color: '#8B4513', label: 'Wood' }
 };
 
 const generateData = (
@@ -129,6 +132,10 @@ const generateData = (
           },
           signal: {
             value: dataPoint.signal * 3.33 || 0,
+            unit: '%'
+          },
+          adc1: {
+            value: dataPoint.adc1 || 0,
             unit: '%'
           }
         }
@@ -271,20 +278,30 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
             );
           }
 
-          // Get sensor location and zone if available
+          // Get sensor location, zone, and type if available
           const sensorLocation = project.sensorLocations?.[sensorImei] || '';
           const sensorZone = project.sensorZones?.[sensorImei] || '';
+          const sensorType = project.sensorTypes?.[sensorImei] || '';
           
-          // Create a display name that includes location and zone if available
+          // Create a display name that includes location, zone, and type if available
           let displayName = sensorName;
           if (sensorLocation) {
             displayName += ` (${sensorLocation}`;
             if (sensorZone) {
               displayName += `, ${sensorZone} zone`;
             }
+            if (sensorType) {
+              displayName += `, ${sensorType}`;
+            }
             displayName += ')';
           } else if (sensorZone) {
-            displayName += ` (${sensorZone} zone)`;
+            displayName += ` (${sensorZone} zone`;
+            if (sensorType) {
+              displayName += `, ${sensorType}`;
+            }
+            displayName += ')';
+          } else if (sensorType) {
+            displayName += ` (${sensorType})`;
           }
           
           return (
@@ -293,6 +310,13 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 {Object.entries(valueConfigs).map(([key, config]) => {
                   const currentValue = latestData.values[key as keyof typeof latestData.values];
+                  
+                  // Skip humidity or adc1 based on sensor type setting
+                  const sensorType = project.sensorTypes?.[sensorImei];
+                  if ((key === 'humidity' && sensorType === 'wood') ||
+                      (key === 'adc1' && sensorType === 'concrete')) {
+                    return null;
+                  }
 
                   return (
                     <Card key={key}>
