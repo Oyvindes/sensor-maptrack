@@ -32,37 +32,64 @@ export async function generateHtmlReport(
       signal: { color: '#ff44ff', label: 'Signal', unit: '%' }
     };
 
+    // Get the current theme from the document element
+    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    
     // Start building the HTML content
     let htmlContent = `
       <!DOCTYPE html>
-      <html lang="en">
+      <html lang="en" class="${currentTheme}">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Project Report: ${project.name}</title>
         <style>
+          :root {
+            color-scheme: light dark;
+          }
+          
           body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
+            background-color: white;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
           }
+          
+          .dark body {
+            color: #e1e1e1;
+            background-color: #1a1a1a;
+          }
           h1, h2, h3 {
             color: #222;
           }
+          
+          .dark h1, .dark h2, .dark h3 {
+            color: #e1e1e1;
+          }
+          
           .project-info {
             background-color: #f5f5f5;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
           }
+          
+          .dark .project-info {
+            background-color: #2a2a2a;
+          }
+          
           .sensor-section {
             margin-bottom: 30px;
             border: 1px solid #ddd;
             border-radius: 5px;
             padding: 15px;
+          }
+          
+          .dark .sensor-section {
+            border-color: #444;
           }
           .sensor-header {
             display: flex;
@@ -95,22 +122,38 @@ export async function generateHtmlReport(
             border-radius: 5px;
             padding: 10px;
           }
+          
+          .dark .chart-container {
+            background-color: #2a2a2a;
+          }
+          
           .footer {
             margin-top: 30px;
             text-align: center;
             font-size: 0.8em;
             color: #666;
           }
+          
+          .dark .footer {
+            color: #999;
+          }
           @media print {
             body {
               padding: 20px;
               margin: 0;
               color: #333;
+              background-color: white !important;
               font-family: Arial, sans-serif;
               line-height: 1.6;
             }
+            
+            .dark body {
+              color: #333 !important;
+              background-color: white !important;
+            }
+            
             h1, h2, h3 {
-              color: #222;
+              color: #222 !important;
             }
             .project-info {
               background-color: #f5f5f5 !important;
@@ -298,18 +341,28 @@ export async function generateHtmlReport(
               margin-bottom: 15px;
               border-left: 4px solid #4444ff;
             }
+            
+            .dark .sensor-info {
+              background-color: #1a2a3a;
+            }
+            
             .values-container {
               display: flex;
               flex-wrap: wrap;
               gap: 20px;
               margin-bottom: 20px;
             }
+            
             .values-column {
               flex: 1;
               min-width: 300px;
               border: 1px solid #eee;
               padding: 10px;
               border-radius: 5px;
+            }
+            
+            .dark .values-column {
+              border-color: #444;
             }
           </style>
         `;
@@ -526,12 +579,31 @@ export async function generateHtmlReport(
                         title: {
                           display: true,
                           text: '${config.unit}'
+                        },
+                        grid: {
+                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
                         }
                       },
                       x: {
                         title: {
                           display: true,
                           text: 'Time'
+                        },
+                        grid: {
+                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+                        }
+                      }
+                    },
+                    plugins: {
+                      legend: {
+                        labels: {
+                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)'
                         }
                       }
                     }

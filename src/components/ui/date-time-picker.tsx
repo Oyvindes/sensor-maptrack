@@ -34,19 +34,26 @@ export function DateTimePicker({
   // Update the time when the date changes
   React.useEffect(() => {
     if (date) {
-      setSelectedTime(format(date, "HH:mm"));
+      // Ensure we're using the actual time from the date object
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      setSelectedTime(`${hours}:${minutes}`);
+      console.log(`Date loaded with time: ${hours}:${minutes}`);
     }
   }, [date]);
 
   // Update the date with the selected time
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedTime(e.target.value);
+    const newTimeValue = e.target.value;
+    setSelectedTime(newTimeValue);
     
-    if (date && e.target.value) {
-      const [hours, minutes] = e.target.value.split(':').map(Number);
-      const newDate = new Date(date);
+    if (date && newTimeValue) {
+      const [hours, minutes] = newTimeValue.split(':').map(Number);
+      // Create a new date object to avoid mutating the original
+      const newDate = new Date(date.getTime());
       newDate.setHours(hours);
       newDate.setMinutes(minutes);
+      console.log(`Time changed to ${hours}:${minutes}, new date: ${newDate.toISOString()}`);
       setDate(newDate);
     }
   };
@@ -54,19 +61,29 @@ export function DateTimePicker({
   // Handle date selection from calendar
   const handleSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
-      // Preserve the time if it exists
+      // Get current time values to preserve
+      let hours = 0;
+      let minutes = 0;
+      
+      // First priority: use existing date's time if available
       if (date) {
-        selectedDate.setHours(date.getHours());
-        selectedDate.setMinutes(date.getMinutes());
+        hours = date.getHours();
+        minutes = date.getMinutes();
+        console.log(`Preserving time from existing date: ${hours}:${minutes}`);
+      }
+      // Second priority: use selected time if available
+      else if (selectedTime) {
+        const timeParts = selectedTime.split(':').map(Number);
+        hours = timeParts[0] || 0;
+        minutes = timeParts[1] || 0;
+        console.log(`Using time from input: ${hours}:${minutes}`);
       }
       
-      // If time is already selected, apply it to the new date
-      if (selectedTime) {
-        const [hours, minutes] = selectedTime.split(':').map(Number);
-        selectedDate.setHours(hours || 0);
-        selectedDate.setMinutes(minutes || 0);
-      }
+      // Apply the time to the new date
+      selectedDate.setHours(hours);
+      selectedDate.setMinutes(minutes);
       
+      console.log(`Setting date with time: ${selectedDate.toISOString()}`);
       setDate(selectedDate);
     } else {
       setDate(undefined);

@@ -28,7 +28,10 @@ const ProjectDates: React.FC<ProjectDatesProps> = ({
         </Label>
         <DateTimePicker
           date={projectStartDate ? new Date(projectStartDate) : undefined}
-          setDate={(date) => onChange("projectStartDate", date ? date.toISOString() : "")}
+          setDate={(date) => {
+            console.log("Project start date changed:", date ? date.toISOString() : "");
+            onChange("projectStartDate", date ? date.toISOString() : "");
+          }}
           placeholder="Select start date and time"
           disabled={false}
           className="w-full"
@@ -48,7 +51,10 @@ const ProjectDates: React.FC<ProjectDatesProps> = ({
         </Label>
         <DateTimePicker
           date={projectEndDate ? new Date(projectEndDate) : undefined}
-          setDate={(date) => onChange("projectEndDate", date ? date.toISOString() : "")}
+          setDate={(date) => {
+            console.log("Project end date changed:", date ? date.toISOString() : "");
+            onChange("projectEndDate", date ? date.toISOString() : "");
+          }}
           placeholder="Select end date and time (optional)"
           disabled={false}
           className="w-full"

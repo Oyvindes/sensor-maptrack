@@ -94,9 +94,9 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 	};
 
 	return (
-		<div className={`${className} relative`}>
+		<div className={`${className} relative z-0`}>
 			{/* Reset zoom button - always visible */}
-			<div className="absolute top-3 right-3 z-[9999]">
+			<div className="absolute top-3 right-3 z-[40]">
 				<Button
 					variant="default"
 					size="sm"
@@ -108,7 +108,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 			</div>
 
 			<MapContainer
-				style={{ height: '100%', width: '100%' }}
+				style={{ height: '100%', width: '100%', zIndex: 0 }}
 				// Need to explicitly type this as any to work around the type error
 				// The react-leaflet types are not correctly matching the actual props
 				{...({

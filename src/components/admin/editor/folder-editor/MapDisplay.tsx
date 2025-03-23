@@ -20,7 +20,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
   if (!mapLocation || !visible) return null;
 
   return (
-    <div className="border rounded-md overflow-hidden h-64 mb-4">
+    <div className="border rounded-md overflow-hidden h-64 mb-4 relative z-0">
       <TrackingMap
         className="h-full w-full"
         devices={[{
