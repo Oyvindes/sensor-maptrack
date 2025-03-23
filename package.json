@@ -16,7 +16,7 @@
     "start:all": "concurrently \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
-    "@capacitor-community/barcode-scanner": "^4.0.1",
+		"@capacitor/barcode-scanner": "^2.0.3",
     "@capacitor/camera": "^7.0.0",
     "@capacitor/core": "^7.0.1",
     "@hookform/resolvers": "^3.9.0",
