@@ -46,7 +46,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 	onDeviceClick,
 	onSensorClick,
 	onObjectSelect,
-	className = 'h-[500px] w-full rounded-md border',
+	className = 'h-full w-full rounded-md border',
 	renderCustomPopup
 }) => {
 	const mapCenter = getMapCenter(focusLocation, devices, sensors, objects);

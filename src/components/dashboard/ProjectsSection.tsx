@@ -65,16 +65,16 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 				</TabsList>
 
 				<TabsContent value="map" className="space-y-3 sm:space-y-4">
-					<div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4">
-						<div className="lg:col-span-2 glass-card rounded-xl overflow-hidden">
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 h-[calc(100vh-200px)]">
+						<div className="lg:col-span-2 glass-card rounded-xl overflow-hidden h-full">
 							<ProjectsMap
 								projects={runningProjects}
 								isLoading={isLoading}
 								onProjectSelect={onProjectSelect}
-								className="w-full h-[250px] sm:h-[300px] md:h-[400px] animate-fade-up [animation-delay:300ms]"
+								className="w-full h-full animate-fade-up [animation-delay:300ms]"
 							/>
 						</div>
-						<div className="flex flex-col glass-card rounded-xl h-[300px] sm:h-[350px] md:h-[433px]">
+						<div className="flex flex-col glass-card rounded-xl h-full">
 							<h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 animate-fade-up [animation-delay:350ms]">
 								Running Projects
 							</h3>
@@ -96,8 +96,8 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 				</TabsContent>
 
 				<TabsContent value="list" className="space-y-3 sm:space-y-4">
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4">
-						<div className="flex flex-col glass-card rounded-xl h-[250px] sm:h-[300px] md:h-[400px]">
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 h-[calc(100vh-200px)]">
+						<div className="flex flex-col glass-card rounded-xl h-full">
 							<h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 animate-fade-up [animation-delay:350ms]">
 								Running Projects
 							</h3>
@@ -116,7 +116,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 							</div>
 						</div>
 
-						<div className="flex flex-col glass-card rounded-xl h-[250px] sm:h-[300px] md:h-[400px]">
+						<div className="flex flex-col glass-card rounded-xl h-full">
 							<h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 animate-fade-up [animation-delay:350ms]">
 								Stopped Projects
 							</h3>

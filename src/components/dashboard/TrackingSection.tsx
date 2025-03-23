@@ -36,14 +36,14 @@ const TrackingSection: React.FC<TrackingSectionProps> = ({ className }) => {
       <div className="flex justify-between items-center mb-2 sm:mb-4">
         <h2 className="text-lg sm:text-xl font-semibold">Asset Tracking</h2>
       </div>
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="rounded-lg overflow-hidden border bg-background lg:w-2/3">
+      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-150px)]">
+        <div className="rounded-lg overflow-hidden border bg-background lg:w-2/3 h-full">
           <TrackingMap
             devices={devices}
             objects={trackingObjects}
             fitAllMarkers={initialLoad || shouldResetView}
             autoFitMarkers={false} // Ensure map doesn't auto-fit after initial load
-            className="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full"
+            className="h-full w-full"
             onDeviceClick={(deviceId) => {
               console.log('Device clicked:', deviceId);
               // Add device click handler implementation here
@@ -86,7 +86,7 @@ const TrackingSection: React.FC<TrackingSectionProps> = ({ className }) => {
         </div>
         
         {/* Device List */}
-        <div className="rounded-lg border bg-background p-4 lg:w-1/3 h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-auto">
+        <div className="rounded-lg border bg-background p-4 lg:w-1/3 h-full overflow-auto">
           <h3 className="text-md font-medium mb-3">Tracked Devices</h3>
           
           {devices.length === 0 && trackingObjects.length === 0 ? (

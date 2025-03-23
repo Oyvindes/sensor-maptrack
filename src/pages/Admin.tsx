@@ -1,7 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/services/authService";
 import { Building2, Users, Radar, Database } from "lucide-react";
+import { PageContainer, ContentContainer } from "@/components/Layout";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { useAdminState } from "@/hooks/useAdminState";
@@ -88,47 +91,76 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <PageContainer>
       <AdminHeader />
       <Toaster position="top-right" />
 
-      <div className="container mx-auto p-2 sm:p-4 pb-20">
-        <SectionContainer>
-          <SectionTitle className="text-lg sm:text-xl md:text-2xl">Admin Controls</SectionTitle>
-          <p className="text-sm sm:text-base">Manage your system's data and settings.</p>
-        </SectionContainer>
-
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="mb-2 sm:mb-4 h-16 overflow-x-auto flex-wrap p-2">
+      <ContentContainer className="pt-4 container">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-1">Admin Controls</h2>
+          <p className="text-sm text-muted-foreground">Manage your system's data and settings.</p>
+        </div>
+        <div className="sticky top-[60px] z-10 bg-background mb-6 shadow-sm">
+          <div className="flex flex-wrap gap-1 sm:gap-0 sm:space-x-2 border-b px-2 sm:px-4 pt-1 sm:pt-2">
             {isMaster && (
-              <TabsTrigger value="companies" className="h-12 px-4">
-                <span className="flex flex-col items-center gap-1">
-                  <Building2 className="w-4 h-4" />
-                  <span className="text-[10px]">Company</span>
-                </span>
-              </TabsTrigger>
+              <Button
+                variant="ghost"
+                className={cn(
+                  'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+                  activeTab === 'companies'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+                onClick={() => handleTabChange('companies')}
+              >
+                <Building2 className="w-4 h-4 mr-2" />
+                <span className="text-[10px] mt-1">Company</span>
+              </Button>
             )}
-            <TabsTrigger value="users" className="h-12 px-4">
-              <span className="flex flex-col items-center gap-1">
-                <Users className="w-4 h-4" />
-                <span className="text-[10px]">Users</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="sensors" className="h-12 px-4">
-              <span className="flex flex-col items-center gap-1">
-                <Database className="w-4 h-4" />
-                <span className="text-[10px]">Sensors</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="devices" className="h-12 px-4">
-              <span className="flex flex-col items-center gap-1">
-                <Radar className="w-4 h-4" />
-                <span className="text-[10px]">Track</span>
-              </span>
-            </TabsTrigger>
-          </TabsList>
+            <Button
+              variant="ghost"
+              className={cn(
+                'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+                activeTab === 'users'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => handleTabChange('users')}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              <span className="text-[10px] mt-1">Users</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+                activeTab === 'sensors'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => handleTabChange('sensors')}
+            >
+              <Database className="w-4 h-4 mr-2" />
+              <span className="text-[10px] mt-1">Sensors</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className={cn(
+                'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+                activeTab === 'devices'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => handleTabChange('devices')}
+            >
+              <Radar className="w-4 h-4 mr-2" />
+              <span className="text-[10px] mt-1">Track</span>
+            </Button>
+          </div>
+        </div>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full block">
           
-          <TabsContent value="companies">
+          <TabsContent value="companies" className="pt-4">
             <CompaniesTab
               mode={mode}
               companies={companies}
@@ -141,7 +173,7 @@ const Admin = () => {
             />
           </TabsContent>
 
-          <TabsContent value="users">
+          <TabsContent value="users" className="pt-4">
             <UsersTab
               mode={mode}
               users={users}
@@ -154,7 +186,7 @@ const Admin = () => {
             />
           </TabsContent>
 
-          <TabsContent value="sensors">
+          <TabsContent value="sensors" className="pt-4">
             <SensorsTab
               mode={mode}
               sensors={sensors}
@@ -171,7 +203,7 @@ const Admin = () => {
             />
           </TabsContent>
 
-          <TabsContent value="devices">
+          <TabsContent value="devices" className="pt-4">
             <DevicesTab
               mode={mode}
               trackingObjects={trackingObjects}
@@ -186,8 +218,8 @@ const Admin = () => {
             />
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+      </ContentContainer>
+    </PageContainer>
   );
 };
 

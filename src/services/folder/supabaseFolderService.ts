@@ -114,6 +114,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         status: (folder.status as 'running' | 'stopped') || 'stopped',
         createdAt: folder.created_at.split('T')[0],
         updatedAt: folder.updated_at.split('T')[0],
+        // Preserve the full ISO string with time information
         projectStartDate: folder.project_start_date || '',
         projectEndDate: folder.project_end_date || '',
         assignedSensorImeis,
@@ -188,6 +189,7 @@ export const saveSensorFolder = async (
       location: locationForDb,
       company_id: mappedCompanyId,
       project_number: folder.projectNumber,
+      // Ensure we're saving the full ISO string with time information
       project_start_date: folder.projectStartDate || null,
       project_end_date: folder.projectEndDate || null,
       status: folder.status || 'stopped',
