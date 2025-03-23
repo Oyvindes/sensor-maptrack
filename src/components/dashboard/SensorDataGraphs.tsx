@@ -13,7 +13,7 @@ import {
   Brush
 } from 'recharts';
 import ProjectPdfHistory from './ProjectPdfHistory';
-import PdfDataSelectionDialog from './PdfDataSelectionDialog';
+import ReportDataSelectionDialog, { ReportFormat } from './ReportDataSelectionDialog';
 import { toast } from 'sonner';
 import { useProjectData } from '@/hooks/useProjectData';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
@@ -35,6 +35,7 @@ interface SensorReading {
     humidity: SensorValueDisplay;
     battery: SensorValueDisplay;
     signal: SensorValueDisplay;
+    adc1: SensorValueDisplay;
   };
 }
 
@@ -44,6 +45,7 @@ interface SensorDataPoint {
   humidity: number;
   battery: number;
   signal: number;
+  adc1: number;
 }
 
 interface SensorInfo {
@@ -55,9 +57,10 @@ interface SensorInfo {
 // Value type configurations
 const valueConfigs = {
   temperature: { color: '#ff4444', label: 'Temperature' },
-  humidity: { color: '#4444ff', label: 'Humidity' },
+  humidity: { color: '#4444ff', label: 'Concrete' },
   battery: { color: '#44ff44', label: 'Battery' },
-  signal: { color: '#ff44ff', label: 'Signal' }
+  signal: { color: '#ff44ff', label: 'Signal' },
+  adc1: { color: '#8B4513', label: 'Wood' }
 };
 
 const generateData = (
@@ -130,6 +133,10 @@ const generateData = (
           signal: {
             value: dataPoint.signal * 3.33 || 0,
             unit: '%'
+          },
+          adc1: {
+            value: dataPoint.adc1 || 0,
+            unit: '%'
           }
         }
       });
@@ -145,7 +152,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 }) => {
   const [project, setProject] = useState<SensorFolder>(initialProject);
   const { setProjects } = useProjectData();
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [sensorInfoMap, setSensorInfoMap] = useState<Record<string, SensorInfo>>({});
   const [isDataSelectionOpen, setIsDataSelectionOpen] = useState(false);
 
@@ -184,27 +191,36 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
     setIsDataSelectionOpen(false);
   };
 
-  const handleDataSelectionConfirm = async (selectedDataTypes: string[]) => {
+  const handleDataSelectionConfirm = async (selectedDataTypes: string[], format: ReportFormat) => {
     try {
-      setIsGeneratingPdf(true);
+      setIsGeneratingReport(true);
       setIsDataSelectionOpen(false);
 
-      const { downloadProjectReport } = await import('@/services/pdfService');
-      const updatedProject = await downloadProjectReport(project, selectedDataTypes);
+      if (format === 'pdf') {
+        // Generate PDF report
+        const { downloadProjectReport } = await import('@/services/pdfService');
+        const updatedProject = await downloadProjectReport(project, selectedDataTypes);
 
-      setProject(updatedProject);
-      setProjects((prevProjects) =>
-        prevProjects.map((p) =>
-          p.id === updatedProject.id ? updatedProject : p
-        )
-      );
+        setProject(updatedProject);
+        setProjects((prevProjects) =>
+          prevProjects.map((p) =>
+            p.id === updatedProject.id ? updatedProject : p
+          )
+        );
 
-      toast.success('PDF report generated successfully');
+        toast.success('PDF report generated successfully');
+      } else {
+        // Generate HTML report
+        const { generateHtmlReport } = await import('@/services/htmlReportService');
+        await generateHtmlReport(project, selectedDataTypes);
+        
+        toast.success('HTML report opened in new tab');
+      }
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF report');
+      console.error(`Error generating ${format} report:`, error);
+      toast.error(`Failed to generate ${format} report`);
     } finally {
-      setIsGeneratingPdf(false);
+      setIsGeneratingReport(false);
     }
   };
 
@@ -227,12 +243,12 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         <div className="flex gap-4">
           <button
             onClick={handleOpenDataSelection}
-            disabled={isGeneratingPdf}
+            disabled={isGeneratingReport}
             className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm
                       hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="flex flex-col items-center gap-1">
-              <span className="text-[10px]">{isGeneratingPdf ? 'Generating...' : 'PDF'}</span>
+              <span className="text-[10px]">{isGeneratingReport ? 'Generating...' : 'Report'}</span>
             </span>
           </button>
           <button
@@ -271,20 +287,30 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
             );
           }
 
-          // Get sensor location and zone if available
+          // Get sensor location, zone, and type if available
           const sensorLocation = project.sensorLocations?.[sensorImei] || '';
           const sensorZone = project.sensorZones?.[sensorImei] || '';
+          const sensorType = project.sensorTypes?.[sensorImei] || '';
           
-          // Create a display name that includes location and zone if available
+          // Create a display name that includes location, zone, and type if available
           let displayName = sensorName;
           if (sensorLocation) {
             displayName += ` (${sensorLocation}`;
             if (sensorZone) {
               displayName += `, ${sensorZone} zone`;
             }
+            if (sensorType) {
+              displayName += `, ${sensorType}`;
+            }
             displayName += ')';
           } else if (sensorZone) {
-            displayName += ` (${sensorZone} zone)`;
+            displayName += ` (${sensorZone} zone`;
+            if (sensorType) {
+              displayName += `, ${sensorType}`;
+            }
+            displayName += ')';
+          } else if (sensorType) {
+            displayName += ` (${sensorType})`;
           }
           
           return (
@@ -293,6 +319,13 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 {Object.entries(valueConfigs).map(([key, config]) => {
                   const currentValue = latestData.values[key as keyof typeof latestData.values];
+                  
+                  // Skip humidity or adc1 based on sensor type setting
+                  const sensorType = project.sensorTypes?.[sensorImei];
+                  if ((key === 'humidity' && sensorType === 'wood') ||
+                      (key === 'adc1' && sensorType === 'concrete')) {
+                    return null;
+                  }
 
                   return (
                     <Card key={key}>
@@ -380,7 +413,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         />
       </div>
 
-      <PdfDataSelectionDialog
+      <ReportDataSelectionDialog
         isOpen={isDataSelectionOpen}
         onClose={handleDataSelectionClose}
         onConfirm={handleDataSelectionConfirm}

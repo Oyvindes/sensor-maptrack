@@ -16,8 +16,10 @@ interface SensorAssignmentProps {
 	companyId: string;
 	sensorLocations?: Record<string, string>;
 	sensorZones?: Record<string, 'wet' | 'dry'>;
+	sensorTypes?: Record<string, 'wood' | 'concrete'>;
 	onSensorLocationChange?: (sensorImei: string, location: string) => void;
 	onSensorZoneChange?: (sensorImei: string, zone: 'wet' | 'dry') => void;
+	onSensorTypeChange?: (sensorImei: string, type: 'wood' | 'concrete') => void;
 }
 
 const SensorAssignment: React.FC<SensorAssignmentProps> = ({
@@ -27,8 +29,10 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 	companyId,
 	sensorLocations = {},
 	sensorZones = {},
+	sensorTypes = {},
 	onSensorLocationChange,
-	onSensorZoneChange
+	onSensorZoneChange,
+	onSensorTypeChange
 }) => {
 	const [imeiInput, setImeiInput] = useState('');
 	const [showScanner, setShowScanner] = useState(false);
@@ -189,8 +193,10 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 						onRemoveSensor={handleRemoveSensor}
 						sensorLocations={sensorLocations}
 						sensorZones={sensorZones}
+						sensorTypes={sensorTypes}
 						onLocationChange={onSensorLocationChange}
 						onZoneChange={onSensorZoneChange}
+						onTypeChange={onSensorTypeChange}
 					/>
 
 					{companyId ? (

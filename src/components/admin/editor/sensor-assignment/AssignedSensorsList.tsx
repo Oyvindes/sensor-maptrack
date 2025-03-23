@@ -2,7 +2,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tag, X, Home, Droplet } from 'lucide-react';
+import { Tag, X, Home, Droplet, Gauge } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -11,8 +11,10 @@ interface AssignedSensorsListProps {
 	onRemoveSensor: (sensorImei: string, e: React.MouseEvent) => void;
 	sensorLocations?: Record<string, string>;
 	sensorZones?: Record<string, 'wet' | 'dry'>;
+	sensorTypes?: Record<string, 'wood' | 'concrete'>;
 	onLocationChange?: (sensorImei: string, location: string) => void;
 	onZoneChange?: (sensorImei: string, zone: 'wet' | 'dry') => void;
+	onTypeChange?: (sensorImei: string, type: 'wood' | 'concrete') => void;
 }
 
 const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
@@ -20,8 +22,10 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 	onRemoveSensor,
 	sensorLocations = {},
 	sensorZones = {},
+	sensorTypes = {},
 	onLocationChange,
-	onZoneChange
+	onZoneChange,
+	onTypeChange
 }) => {
 	if (assignedSensors.length === 0) {
 		return null;
@@ -54,7 +58,7 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 							</Button>
 						</div>
 						
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 							<div className="space-y-2">
 								<Label className="text-xs flex items-center gap-1">
 									<Home className="h-3 w-3" />
@@ -83,6 +87,25 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 									<SelectContent>
 										<SelectItem value="wet">Wet Zone</SelectItem>
 										<SelectItem value="dry">Dry Zone</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+
+							<div className="space-y-2">
+								<Label className="text-xs flex items-center gap-1">
+									<Gauge className="h-3 w-3" />
+									<span>Material Type</span>
+								</Label>
+								<Select
+									value={sensorTypes[sensor.imei] || ''}
+									onValueChange={(value) => onTypeChange && onTypeChange(sensor.imei, value as 'wood' | 'concrete')}
+								>
+									<SelectTrigger className="h-8 text-sm">
+										<SelectValue placeholder="Select material type" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="concrete">Concrete</SelectItem>
+										<SelectItem value="wood">Wood</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>

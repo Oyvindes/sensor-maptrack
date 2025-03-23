@@ -11,7 +11,8 @@ export const useFolderEditor = (
 	const [formData, setFormData] = useState<SensorFolder>({
 		...folder,
 		sensorLocations: folder.sensorLocations || {},
-		sensorZones: folder.sensorZones || {}
+		sensorZones: folder.sensorZones || {},
+		sensorTypes: folder.sensorTypes || {}
 	});
 	const [availableSensors, setAvailableSensors] = useState<
 		Array<{ imei: string; name: string }>
@@ -173,9 +174,10 @@ export const useFolderEditor = (
 					(imei) => imei !== sensorImei
 				);
 				
-				// Remove sensor location and zone when sensor is removed
+				// Remove sensor location, zone, and type when sensor is removed
 				const updatedLocations = { ...prev.sensorLocations };
 				const updatedZones = { ...prev.sensorZones };
+				const updatedTypes = { ...prev.sensorTypes };
 				
 				if (updatedLocations && sensorImei in updatedLocations) {
 					delete updatedLocations[sensorImei];
@@ -185,13 +187,18 @@ export const useFolderEditor = (
 					delete updatedZones[sensorImei];
 				}
 				
+				if (updatedTypes && sensorImei in updatedTypes) {
+					delete updatedTypes[sensorImei];
+				}
+				
 				toast.info('Sensor removed from project');
 				
 				return {
 					...prev,
 					assignedSensorImeis: updatedSensors,
 					sensorLocations: updatedLocations,
-					sensorZones: updatedZones
+					sensorZones: updatedZones,
+					sensorTypes: updatedTypes
 				};
 			}
 
@@ -227,7 +234,8 @@ export const useFolderEditor = (
 			companyId,
 			assignedSensorImeis: [],
 			sensorLocations: {},
-			sensorZones: {}
+			sensorZones: {},
+			sensorTypes: {}
 		}));
 	};
 	
@@ -246,6 +254,14 @@ export const useFolderEditor = (
 			return { ...prev, sensorZones: updatedZones };
 		});
 	};
+	
+	const handleSensorTypeChange = (sensorImei: string, type: 'wood' | 'concrete') => {
+		setFormData((prev) => {
+			const updatedTypes = { ...(prev.sensorTypes || {}) };
+			updatedTypes[sensorImei] = type;
+			return { ...prev, sensorTypes: updatedTypes };
+		});
+	};
 
 	return {
 		formData,
@@ -259,6 +275,7 @@ export const useFolderEditor = (
 		handleSubmit,
 		handleCompanyChange,
 		handleSensorLocationChange,
-		handleSensorZoneChange
+		handleSensorZoneChange,
+		handleSensorTypeChange
 	};
 };

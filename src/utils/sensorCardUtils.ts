@@ -7,6 +7,7 @@ export const sensorRanges = {
   battery: { min: 0, max: 100 },
   proximity: { min: 0, max: 100 },
   signal: { min: 0, max: 100 },
+  adc1: { min: 0, max: 100 },
 };
 
 export const getStatusIndicatorColor = (status: "online" | "offline" | "warning"): string => {

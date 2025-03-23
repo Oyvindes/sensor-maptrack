@@ -15,7 +15,8 @@ const PdfSettingsButton = () => {
     temperature: true,
     humidity: true,
     battery: true,
-    signal: true
+    signal: true,
+    adc1: true
   });
 
   const handleToggleType = (type: keyof typeof selectedTypes) => {
@@ -89,7 +90,7 @@ const PdfSettingsButton = () => {
                     className="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 sm:mr-2 rounded-full"
                     style={{ backgroundColor: "#4444ff" }}
                   />
-                  Humidity
+                  Concrete
                 </Label>
               </div>
               
@@ -122,6 +123,22 @@ const PdfSettingsButton = () => {
                     style={{ backgroundColor: "#ff44ff" }}
                   />
                   Signal
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Checkbox
+                  id="adc1"
+                  checked={selectedTypes.adc1}
+                  onCheckedChange={() => handleToggleType('adc1')}
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                />
+                <Label htmlFor="adc1" className="flex items-center text-xs sm:text-sm">
+                  <span
+                    className="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 sm:mr-2 rounded-full"
+                    style={{ backgroundColor: "#8B4513" }}
+                  />
+                  Wood
                 </Label>
               </div>
             </div>

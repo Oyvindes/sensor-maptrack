@@ -29,10 +29,11 @@ const SensorValueEditor: React.FC<SensorValueEditorProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="temperature">Temperature</SelectItem>
-              <SelectItem value="humidity">Humidity</SelectItem>
+              <SelectItem value="humidity">Concrete</SelectItem>
               <SelectItem value="battery">Battery</SelectItem>
               <SelectItem value="proximity">Proximity</SelectItem>
               <SelectItem value="signal">Signal</SelectItem>
+              <SelectItem value="adc1">Wood</SelectItem>
             </SelectContent>
           </Select>
         </div>

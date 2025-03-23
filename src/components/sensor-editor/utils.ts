@@ -13,6 +13,8 @@ export function getDefaultUnit(type: SensorType): string {
       return "cm";
     case "signal":
       return "dBm";
+    case "adc1":
+      return "%";
     default:
       return "";
   }
