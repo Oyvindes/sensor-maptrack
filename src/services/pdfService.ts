@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import { Purchase } from '@/types/store';
 import { PdfRecord, SensorFolder } from '@/types/users';
 import { format } from 'date-fns';
-import { savePdfRecord } from './pdf/supabasePdfService';
+import { savePdfRecord } from './report/reportService';
 import { fetchSensors } from './sensor/supabaseSensorService';
 
 export interface PdfServiceInterface {
@@ -770,7 +770,8 @@ export async function downloadProjectReport(
       filename,
       createdAt: new Date().toISOString(),
       creatorName: project.creatorName || 'System',
-      pdfBlob
+      pdfBlob,
+      type: 'pdf'  // Add the required type property
     };
     
     const result = await savePdfRecord(project.id, pdfRecord);

@@ -64,7 +64,8 @@ export const savePdfRecord = async (
         filename: data.filename,
         createdAt: data.created_at,
         creatorName: data.creator_name,
-        blobUrl
+        blobUrl,
+        type: 'pdf'  // Add the required type property
       },
       message: 'PDF record saved successfully'
     };
@@ -94,7 +95,8 @@ export const fetchPdfRecords = async (folderId: string): Promise<PdfRecord[]> =>
       id: record.id,
       filename: record.filename,
       createdAt: record.created_at,
-      creatorName: record.creator_name
+      creatorName: record.creator_name,
+      type: 'pdf'  // Add the required type property
     }));
   } catch (error) {
     console.error('Error fetching PDF records:', error);

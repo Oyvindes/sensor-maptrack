@@ -4,20 +4,20 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Index from "./pages/Index";
-import Admin from "./pages/Admin";
-import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
-import SensorHealthCheck from "./pages/SensorHealthCheck";
-import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "./services/authService";
+import Index from "@/pages/Index";
+import Admin from "@/pages/Admin";
+import Login from "@/pages/Login";
+import NotFound from "@/pages/NotFound";
+import SensorHealthCheck from "@/pages/SensorHealthCheck";
+import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "@/services/authService";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { hasAdminAccess } from "./utils/authUtils";
+import { hasAdminAccess } from "@/utils/authUtils";
 import StatePreserver from "@/components/StatePreserver";
-import Overview from "./pages/Overview";
-import Projects from "./pages/Projects";
-import Track from "./pages/Track";
-import Support from "./pages/Support";
-import Shop from "./pages/Shop";
+import Overview from "@/pages/Overview";
+import Projects from "@/pages/Projects";
+import Track from "@/pages/Track";
+import Support from "@/pages/Support";
+import Shop from "@/pages/Shop";
 
 // Authentication guard component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
