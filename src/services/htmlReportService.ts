@@ -58,7 +58,7 @@ export async function generateHtmlReport(
             padding: 20px;
           }
           
-          .dark body {
+          html.dark body {
             color: #e1e1e1;
             background-color: #1a1a1a;
           }
@@ -66,7 +66,7 @@ export async function generateHtmlReport(
             color: #222;
           }
           
-          .dark h1, .dark h2, .dark h3 {
+          html.dark h1, html.dark h2, html.dark h3 {
             color: #e1e1e1;
           }
           
@@ -77,7 +77,7 @@ export async function generateHtmlReport(
             margin-bottom: 20px;
           }
           
-          .dark .project-info {
+          html.dark .project-info {
             background-color: #2a2a2a;
           }
           
@@ -88,7 +88,7 @@ export async function generateHtmlReport(
             padding: 15px;
           }
           
-          .dark .sensor-section {
+          html.dark .sensor-section {
             border-color: #444;
           }
           .sensor-header {
@@ -123,7 +123,7 @@ export async function generateHtmlReport(
             padding: 10px;
           }
           
-          .dark .chart-container {
+          html.dark .chart-container {
             background-color: #2a2a2a;
           }
           
@@ -134,7 +134,7 @@ export async function generateHtmlReport(
             color: #666;
           }
           
-          .dark .footer {
+          html.dark .footer {
             color: #999;
           }
           @media print {
@@ -147,7 +147,7 @@ export async function generateHtmlReport(
               line-height: 1.6;
             }
             
-            .dark body {
+            html.dark body {
               color: #333 !important;
               background-color: white !important;
             }
@@ -342,7 +342,7 @@ export async function generateHtmlReport(
               border-left: 4px solid #4444ff;
             }
             
-            .dark .sensor-info {
+            html.dark .sensor-info {
               background-color: #1a2a3a;
             }
             
@@ -361,7 +361,7 @@ export async function generateHtmlReport(
               border-radius: 5px;
             }
             
-            .dark .values-column {
+            html.dark .values-column {
               border-color: #444;
             }
           </style>
@@ -581,10 +581,10 @@ export async function generateHtmlReport(
                           text: '${config.unit}'
                         },
                         grid: {
-                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                          color: document.querySelector('html').classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                         },
                         ticks: {
-                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+                          color: document.querySelector('html').classList.contains('dark') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
                         }
                       },
                       x: {
@@ -593,17 +593,17 @@ export async function generateHtmlReport(
                           text: 'Time'
                         },
                         grid: {
-                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                          color: document.querySelector('html').classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                         },
                         ticks: {
-                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+                          color: document.querySelector('html').classList.contains('dark') ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
                         }
                       }
                     },
                     plugins: {
                       legend: {
                         labels: {
-                          color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)'
+                          color: document.querySelector('html').classList.contains('dark') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)'
                         }
                       }
                     }
