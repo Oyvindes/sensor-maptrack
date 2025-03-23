@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SectionContainer, SectionTitle } from '@/components/Layout';
-import { SensorFolder } from '@/types/users';
+import { SensorFolder, Company } from '@/types/users';
 import ProjectsMap from './ProjectsMap';
 import ProjectsList from './ProjectsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface ProjectsSectionProps {
 	projects: SensorFolder[];
 	isLoading: boolean;
+	companies?: Company[];
 	onProjectSelect: (project: SensorFolder) => void;
 	onProjectStatusChange?: (
 		projectId: string,
@@ -19,6 +20,7 @@ interface ProjectsSectionProps {
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 	projects,
 	isLoading,
+	companies = [],
 	onProjectSelect,
 	onProjectStatusChange,
 	onProjectDelete
@@ -82,6 +84,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 								<ProjectsList
 									projects={runningProjects}
 									isLoading={isLoading}
+									companies={companies}
 									onProjectSelect={onProjectSelect}
 									onProjectStatusChange={
 										onProjectStatusChange
@@ -105,6 +108,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 								<ProjectsList
 									projects={runningProjects}
 									isLoading={isLoading}
+									companies={companies}
 									onProjectSelect={onProjectSelect}
 									onProjectStatusChange={
 										onProjectStatusChange
@@ -124,6 +128,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 								<ProjectsList
 									projects={stoppedProjects}
 									isLoading={isLoading}
+									companies={companies}
 									onProjectSelect={onProjectSelect}
 									onProjectStatusChange={
 										onProjectStatusChange

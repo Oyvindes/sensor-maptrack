@@ -104,6 +104,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialView = 'dashboard', onView
 					<ProjectsSection
 						projects={projects}
 						isLoading={isLoading}
+						companies={companies}
 						onProjectSelect={handleProjectSelect}
 						onProjectStatusChange={handleProjectStatusChange}
 						onProjectDelete={handleProjectDelete}
@@ -132,6 +133,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialView = 'dashboard', onView
 						<ProjectsList
 							projects={projects}
 							isLoading={isLoading}
+							companies={companies}
 							onProjectSelect={handleProjectSelect}
 							onProjectStatusChange={handleProjectStatusChange}
 							onProjectDelete={handleProjectDelete}

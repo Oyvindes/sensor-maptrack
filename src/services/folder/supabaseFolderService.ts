@@ -9,29 +9,70 @@ import { mapCompanyIdToUUID, isValidUUID } from '@/utils/uuidUtils';
  */
 export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
   try {
-    const { data, error } = await supabase.from('sensor_folders').select(`
-      id,
-      name,
-      description,
-      address,
-      location,
-      company_id,
-      project_number,
-      status,
-      created_at,
-      updated_at,
-      project_start_date,
-      project_end_date,
-      sensor_locations,
-      sensor_zones,
-      sensor_types,
-      pdf_records (
+    // Try to query with the creator columns, but handle the case where they don't exist
+    let data;
+    let error;
+    
+    try {
+      // Try with creator columns
+      const result = await supabase.from('sensor_folders').select(`
         id,
-        filename,
+        name,
+        description,
+        address,
+        location,
+        company_id,
+        project_number,
+        status,
         created_at,
-        creator_name
-      )
-    `);
+        updated_at,
+        project_start_date,
+        project_end_date,
+        sensor_locations,
+        sensor_zones,
+        sensor_types,
+        created_by,
+        creator_name,
+        pdf_records (
+          id,
+          filename,
+          created_at,
+          creator_name
+        )
+      `);
+      
+      data = result.data;
+      error = result.error;
+    } catch (e) {
+      // If that fails, try without creator columns
+      console.warn('Error querying with creator columns, trying without:', e);
+      const result = await supabase.from('sensor_folders').select(`
+        id,
+        name,
+        description,
+        address,
+        location,
+        company_id,
+        project_number,
+        status,
+        created_at,
+        updated_at,
+        project_start_date,
+        project_end_date,
+        sensor_locations,
+        sensor_zones,
+        sensor_types,
+        pdf_records (
+          id,
+          filename,
+          created_at,
+          creator_name
+        )
+      `);
+      
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) throw error;
 
@@ -48,6 +89,10 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
       const assignedSensorImeis = folderSensors
         .filter((fs) => fs.folder_id === folder.id)
         .map((fs) => fs.sensor_imei);
+      
+      // Handle case where created_by and creator_name might not exist yet
+      const createdBy = 'created_by' in folder ? folder.created_by : '';
+      const creatorName = 'creator_name' in folder ? folder.creator_name : '';
 
       // Parse location if it's stored as a string or as JSON data
       let parsedLocation:
@@ -121,6 +166,8 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         sensorLocations: folder.sensor_locations || {},
         sensorZones: folder.sensor_zones || {},
         sensorTypes: folder.sensor_types || {},
+        createdBy: createdBy,
+        creatorName: creatorName,
         pdfHistory
       };
     });
@@ -182,7 +229,7 @@ export const saveSensorFolder = async (
     }
 
     // Prepare folder data for insert/update
-    const folderData = {
+    const folderData: Record<string, any> = {
       name: folder.name,
       description: folder.description,
       address: folder.address,
@@ -198,6 +245,15 @@ export const saveSensorFolder = async (
       sensor_zones: folder.sensorZones || {},
       sensor_types: folder.sensorTypes || {}
     };
+    
+    // Only add creator fields if they exist in the folder object
+    if (folder.createdBy) {
+      folderData.created_by = folder.createdBy;
+    }
+    
+    if (folder.creatorName) {
+      folderData.creator_name = folder.creatorName;
+    }
 
     // Verify the company exists in the database
     const { data: companyExists, error: companyCheckError } = await supabase
@@ -314,31 +370,73 @@ export const saveSensorFolder = async (
     }
 
     // Get the folder with updated PDF records
-    const { data: updatedFolder, error: fetchError } = await supabase
-      .from('sensor_folders')
-      .select(`
-        id,
-        name,
-        description,
-        address,
-        location,
-        company_id,
-        project_number,
-        status,
-        created_at,
-        updated_at,
-        sensor_locations,
-        sensor_zones,
-        sensor_types,
-        pdf_records (
+    let updatedFolder;
+    let fetchError;
+    
+    try {
+      // Try with creator columns
+      const result = await supabase
+        .from('sensor_folders')
+        .select(`
           id,
-          filename,
+          name,
+          description,
+          address,
+          location,
+          company_id,
+          project_number,
+          status,
           created_at,
-          creator_name
-        )
-      `)
-      .eq('id', folderId)
-      .single();
+          updated_at,
+          sensor_locations,
+          sensor_zones,
+          sensor_types,
+          created_by,
+          creator_name,
+          pdf_records (
+            id,
+            filename,
+            created_at,
+            creator_name
+          )
+        `)
+        .eq('id', folderId)
+        .single();
+        
+      updatedFolder = result.data;
+      fetchError = result.error;
+    } catch (e) {
+      // If that fails, try without creator columns
+      console.warn('Error querying with creator columns, trying without:', e);
+      const result = await supabase
+        .from('sensor_folders')
+        .select(`
+          id,
+          name,
+          description,
+          address,
+          location,
+          company_id,
+          project_number,
+          status,
+          created_at,
+          updated_at,
+          sensor_locations,
+          sensor_zones,
+          sensor_types,
+          pdf_records (
+            id,
+            filename,
+            created_at,
+            creator_name
+          )
+        `)
+        .eq('id', folderId)
+        .single();
+        
+      updatedFolder = result.data;
+      fetchError = result.error;
+    }
 
     if (fetchError) throw fetchError;
 
@@ -352,6 +450,8 @@ export const saveSensorFolder = async (
         sensorLocations: updatedFolder.sensor_locations || {},
         sensorZones: updatedFolder.sensor_zones || {},
         sensorTypes: updatedFolder.sensor_types || {},
+        createdBy: ('created_by' in updatedFolder ? updatedFolder.created_by : null) || folder.createdBy || '',
+        creatorName: ('creator_name' in updatedFolder ? updatedFolder.creator_name : null) || folder.creatorName || '',
         pdfHistory: updatedFolder.pdf_records?.map(record => ({
           id: record.id,
           filename: record.filename,

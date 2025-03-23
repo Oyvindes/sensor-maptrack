@@ -1,10 +1,11 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { SensorFolder } from '@/types/users';
+import { SensorFolder, Company } from '@/types/users';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, Cpu, Play, Square, Trash2 } from 'lucide-react';
+import { MapPin, Cpu, Play, Square, Trash2, Building2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { getCurrentUser } from '@/services/authService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +24,7 @@ import {
 interface ProjectsListProps {
   projects: SensorFolder[];
   isLoading: boolean;
+  companies?: Company[];
   onProjectSelect: (project: SensorFolder) => void;
   onProjectStatusChange?: (
     projectId: string,
@@ -35,12 +37,20 @@ interface ProjectsListProps {
 const ProjectsList: React.FC<ProjectsListProps> = ({
   projects,
   isLoading,
+  companies = [],
   onProjectSelect,
   onProjectStatusChange,
   onProjectDelete,
   className,
   onDialogChange
 }) => {
+  const currentUser = getCurrentUser();
+  const isMasterAdmin = currentUser?.role === 'master';
+  
+  const getCompanyName = (companyId: string) => {
+    const company = companies.find(c => c.id === companyId);
+    return company ? company.name : 'Unknown Company';
+  };
   const [confirmingDelete, setConfirmingDelete] = useState<SensorFolder | null>(null);
   const [confirmingStatusChange, setConfirmingStatusChange] = useState<SensorFolder | null>(null);
 
@@ -213,6 +223,29 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 	                    project.description ||
 	                    project.projectNumber}
 	                </p>
+	                <div className="flex flex-wrap items-center gap-1 text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">
+	                  {/* Show company info for master admins */}
+	                  {isMasterAdmin && project.companyId && (
+	                    <span className="flex items-center gap-0.5 mr-1">
+	                      <Building2 className="h-2.5 w-2.5" />
+	                      <span className="font-medium">{getCompanyName(project.companyId)}</span>
+	                    </span>
+	                  )}
+	                  
+	                  {/* Show creator info for all admins */}
+	                  {project.creatorName && (
+	                    <span className="flex items-center gap-0.5">
+	                      <User className="h-2.5 w-2.5" />
+	                      <span className="font-medium">{project.creatorName}</span>
+	                    </span>
+	                  )}
+	                  {!project.creatorName && project.createdBy && (
+	                    <span className="flex items-center gap-0.5">
+	                      <User className="h-2.5 w-2.5" />
+	                      <span className="font-medium">User ID: {project.createdBy.substring(0, 8)}...</span>
+	                    </span>
+	                  )}
+	                </div>
 	              </div>
 	              <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
 	                <div className="hidden xs:flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-xs text-muted-foreground">
@@ -302,7 +335,10 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 	        </AlertDialogHeader>
 	        <AlertDialogFooter>
 	          <AlertDialogCancel>Cancel</AlertDialogCancel>
-	          <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+	          <AlertDialogAction
+	            onClick={confirmDelete}
+	            variant="destructive"
+	          >
 	            Delete Project
 	          </AlertDialogAction>
 	        </AlertDialogFooter>
@@ -324,7 +360,13 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
 	        </AlertDialogHeader>
 	        <AlertDialogFooter>
 	          <AlertDialogCancel>Cancel</AlertDialogCancel>
-	          <AlertDialogAction onClick={confirmStatusChange}>
+	          <AlertDialogAction
+	            onClick={confirmStatusChange}
+	            variant={confirmingStatusChange?.status === 'running' ? 'destructive' : 'default'}
+	            className={confirmingStatusChange?.status === 'running'
+	              ? ""
+	              : "bg-green-600 hover:bg-green-700"}
+	          >
 	            {confirmingStatusChange?.status === 'running' ? 'Stop Project' : 'Start Project'}
 	          </AlertDialogAction>
 	        </AlertDialogFooter>
