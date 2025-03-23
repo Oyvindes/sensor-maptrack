@@ -152,9 +152,6 @@ const UserList: React.FC<UserListProps> = ({
                     <>Role: {user.role}</>
                   )}
                 </span>
-                {user.isCompanyAdmin && user.role !== "master" && (
-                  <Badge variant="outline" className="text-xs">Company Admin</Badge>
-                )}
               </div>
               {(!currentCompanyId && companyFilter === "all") && (
                 <div className="text-sm text-muted-foreground">

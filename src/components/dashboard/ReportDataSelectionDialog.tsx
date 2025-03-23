@@ -147,7 +147,7 @@ const ReportDataSelectionDialog: React.FC<ReportDataSelectionDialogProps> = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose} className="text-black border-gray-300">Cancel</Button>
-          <Button onClick={handleConfirm} className="bg-blue-600 text-white hover:bg-blue-700">
+          <Button variant="outline" onClick={handleConfirm}>
             Generate {reportFormat === 'html' ? 'HTML' : 'PDF'} Report
           </Button>
         </DialogFooter>
