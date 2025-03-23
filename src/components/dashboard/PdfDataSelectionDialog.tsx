@@ -110,7 +110,7 @@ const PdfDataSelectionDialog: React.FC<PdfDataSelectionDialogProps> = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleConfirm}>Generate PDF</Button>
+          <Button variant="outline" onClick={handleConfirm}>Generate PDF</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

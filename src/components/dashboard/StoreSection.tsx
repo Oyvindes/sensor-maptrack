@@ -133,24 +133,44 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
   
   // Synchronize activeTab and storeView
   useEffect(() => {
+    // Prevent users from accessing cart
+    if (currentUser?.role === 'user' && activeTab === 'cart') {
+      toast.error("Only administrators can access the shopping cart");
+      setActiveTab('products');
+      return;
+    }
+    
     if (activeTab === 'products') {
       setStoreView('products');
     } else if (activeTab === 'cart') {
       setStoreView('cart');
     }
-  }, [activeTab]);
+  }, [activeTab, currentUser?.role]);
   
   // Update activeTab when storeView changes
   useEffect(() => {
+    // Prevent users from accessing checkout
+    if (currentUser?.role === 'user' && (storeView === 'cart' || storeView === 'checkout')) {
+      toast.error("Only administrators can access the shopping cart");
+      setStoreView('products');
+      return;
+    }
+    
     if (storeView === 'products') {
       setActiveTab('products');
     } else if (storeView === 'cart' || storeView === 'checkout') {
       setActiveTab('cart');
     }
-  }, [storeView]);
+  }, [storeView, currentUser?.role]);
 
   // Cart management methods
   const handleAddToCart = (product: Product) => {
+    // Check if the user has permission to add items to cart (admin or master only)
+    if (currentUser?.role === 'user') {
+      toast.error("Only administrators can add items to the shopping cart");
+      return;
+    }
+    
     // Check if the product is already in the cart
     const existingItem = cartItems.find(item => item.product.id === product.id);
     
@@ -347,10 +367,12 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
             <Tag className="h-4 w-4" />
             <span className="text-[10px] mt-1">Products</span>
           </TabsTrigger>
-          <TabsTrigger value="cart" className="flex flex-col">
-            <ShoppingCartIcon className="h-4 w-4" />
-            <span className="text-[10px] mt-1">Cart {cartItems.length > 0 && `(${cartItems.length})`}</span>
-          </TabsTrigger>
+          {currentUser?.role !== 'user' && (
+            <TabsTrigger value="cart" className="flex flex-col">
+              <ShoppingCartIcon className="h-4 w-4" />
+              <span className="text-[10px] mt-1">Cart {cartItems.length > 0 && `(${cartItems.length})`}</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="purchases" className="flex flex-col">
             <Package className="h-4 w-4" />
             <span className="text-[10px] mt-1">Purchases</span>
@@ -400,15 +422,21 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAddToCart(product)}
-                      className="gap-2"
-                    >
-                      <ShoppingCartIcon className="h-4 w-4" />
-                      Add to Cart
-                    </Button>
+                    {currentUser?.role !== 'user' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddToCart(product)}
+                        className="gap-2"
+                      >
+                        <ShoppingCartIcon className="h-4 w-4" />
+                        Add to Cart
+                      </Button>
+                    ) : (
+                      <div className="text-xs text-muted-foreground italic">
+                        Contact an administrator to order
+                      </div>
+                    )}
                     {isSiteAdmin && (
                       <div className="flex gap-2">
                         <Button

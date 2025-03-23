@@ -108,7 +108,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" variant="outline">
             Save Changes
           </Button>
         </div>

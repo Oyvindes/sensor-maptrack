@@ -120,7 +120,7 @@ const SensorEditor: React.FC<SensorEditorProps> = ({
 				<Button variant="outline" onClick={onCancel} type="button">
 					Cancel
 				</Button>
-				<Button type="submit" className="gap-2">
+				<Button type="submit" variant="outline" className="gap-2">
 					<Save className="h-4 w-4" />
 					Save Changes
 				</Button>

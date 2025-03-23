@@ -12,7 +12,7 @@ const EditorActionButtons: React.FC<EditorActionButtonsProps> = ({ onCancel }) =
       <Button type="button" variant="outline" onClick={onCancel}>
         Cancel
       </Button>
-      <Button type="submit">
+      <Button type="submit" variant="outline">
         Save Changes
       </Button>
     </div>

@@ -84,7 +84,7 @@ const CompanyEditor: React.FC<CompanyEditorProps> = ({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" variant="outline">
             Save Changes
           </Button>
         </div>
