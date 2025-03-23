@@ -13,7 +13,7 @@ import {
   Brush
 } from 'recharts';
 import ProjectPdfHistory from './ProjectPdfHistory';
-import PdfDataSelectionDialog from './PdfDataSelectionDialog';
+import ReportDataSelectionDialog, { ReportFormat } from './ReportDataSelectionDialog';
 import { toast } from 'sonner';
 import { useProjectData } from '@/hooks/useProjectData';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
@@ -152,7 +152,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 }) => {
   const [project, setProject] = useState<SensorFolder>(initialProject);
   const { setProjects } = useProjectData();
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [sensorInfoMap, setSensorInfoMap] = useState<Record<string, SensorInfo>>({});
   const [isDataSelectionOpen, setIsDataSelectionOpen] = useState(false);
 
@@ -191,27 +191,36 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
     setIsDataSelectionOpen(false);
   };
 
-  const handleDataSelectionConfirm = async (selectedDataTypes: string[]) => {
+  const handleDataSelectionConfirm = async (selectedDataTypes: string[], format: ReportFormat) => {
     try {
-      setIsGeneratingPdf(true);
+      setIsGeneratingReport(true);
       setIsDataSelectionOpen(false);
 
-      const { downloadProjectReport } = await import('@/services/pdfService');
-      const updatedProject = await downloadProjectReport(project, selectedDataTypes);
+      if (format === 'pdf') {
+        // Generate PDF report
+        const { downloadProjectReport } = await import('@/services/pdfService');
+        const updatedProject = await downloadProjectReport(project, selectedDataTypes);
 
-      setProject(updatedProject);
-      setProjects((prevProjects) =>
-        prevProjects.map((p) =>
-          p.id === updatedProject.id ? updatedProject : p
-        )
-      );
+        setProject(updatedProject);
+        setProjects((prevProjects) =>
+          prevProjects.map((p) =>
+            p.id === updatedProject.id ? updatedProject : p
+          )
+        );
 
-      toast.success('PDF report generated successfully');
+        toast.success('PDF report generated successfully');
+      } else {
+        // Generate HTML report
+        const { generateHtmlReport } = await import('@/services/htmlReportService');
+        await generateHtmlReport(project, selectedDataTypes);
+        
+        toast.success('HTML report opened in new tab');
+      }
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF report');
+      console.error(`Error generating ${format} report:`, error);
+      toast.error(`Failed to generate ${format} report`);
     } finally {
-      setIsGeneratingPdf(false);
+      setIsGeneratingReport(false);
     }
   };
 
@@ -234,12 +243,12 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         <div className="flex gap-4">
           <button
             onClick={handleOpenDataSelection}
-            disabled={isGeneratingPdf}
+            disabled={isGeneratingReport}
             className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm
                       hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="flex flex-col items-center gap-1">
-              <span className="text-[10px]">{isGeneratingPdf ? 'Generating...' : 'PDF'}</span>
+              <span className="text-[10px]">{isGeneratingReport ? 'Generating...' : 'Report'}</span>
             </span>
           </button>
           <button
@@ -404,7 +413,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         />
       </div>
 
-      <PdfDataSelectionDialog
+      <ReportDataSelectionDialog
         isOpen={isDataSelectionOpen}
         onClose={handleDataSelectionClose}
         onConfirm={handleDataSelectionConfirm}
