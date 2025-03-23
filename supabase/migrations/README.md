@@ -1,70 +1,57 @@
 # Database Migrations
 
-This directory contains SQL migration files for the Supabase database.
+This directory contains database migration scripts for the Supabase database.
 
-## Migration Files
+## Migration: Add Time to Project Dates
 
-- `20250317_add_devices_table.sql`: Creates the `devices` and `device_positions` tables, and adds the `folder_id` column to the `tracking_objects` table.
+The migration script `20250323_add_time_to_project_dates.sql` changes the `project_start_date` and `project_end_date` columns in the `sensor_folders` table from `date` type to `timestamptz` type. This allows storing both date and time information, rather than just the date.
 
-## Running Migrations
+### Why This Change?
 
-There are two ways to run the migrations:
+Previously, when setting a project start or end date with a specific time, only the date part was saved to the database. This meant that time information was lost when reloading the page. By changing the column types to `timestamptz`, we can now store and retrieve the full date and time information.
 
-### 1. Using the Supabase Dashboard
+### Timezone Handling
 
-1. Go to the Supabase Dashboard
-2. Navigate to the SQL Editor
-3. Copy the contents of the migration file
-4. Paste into the SQL Editor
-5. Click "Run"
+The database stores timestamps in UTC timezone (indicated by the "+00" suffix in the database). The frontend displays dates in the local timezone (e.g., Europe/Oslo, which is UTC+1). This is the correct behavior:
 
-### 2. Using the Script
+1. When a user selects a date and time in the frontend, it's converted to UTC before being saved to the database.
+2. When the date is loaded from the database, it's converted from UTC to the local timezone for display.
 
-We've provided a script to run the migrations programmatically:
+This ensures consistent time handling regardless of the user's location or timezone.
+
+### How to Apply the Migration
+
+To apply this migration, you can use the Supabase CLI:
 
 ```bash
-# Install dependencies if needed
-npm install @supabase/supabase-js
+# Navigate to the project root
+cd /path/to/your/project
 
-# Set environment variables (optional)
-# export SUPABASE_URL=your_supabase_url
-# export SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# Run the migration
-node ../scripts/run-migration.js
+# Apply the migration
+supabase db push
 ```
 
-## What the Migration Does
+Or, if you prefer to apply the migration manually:
 
-The `20250317_add_devices_table.sql` migration:
+1. Connect to your Supabase database using psql or another PostgreSQL client
+2. Run the SQL commands in the migration script
 
-1. Creates a `devices` table with the following columns:
-   - `id`: UUID primary key
-   - `name`: Device name
-   - `type`: Device type
-   - `status`: Device status (online, offline, maintenance, warning)
-   - `company_id`: Reference to companies table
-   - `location`: JSON object with lat/lng coordinates
-   - `imei`: Device IMEI number
-   - `folder_id`: Reference to sensor_folders table
-   - `last_seen`: Timestamp of when the device was last seen
-   - `created_at`: Creation timestamp
-   - `updated_at`: Last update timestamp
+```sql
+-- First, alter the project_start_date column
+ALTER TABLE sensor_folders 
+ALTER COLUMN project_start_date TYPE timestamptz 
+USING project_start_date::timestamptz;
 
-2. Adds a `folder_id` column to the `tracking_objects` table if it doesn't exist
+-- Then, alter the project_end_date column
+ALTER TABLE sensor_folders 
+ALTER COLUMN project_end_date TYPE timestamptz 
+USING project_end_date::timestamptz;
 
-3. Creates a `device_positions` table for storing historical position data:
-   - `id`: UUID primary key
-   - `device_id`: Reference to devices table
-   - `latitude`: Latitude coordinate
-   - `longitude`: Longitude coordinate
-   - `speed`: Device speed
-   - `direction`: Device direction
-   - `battery_level`: Device battery level
-   - `created_at`: Creation timestamp
+-- Add a comment to explain the change
+COMMENT ON COLUMN sensor_folders.project_start_date IS 'Project start date and time (timestamp with timezone)';
+COMMENT ON COLUMN sensor_folders.project_end_date IS 'Project end date and time (timestamp with timezone)';
+```
 
-4. Creates a function `migrate_mock_devices()` to populate the tables with sample data
+### After Migration
 
-## After Running the Migration
-
-After running the migration, the application should use data from the database instead of mock data for devices and tracking objects.
+After applying the migration, the application will automatically start saving and retrieving the full date and time information for project start and end dates. No changes to the application code are needed, as we've already updated the code to handle the full ISO string with time information.

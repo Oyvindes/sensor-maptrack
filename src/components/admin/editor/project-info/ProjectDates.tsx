@@ -29,7 +29,7 @@ const ProjectDates: React.FC<ProjectDatesProps> = ({
         <DateTimePicker
           date={projectStartDate ? new Date(projectStartDate) : undefined}
           setDate={(date) => {
-            console.log("Project start date changed:", date ? date.toISOString() : "");
+            // Ensure we're saving the full ISO string with time information
             onChange("projectStartDate", date ? date.toISOString() : "");
           }}
           placeholder="Select start date and time"
@@ -52,7 +52,7 @@ const ProjectDates: React.FC<ProjectDatesProps> = ({
         <DateTimePicker
           date={projectEndDate ? new Date(projectEndDate) : undefined}
           setDate={(date) => {
-            console.log("Project end date changed:", date ? date.toISOString() : "");
+            // Ensure we're saving the full ISO string with time information
             onChange("projectEndDate", date ? date.toISOString() : "");
           }}
           placeholder="Select end date and time (optional)"

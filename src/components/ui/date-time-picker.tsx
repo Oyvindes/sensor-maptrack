@@ -38,9 +38,25 @@ export function DateTimePicker({
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
       setSelectedTime(`${hours}:${minutes}`);
-      console.log(`Date loaded with time: ${hours}:${minutes}`);
+      // console.log(`Date loaded with time: ${hours}:${minutes}`);
     }
   }, [date]);
+
+  // Initialize with current time if no time is set
+  React.useEffect(() => {
+    if (date && !selectedTime) {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      setSelectedTime(`${hours}:${minutes}`);
+      
+      // Apply the time to the date
+      const newDate = new Date(date.getTime());
+      newDate.setHours(now.getHours());
+      newDate.setMinutes(now.getMinutes());
+      setDate(newDate);
+    }
+  }, [date, selectedTime, setDate]);
 
   // Update the date with the selected time
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +69,7 @@ export function DateTimePicker({
       const newDate = new Date(date.getTime());
       newDate.setHours(hours);
       newDate.setMinutes(minutes);
-      console.log(`Time changed to ${hours}:${minutes}, new date: ${newDate.toISOString()}`);
+      // console.log(`Time changed to ${hours}:${minutes}, new date: ${newDate.toISOString()}`);
       setDate(newDate);
     }
   };
@@ -83,7 +99,7 @@ export function DateTimePicker({
       selectedDate.setHours(hours);
       selectedDate.setMinutes(minutes);
       
-      console.log(`Setting date with time: ${selectedDate.toISOString()}`);
+      // console.log(`Setting date with time: ${selectedDate.toISOString()}`);
       setDate(selectedDate);
     } else {
       setDate(undefined);
