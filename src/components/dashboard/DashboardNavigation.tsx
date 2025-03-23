@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { hasAdminAccess } from '@/utils/authUtils';
+import { useTranslation } from 'react-i18next';
 
 type DashboardView = 'dashboard' | 'projects' | 'tracking' | 'help' | 'store';
 
@@ -24,6 +25,8 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 	currentView,
 	onViewChange
 }) => {
+	const { t } = useTranslation();
+	
 	return (
 		<div className="container sticky top-[60px] z-10 bg-background mb-2 sm:mb-6 shadow-sm animate-fade-up [animation-delay:150ms]">
 			<div className="flex flex-wrap gap-1 sm:gap-0 sm:space-x-2 border-b px-2 sm:px-4 pt-1 sm:pt-2">
@@ -32,35 +35,35 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 					currentView={currentView}
 					onViewChange={onViewChange}
 					icon={<LayoutGrid className="w-4 h-4 mr-2" />}
-					label="Overview"
+					label={t('navigation.overview')}
 				/>
 				<NavigationButton
 					view="projects"
 					currentView={currentView}
 					onViewChange={onViewChange}
 					icon={<FolderKanban className="w-4 h-4" />}
-					label="Projects"
+					label={t('navigation.projects')}
 				/>
 				<NavigationButton
 					view="tracking"
 					currentView={currentView}
 					onViewChange={onViewChange}
 					icon={<Radar className="w-4 h-4" />}
-					label="Track"
+					label={t('navigation.track')}
 				/>
 				<NavigationButton
 					view="help"
 					currentView={currentView}
 					onViewChange={onViewChange}
 					icon={<HelpCircle className="w-4 h-4" />}
-					label="Support"
+					label={t('navigation.support')}
 				/>
 				<NavigationButton
 					view="store"
 					currentView={currentView}
 					onViewChange={onViewChange}
 					icon={<Store className="w-4 h-4" />}
-					label="Shop"
+					label={t('navigation.shop')}
 				/>
 
 				{/* Admin tab - Only visible to admin users */}
@@ -73,10 +76,10 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 									'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
 									'border-transparent text-muted-foreground hover:text-foreground'
 								)}
-								aria-label="Admin"
+								aria-label={t('navigation.admin')}
 							>
 								<ShieldCheck className="w-4 h-4" />
-								<span className="text-[10px] mt-1">Admin</span>
+								<span className="text-[10px] mt-1">{t('navigation.admin')}</span>
 							</Button>
 						</Link>
 					</div>
@@ -91,10 +94,10 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 								'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
 								'border-transparent text-muted-foreground hover:text-foreground'
 							)}
-							aria-label="Sensor Health Check"
+							aria-label={t('navigation.check')}
 						>
 							<Stethoscope className="w-4 h-4" />
-							<span className="text-[10px] mt-1">Check</span>
+							<span className="text-[10px] mt-1">{t('navigation.check')}</span>
 						</Button>
 					</Link>
 					{/* Removed redundant tooltip */}

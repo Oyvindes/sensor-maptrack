@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import './MapIcon'; // Import to ensure default icon is set
+import { useTranslation } from 'react-i18next';
 
 interface TrackingMapProps {
 	devices?: Device[];
@@ -49,6 +50,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 	className = 'h-full w-full rounded-md border',
 	renderCustomPopup
 }) => {
+	const { t } = useTranslation();
 	const mapCenter = getMapCenter(focusLocation, devices, sensors, objects);
 	const allMarkersBounds = getBoundsForAllMarkers(devices, sensors, objects);
 
@@ -103,7 +105,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({
 					className="bg-black/80 hover:bg-black/90 text-white border-none shadow-md"
 					onClick={handleResetZoom}
 				>
-					<RefreshCw className="w-4 h-4 mr-1" /> Reset View
+					<RefreshCw className="w-4 h-4 mr-1" /> {t('map.resetView')}
 				</Button>
 			</div>
 

@@ -3,6 +3,7 @@ import { TrackingObject } from "@/types/sensors";
 import { Plus, Pencil, Trash, Folder, AlertOctagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,8 @@ const DeviceList: React.FC<DeviceListProps> = ({
   onAddNew,
   onDelete
 }) => {
+  const { t } = useTranslation();
+  
   // Log the devices for debugging
   console.log('DeviceList - Received devices:', devices);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
@@ -75,7 +78,7 @@ const DeviceList: React.FC<DeviceListProps> = ({
   return (
     <>
       <SectionContainer>
-        <SectionTitle className="mb-2">Manage Tracking Devices</SectionTitle>
+        <SectionTitle className="mb-2">{t('admin.manageTrackingDevices')}</SectionTitle>
         <div className="flex justify-start gap-2 mb-6">
           <Button
             onClick={onAddNew}
@@ -84,18 +87,18 @@ const DeviceList: React.FC<DeviceListProps> = ({
           >
             <span className="flex flex-col items-center gap-1">
               <Plus className="h-4 w-4" />
-              <span className="text-[10px]">New</span>
+              <span className="text-[10px]">{t('buttons.new')}</span>
             </span>
           </Button>
         </div>
         
         {devices.length === 0 ? (
           <div className="p-4 sm:p-8 text-center border border-dashed rounded-lg">
-            <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4">No tracking objects found in the database.</p>
+            <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4">{t('admin.noTrackingObjects')}</p>
             <Button onClick={onAddNew} variant="outline" className="h-12 px-4">
               <span className="flex flex-col items-center gap-1">
                 <Plus className="h-4 w-4" />
-                <span className="text-[10px]">Start</span>
+                <span className="text-[10px]">{t('admin.start')}</span>
               </span>
             </Button>
           </div>
@@ -121,7 +124,7 @@ const DeviceList: React.FC<DeviceListProps> = ({
                     >
                       <span className="flex flex-col items-center gap-1">
                         <Pencil className="h-4 w-4" />
-                        <span className="text-[10px]">Edit</span>
+                        <span className="text-[10px]">{t('buttons.edit')}</span>
                       </span>
                     </Button>
                     
@@ -134,30 +137,30 @@ const DeviceList: React.FC<DeviceListProps> = ({
                       >
                         <span className="flex flex-col items-center gap-1">
                           <Trash className="h-4 w-4" />
-                          <span className="text-[10px]">Del</span>
+                          <span className="text-[10px]">{t('buttons.delete')}</span>
                         </span>
                       </Button>
                     )}
                   </div>
                 </div>
                 <div className="text-xs sm:text-sm text-muted-foreground">
-                  Position: {device.position.lat.toFixed(4)}, {device.position.lng.toFixed(4)}
+                  {t('admin.position')}: {device.position.lat.toFixed(4)}, {device.position.lng.toFixed(4)}
                 </div>
                 <div className="flex flex-col xs:flex-row xs:justify-between mt-1 sm:mt-2 gap-1">
                   <div className="text-[10px] sm:text-xs text-muted-foreground">
-                    Speed: {device.speed} mph • Battery: {device.batteryLevel}%
+                    {t('admin.speed')}: {device.speed} {t('admin.mph')} • {t('admin.battery')}: {device.batteryLevel}%
                   </div>
                   {device.folderId && (
                     <div className="text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1">
                       <Folder className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                      <span>In folder</span>
+                      <span>{t('admin.inFolder')}</span>
                     </div>
                   )}
                 </div>
                 {!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(device.id) && (
                   <div className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-amber-500 flex items-center gap-0.5 sm:gap-1">
                     <AlertOctagon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                    <span>Mock data (cannot be deleted)</span>
+                    <span>{t('admin.mockData')}</span>
                   </div>
                 )}
               </div>
@@ -169,9 +172,9 @@ const DeviceList: React.FC<DeviceListProps> = ({
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle>{t('admin.confirmDeletion')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deviceToDelete?.name}"? This action cannot be undone.
+              {t('admin.deleteConfirmation', { name: deviceToDelete?.name })}
             </DialogDescription>
           </DialogHeader>
           
@@ -187,12 +190,12 @@ const DeviceList: React.FC<DeviceListProps> = ({
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>
               <span className="flex flex-col items-center gap-1">
-                <span className="text-[10px]">Cancel</span>
+                <span className="text-[10px]">{t('buttons.cancel')}</span>
               </span>
             </Button>
             <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
               <span className="flex flex-col items-center gap-1">
-                <span className="text-[10px]">{isDeleting ? "Deleting..." : "Delete"}</span>
+                <span className="text-[10px]">{isDeleting ? t('admin.deleting') : t('buttons.delete')}</span>
               </span>
             </Button>
           </DialogFooter>

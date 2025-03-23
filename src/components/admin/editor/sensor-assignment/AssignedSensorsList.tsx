@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tag, X, Home, Droplet, Gauge } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
 
 interface AssignedSensorsListProps {
 	assignedSensors: Array<{ imei: string; name: string }>;
@@ -27,6 +28,8 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 	onZoneChange,
 	onTypeChange
 }) => {
+	const { t } = useTranslation();
+	
 	if (assignedSensors.length === 0) {
 		return null;
 	}
@@ -36,7 +39,7 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 			<div className="mb-2">
 				<Label className="text-sm font-medium flex items-center gap-2">
 					<Tag className="h-4 w-4" />
-					<span>Current Assignments</span>
+					<span>{t('sensorAssignment.currentAssignments')}</span>
 					<Badge variant="secondary">{assignedSensors.length}</Badge>
 				</Label>
 			</div>
@@ -62,10 +65,10 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 							<div className="space-y-2">
 								<Label className="text-xs flex items-center gap-1">
 									<Home className="h-3 w-3" />
-									<span>Location</span>
+									<span>{t('sensorAssignment.location')}</span>
 								</Label>
 								<Input
-									placeholder="e.g., Kitchen, Livingroom"
+									placeholder={t('sensorAssignment.locationPlaceholder')}
 									className="h-8 text-sm"
 									value={sensorLocations[sensor.imei] || ''}
 									onChange={(e) => onLocationChange && onLocationChange(sensor.imei, e.target.value)}
@@ -75,18 +78,18 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 							<div className="space-y-2">
 								<Label className="text-xs flex items-center gap-1">
 									<Droplet className="h-3 w-3" />
-									<span>Zone Type</span>
+									<span>{t('sensorAssignment.zoneType')}</span>
 								</Label>
 								<Select
 									value={sensorZones[sensor.imei] || ''}
 									onValueChange={(value) => onZoneChange && onZoneChange(sensor.imei, value as 'wet' | 'dry')}
 								>
 									<SelectTrigger className="h-8 text-sm">
-										<SelectValue placeholder="Select zone type" />
+										<SelectValue placeholder={t('sensorAssignment.selectZoneType')} />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="wet">Wet Zone</SelectItem>
-										<SelectItem value="dry">Dry Zone</SelectItem>
+										<SelectItem value="wet">{t('sensorAssignment.wetZone')}</SelectItem>
+										<SelectItem value="dry">{t('sensorAssignment.dryZone')}</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
@@ -94,18 +97,18 @@ const AssignedSensorsList: React.FC<AssignedSensorsListProps> = ({
 							<div className="space-y-2">
 								<Label className="text-xs flex items-center gap-1">
 									<Gauge className="h-3 w-3" />
-									<span>Material Type</span>
+									<span>{t('sensorAssignment.materialType')}</span>
 								</Label>
 								<Select
 									value={sensorTypes[sensor.imei] || ''}
 									onValueChange={(value) => onTypeChange && onTypeChange(sensor.imei, value as 'wood' | 'concrete')}
 								>
 									<SelectTrigger className="h-8 text-sm">
-										<SelectValue placeholder="Select material type" />
+										<SelectValue placeholder={t('sensorAssignment.selectMaterialType')} />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="concrete">Concrete</SelectItem>
-										<SelectItem value="wood">Wood</SelectItem>
+										<SelectItem value="concrete">{t('sensorAssignment.concrete')}</SelectItem>
+										<SelectItem value="wood">{t('sensorAssignment.wood')}</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>

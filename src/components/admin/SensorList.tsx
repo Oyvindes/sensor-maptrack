@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { SectionContainer, SectionTitle } from '@/components/Layout';
 import { getSensorColor, getSensorIconComponent } from '@/utils/sensorUtils';
 import { User } from '@/types/users';
+import { useTranslation } from 'react-i18next';
 
 interface SensorListProps {
 	sensors: (SensorData & { folderId?: string })[];
@@ -23,6 +24,8 @@ const SensorList: React.FC<SensorListProps> = ({
 	onDelete,
 	currentUser
 }) => {
+	const { t } = useTranslation();
+	
 	// Check if user is a site-wide admin (master role)
 	const isSiteAdmin = currentUser?.role === 'master';
 	// Get the last seen timestamp for a sensor
@@ -35,7 +38,7 @@ const SensorList: React.FC<SensorListProps> = ({
 
 	return (
 		<SectionContainer>
-			<SectionTitle className="mb-2">Manage Sensors</SectionTitle>
+			<SectionTitle className="mb-2">{t('admin.manageSensors')}</SectionTitle>
 			<div className="flex justify-start gap-2 mb-6">
 				{isSiteAdmin && (
 					<>
@@ -47,7 +50,7 @@ const SensorList: React.FC<SensorListProps> = ({
 						>
 							<span className="flex flex-col items-center gap-1">
 							  <FileUp className="h-4 w-4" />
-							  <span className="text-[10px]">Import</span>
+							  <span className="text-[10px]">{t('buttons.import')}</span>
 							</span>
 						</Button>
 						<Button
@@ -58,7 +61,7 @@ const SensorList: React.FC<SensorListProps> = ({
 						>
 							<span className="flex flex-col items-center gap-1">
 							  <Trash2 className="h-4 w-4" />
-							  <span className="text-[10px]">Delete</span>
+							  <span className="text-[10px]">{t('buttons.delete')}</span>
 							</span>
 						</Button>
 					</>
@@ -66,7 +69,7 @@ const SensorList: React.FC<SensorListProps> = ({
 				<Button onClick={onAddNew} size="sm" className="h-12 w-16 px-4">
 					<span className="flex flex-col items-center gap-1">
 						 <Plus className="h-4 w-4" />
-						 <span className="text-[10px]">New</span>
+						 <span className="text-[10px]">{t('buttons.new')}</span>
 					</span>
 				</Button>
 			</div>
@@ -105,18 +108,17 @@ const SensorList: React.FC<SensorListProps> = ({
 								>
 									<span className="flex flex-col items-center gap-1">
 										<Pencil className="h-4 w-4" />
-										<span className="text-[10px]">Edit</span>
+										<span className="text-[10px]">{t('buttons.edit')}</span>
 									</span>
 								</Button>
 							</div>
 							<div className="text-sm text-muted-foreground">
-								{sensor.values.length} sensor value
-								{sensor.values.length !== 1 ? 's' : ''}
+								{sensor.values.length} {t('admin.sensorValue', { count: sensor.values.length })}
 							</div>
 							<div className="flex flex-col gap-1 mt-2">
 								<div className="flex justify-between">
 									<div className="text-xs text-muted-foreground">
-										Status: {sensor.status}
+										{t('admin.status')}: {t(`admin.${sensor.status}`)}
 									</div>
 									{sensor.projectName ? (
 										<div className="text-xs flex items-center gap-1">
@@ -126,12 +128,12 @@ const SensorList: React.FC<SensorListProps> = ({
 									) : sensor.folderId ? (
 										<div className="text-xs flex items-center gap-1">
 											<Folder className="h-3 w-3" />
-											<span>Project {sensor.folderId.substring(0, 8)}...</span>
+											<span>{t('admin.project')} {sensor.folderId.substring(0, 8)}...</span>
 										</div>
 									) : null}
 								</div>
 								<div className="text-xs text-muted-foreground">
-									Last seen: {lastSeen}
+									{t('admin.lastSeen')}: {lastSeen}
 								</div>
 							</div>
 						</div>

@@ -8,6 +8,7 @@ import AssignedSensorsList from './sensor-assignment/AssignedSensorsList';
 import AvailableSensorsList from './sensor-assignment/AvailableSensorsList';
 import { scanSensorQrCode } from '@/utils/cameraUtils';
 import { validateSensorForCompany } from '@/services/sensor/sensorApi';
+import { useTranslation } from 'react-i18next';
 
 interface SensorAssignmentProps {
 	availableSensors: Array<{ imei: string; name: string }>;
@@ -34,6 +35,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 	onSensorZoneChange,
 	onSensorTypeChange
 }) => {
+	const { t } = useTranslation();
 	const [imeiInput, setImeiInput] = useState('');
 	const [showScanner, setShowScanner] = useState(false);
 	const [scanning, setScanning] = useState(false);
@@ -68,12 +70,12 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 		if (!imeiInput.trim()) return;
 
 		if (!companyId) {
-			toast.error('Please select a company before adding sensors');
+			toast.error(t('projectEditor.selectCompanyBeforeAddingSensors'));
 			return;
 		}
 
 		// Show loading indicator
-		toast.loading('Validating sensor...');
+		toast.loading(t('projectEditor.validatingSensor'));
 
 		try {
 			// Validate the sensor with the API
@@ -94,7 +96,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 			}
 		} catch (error) {
 			console.error('Error validating sensor:', error);
-			toast.error('Failed to validate sensor. Please try again.');
+			toast.error(t('projectEditor.failedToValidate'));
 		} finally {
 			toast.dismiss();
 		}
@@ -114,13 +116,13 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 
 				if (!companyId) {
 					toast.error(
-						'Please select a company before adding sensors'
+						t('projectEditor.selectCompanyBeforeAddingSensors')
 					);
 					return;
 				}
 
 				// Show loading indicator
-				toast.loading('Validating scanned sensor...');
+				toast.loading(t('projectEditor.validatingScannedSensor'));
 
 				try {
 					// Validate the sensor with the company using our API
@@ -137,7 +139,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 						setImeiInput('');
 
 						toast.success(
-							'Sensor validated and added successfully'
+							t('projectEditor.sensorValidated')
 						);
 					} else {
 						// Keep the IMEI value in the input but show error message
@@ -145,16 +147,16 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 					}
 				} catch (validationError) {
 					console.error('Error validating sensor:', validationError);
-					toast.error('Failed to validate sensor. Please try again.');
+					toast.error(t('projectEditor.failedToValidate'));
 				} finally {
 					toast.dismiss();
 				}
 			} else {
-				toast.error(result.error || 'Failed to scan QR code');
+				toast.error(result.error || t('projectEditor.failedToScan'));
 			}
 		} catch (error) {
 			console.error('Error scanning QR code:', error);
-			toast.error('An error occurred while scanning');
+			toast.error(t('projectEditor.scanningError'));
 		} finally {
 			// Use a small delay before hiding the scanner UI to make the transition smoother
 			setTimeout(() => {
@@ -174,7 +176,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 		<div className="space-y-2">
 			<Label className="flex items-center gap-1">
 				<Link className="h-4 w-4" />
-				<span>Assigned Sensors</span>
+				<span>{t('projectEditor.assignedSensors')}</span>
 			</Label>
 
 			<Card>
@@ -202,13 +204,11 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 					{companyId ? (
 						<div>
 							<div className="mb-4 font-medium text-sm">
-								Available Sensors
+								{t('sensorAssignment.availableSensors')}
 							</div>
 							{availableSensors.length === 0 ? (
 								<div className="text-muted-foreground text-sm p-4 bg-muted/30 rounded-md">
-									No sensors are available for this company.
-									Please go to the Sensors tab to add sensors
-									to this company first.
+									{t('sensorAssignment.noSensorsAvailable')}
 								</div>
 							) : (
 								<AvailableSensorsList
@@ -220,7 +220,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 						</div>
 					) : (
 						<div className="text-muted-foreground text-sm p-4 bg-muted/30 rounded-md">
-							Please select a company to see available sensors.
+							{t('projectEditor.selectCompanyForSensors')}
 						</div>
 					)}
 				</CardContent>

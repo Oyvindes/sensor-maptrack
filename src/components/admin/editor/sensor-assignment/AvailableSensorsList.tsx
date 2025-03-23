@@ -2,6 +2,7 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 
 interface AvailableSensorsListProps {
 	availableSensors: Array<{ imei: string; name: string }>;
@@ -14,10 +15,12 @@ const AvailableSensorsList: React.FC<AvailableSensorsListProps> = ({
 	assignedSensorImeis,
 	onSensorToggle
 }) => {
+	const { t } = useTranslation();
+	
 	if (availableSensors.length === 0) {
 		return (
 			<p className="text-muted-foreground text-sm">
-				No sensors available for this company
+				{t('sensorAssignment.noSensorsAvailable')}
 			</p>
 		);
 	}
@@ -54,7 +57,7 @@ const AvailableSensorsList: React.FC<AvailableSensorsListProps> = ({
 								variant="outline"
 								className="ml-auto text-xs"
 							>
-								Assigned
+								{t('sensorAssignment.assigned')}
 							</Badge>
 						)}
 					</div>

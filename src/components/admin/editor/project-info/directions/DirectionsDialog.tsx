@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Navigation, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { 
   Dialog, 
   DialogContent, 
@@ -20,6 +21,7 @@ interface DirectionsDialogProps {
 }
 
 const DirectionsDialog: React.FC<DirectionsDialogProps> = ({ address, location }) => {
+  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   
   const { openDirectionsInNewTab } = useDirectionsEmail({ address, location });
@@ -48,20 +50,20 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({ address, location }
             className="gap-2"
           >
             <Navigation className="h-4 w-4" />
-            <span>Get Directions</span>
+            <span>{t('projectEditor.directions.getDirections')}</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md fixed z-[100] bg-background">
           <DialogHeader>
-            <DialogTitle>Get Directions</DialogTitle>
+            <DialogTitle>{t('projectEditor.directions.title')}</DialogTitle>
             <DialogDescription>
-              Directions to the project location
+              {t('projectEditor.directions.description')}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="flex flex-col space-y-2">
-              <p className="text-sm font-medium">Project Address</p>
+              <p className="text-sm font-medium">{t('projectEditor.directions.projectAddress')}</p>
               <p className="p-2 bg-muted rounded">{address}</p>
             </div>
             
@@ -71,7 +73,7 @@ const DirectionsDialog: React.FC<DirectionsDialogProps> = ({ address, location }
               className="w-full gap-2"
             >
               <ExternalLink className="h-4 w-4" />
-              <span>Open Directions in New Tab</span>
+              <span>{t('projectEditor.directions.openInNewTab')}</span>
             </Button>
           </div>
         </DialogContent>

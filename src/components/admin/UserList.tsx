@@ -6,6 +6,7 @@ import { User as UserType, Company } from "@/types/users";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { getCurrentUser } from "@/services/authService";
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -23,14 +24,15 @@ interface UserListProps {
   onBack?: () => void;
 }
 
-const UserList: React.FC<UserListProps> = ({ 
-  users, 
+const UserList: React.FC<UserListProps> = ({
+  users,
   companies,
   currentCompanyId,
-  onUserSelect, 
+  onUserSelect,
   onAddNew,
   onBack
 }) => {
+  const { t } = useTranslation();
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const currentUser = getCurrentUser();
   
@@ -74,14 +76,14 @@ const UserList: React.FC<UserListProps> = ({
           <Button variant="ghost" size="sm" onClick={onBack}>
             <span className="flex flex-col items-center gap-1">
               <ArrowLeft className="h-4 w-4" />
-              <span className="text-[10px]">Back</span>
+              <span className="text-[10px]">{t('buttons.back')}</span>
             </span>
           </Button>
         )}
         <SectionTitle>
-          {currentCompany 
-            ? `Users for ${currentCompany.name}` 
-            : "All Users"}
+          {currentCompany
+            ? t('admin.usersForCompany', { company: currentCompany.name })
+            : t('admin.allUsers')}
         </SectionTitle>
       </div>
       
@@ -94,7 +96,7 @@ const UserList: React.FC<UserListProps> = ({
           >
             <span className="flex flex-col items-center gap-1">
               <Plus className="h-4 w-4" />
-              <span className="text-[10px]">New</span>
+              <span className="text-[10px]">{t('buttons.new')}</span>
             </span>
           </Button>
         </div>

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { SensorFolder } from "@/types/users";
 import { MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface AddressSearchProps {
   address: string | undefined;
@@ -25,6 +26,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
   address,
   onChange
 }) => {
+  const { t } = useTranslation();
   const [addressQuery, setAddressQuery] = useState("");
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -73,11 +75,11 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
       } else {
         setSuggestions([]);
         setShowSuggestions(false);
-        toast.warning("No matching addresses found. Please try a different search term.");
+        toast.warning(t('projectEditor.noAddressFound'));
       }
     } catch (error) {
       console.error("Error fetching address suggestions:", error);
-      toast.error("Failed to fetch address data. Please check your connection and try again.");
+      toast.error(t('projectEditor.fetchError'));
       setSuggestions([]);
       setShowSuggestions(false);
     } finally {
@@ -100,7 +102,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
       });
       onChange("location" as keyof SensorFolder, locationData);
       
-      toast.success(`Address set with precise coordinates [${suggestion.lat}, ${suggestion.lng}]`);
+      toast.success(`${t('projectEditor.addressSet')} [${suggestion.lat}, ${suggestion.lng}]`);
     }
     
     setShowSuggestions(false);
@@ -112,7 +114,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
       <Label htmlFor="address">
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
-          <span>Project Address</span>
+          <span>{t('projectEditor.projectAddress')}</span>
         </div>
       </Label>
       <div className="relative">
@@ -121,7 +123,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
             id="addressSearch"
             value={addressQuery}
             onChange={(e) => setAddressQuery(e.target.value)}
-            placeholder="Search for Norwegian address..."
+            placeholder={t('projectEditor.searchAddress')}
             className="flex-1"
           />
           <Button 
@@ -148,7 +150,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
                     {suggestion.postcode} {suggestion.city}, Norway
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Coordinates: [{suggestion.lat}, {suggestion.lng}]
+                    {t('projectEditor.coordinates')} [{suggestion.lat}, {suggestion.lng}]
                   </div>
                 </div>
               ))}
@@ -161,7 +163,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({
           value={address || ""}
           readOnly
           disabled
-          placeholder="Full address of the project location"
+          placeholder={t('projectEditor.fullAddress')}
           className="mt-2 bg-muted cursor-not-allowed"
         />
       </div>

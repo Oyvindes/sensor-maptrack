@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/services/authService";
 import { Building2, Users, Radar, Database, Home } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { PageContainer, ContentContainer } from "@/components/Layout";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
@@ -24,6 +25,7 @@ import SensorsTab from "@/components/admin/tabs/SensorsTab";
 import DevicesTab from "@/components/admin/tabs/DevicesTab";
 
 const Admin = () => {
+  const { t } = useTranslation();
   const adminState = useAdminState();
   const {
     mode, activeTab, companies, users, sensors, devices, trackingObjects,
@@ -98,8 +100,8 @@ const Admin = () => {
 
       <ContentContainer className="pt-4 container">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-1">Admin Controls</h2>
-          <p className="text-sm text-muted-foreground">Manage your system's data and settings.</p>
+          <h2 className="text-xl font-semibold mb-1">{t('admin.controls')}</h2>
+          <p className="text-sm text-muted-foreground">{t('admin.manageSystemData')}</p>
         </div>
         <div className="sticky top-[60px] z-10 bg-background mb-6 shadow-sm">
           <div className="flex flex-wrap gap-1 sm:gap-0 sm:space-x-2 border-b px-2 sm:px-4 pt-1 sm:pt-2">
@@ -115,7 +117,7 @@ const Admin = () => {
                 onClick={() => handleTabChange('companies')}
               >
                 <Building2 className="w-4 h-4 mr-2" />
-                <span className="text-[10px] mt-1">Company</span>
+                <span className="text-[10px] mt-1">{t('admin.company')}</span>
               </Button>
             )}
             <Button
@@ -129,7 +131,7 @@ const Admin = () => {
               onClick={() => handleTabChange('users')}
             >
               <Users className="w-4 h-4 mr-2" />
-              <span className="text-[10px] mt-1">Users</span>
+              <span className="text-[10px] mt-1">{t('admin.users')}</span>
             </Button>
             <Button
               variant="ghost"
@@ -142,7 +144,7 @@ const Admin = () => {
               onClick={() => handleTabChange('sensors')}
             >
               <Database className="w-4 h-4 mr-2" />
-              <span className="text-[10px] mt-1">Sensors</span>
+              <span className="text-[10px] mt-1">{t('admin.sensors')}</span>
             </Button>
             <Button
               variant="ghost"
@@ -155,7 +157,7 @@ const Admin = () => {
               onClick={() => handleTabChange('devices')}
             >
               <Radar className="w-4 h-4 mr-2" />
-              <span className="text-[10px] mt-1">Track</span>
+              <span className="text-[10px] mt-1">{t('admin.track')}</span>
             </Button>
             <Button
               variant="ghost"
@@ -167,7 +169,7 @@ const Admin = () => {
             >
               <Link to="/index">
                 <Home className="w-4 h-4 mr-2" />
-                <span className="text-[10px] mt-1">Exit Admin</span>
+                <span className="text-[10px] mt-1">{t('admin.exitAdmin')}</span>
               </Link>
             </Button>
           </div>

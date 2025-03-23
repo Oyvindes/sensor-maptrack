@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FileIcon, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { getPdfContent } from "@/services/pdf/supabasePdfService";
+import { useTranslation } from "react-i18next";
 
 interface ProjectPdfHistoryProps {
   project: SensorFolder;
@@ -15,18 +16,20 @@ const ProjectPdfHistory: React.FC<ProjectPdfHistoryProps> = ({
   project,
   className
 }) => {
+  const { t } = useTranslation();
+  
   if (!project.pdfHistory || project.pdfHistory.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle className="text-lg">PDF Reports</CardTitle>
+          <CardTitle className="text-lg">{t('projectEditor.pdfReports')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center space-y-2 p-4">
             <FileIcon className="h-12 w-12 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No reports generated yet</p>
+            <p className="text-sm text-muted-foreground">{t('projectEditor.noReportsGenerated')}</p>
             <p className="text-xs text-muted-foreground">
-              Reports are automatically generated when a project is stopped
+              {t('projectEditor.reportsAutomaticallyGenerated')}
             </p>
           </div>
         </CardContent>
@@ -36,11 +39,11 @@ const ProjectPdfHistory: React.FC<ProjectPdfHistoryProps> = ({
 
   const handleViewPdf = async (pdfRecord: PdfRecord) => {
     try {
-      toast.loading("Loading PDF...");
+      toast.loading(t('projectEditor.loadingPdf'));
       const result = await getPdfContent(pdfRecord.id);
       
       if (!result || !result.blob) {
-        toast.error("PDF is no longer available. Please regenerate the report.");
+        toast.error(t('projectEditor.pdfNoLongerAvailable'));
         return;
       }
       
@@ -56,14 +59,14 @@ const ProjectPdfHistory: React.FC<ProjectPdfHistoryProps> = ({
       toast.dismiss();
     } catch (error) {
       console.error("Error viewing PDF:", error);
-      toast.error("Failed to load PDF. Please try again.");
+      toast.error(t('projectEditor.failedToLoadPdf'));
     }
   };
 
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="text-lg">PDF Reports ({project.pdfHistory.length})</CardTitle>
+        <CardTitle className="text-lg">{t('projectEditor.pdfReports')} ({project.pdfHistory.length})</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2 max-h-[300px] overflow-auto pr-2">
@@ -88,7 +91,7 @@ const ProjectPdfHistory: React.FC<ProjectPdfHistoryProps> = ({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => handleViewPdf(pdf)}
-                  title="View PDF"
+                  title={t('projectEditor.viewPdf')}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>

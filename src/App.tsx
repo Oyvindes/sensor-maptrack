@@ -11,6 +11,7 @@ import NotFound from "@/pages/NotFound";
 import SensorHealthCheck from "@/pages/SensorHealthCheck";
 import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "@/services/authService";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LanguageProvider } from "@/components/LanguageProvider";
 import { hasAdminAccess } from "@/utils/authUtils";
 import StatePreserver from "@/components/StatePreserver";
 import Overview from "@/pages/Overview";
@@ -18,6 +19,7 @@ import Projects from "@/pages/Projects";
 import Track from "@/pages/Track";
 import Support from "@/pages/Support";
 import Shop from "@/pages/Shop";
+import '@/i18n'; // Import i18n configuration
 
 // Authentication guard component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -69,13 +71,14 @@ const App = () => {
 
   return (
     <ThemeProvider defaultTheme="system">
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <BrowserRouter>
-            {/* Add our StatePreserver component */}
-            <StatePreserver />
-            <Toaster />
-            <Sonner />
+      <LanguageProvider defaultLanguage="en">
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <BrowserRouter>
+              {/* Add our StatePreserver component */}
+              <StatePreserver />
+              <Toaster />
+              <Sonner />
             <Routes>
               {/* Redirect root to dashboard if authenticated, otherwise to login */}
               <Route
@@ -162,7 +165,8 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-    </ThemeProvider>
+    </LanguageProvider>
+  </ThemeProvider>
   );
 };
 

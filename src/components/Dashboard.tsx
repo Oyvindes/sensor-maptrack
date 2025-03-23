@@ -8,6 +8,7 @@ import SensorFolderEditor from './admin/SensorFolderEditor';
 import { companyService } from '@/services/company';
 import { Company } from '@/types/users';
 import DashboardNavigation from './dashboard/DashboardNavigation';
+import { useTranslation } from 'react-i18next';
 import ProjectsList from './dashboard/ProjectsList';
 import TrackingSection from './dashboard/TrackingSection';
 import HelpSection from './dashboard/HelpSection';
@@ -24,6 +25,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ initialView = 'dashboard', onViewChange }) => {
+	const { t } = useTranslation();
 	const [currentView, setCurrentView] = useState<DashboardView>(initialView);
 	const [companies, setCompanies] = useState<Company[]>([]);
 	const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
@@ -126,7 +128,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialView = 'dashboard', onView
 							>
 								<span className="flex flex-col items-center gap-1">
 									<Plus className="h-4 w-4" />
-									<span className="text-[10px]">New</span>
+									<span className="text-[10px]">{t('buttons.new')}</span>
 								</span>
 							</Button>
 						</div>

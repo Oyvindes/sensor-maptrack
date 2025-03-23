@@ -9,6 +9,7 @@ import {
 	SelectValue
 } from '@/components/ui/select';
 import { Company } from '@/types/users';
+import { useTranslation } from 'react-i18next';
 
 interface CompanySelectorProps {
 	companyId: string;
@@ -16,19 +17,21 @@ interface CompanySelectorProps {
 	isMasterAdmin: boolean;
 	onCompanyChange: (companyId: string) => void;
 }
-
 const CompanySelector: React.FC<CompanySelectorProps> = ({
 	companyId,
 	companies,
 	isMasterAdmin,
 	onCompanyChange
 }) => {
+	const { t } = useTranslation();
+	
 	return (
 		<div className="space-y-2">
-			<Label htmlFor="company">Company</Label>
+			<Label htmlFor="company">{t('projectEditor.company')}</Label>
 			{isMasterAdmin ? (
 				<Select value={companyId} onValueChange={onCompanyChange}>
 					<SelectTrigger>
+						<SelectValue placeholder={t('projectEditor.selectCompany')} />
 						<SelectValue placeholder="Select company" />
 					</SelectTrigger>
 					<SelectContent>

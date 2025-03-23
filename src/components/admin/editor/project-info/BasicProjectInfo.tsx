@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
 interface BasicProjectInfoProps {
   name: string;
@@ -25,11 +26,13 @@ const BasicProjectInfo: React.FC<BasicProjectInfoProps> = ({
   insuranceCompany,
   onChange
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-4">
       {/* Project Name */}
       <div className="space-y-2">
-        <Label htmlFor="name">Project Name</Label>
+        <Label htmlFor="name">{t('projectEditor.projectName')}</Label>
         <Input
           id="name"
           value={name}
@@ -43,7 +46,7 @@ const BasicProjectInfo: React.FC<BasicProjectInfoProps> = ({
         <Label htmlFor="insuranceCompany">
           <div className="flex items-center gap-1">
             <Building className="h-4 w-4" />
-            <span>Insurance Company</span>
+            <span>{t('projectEditor.insuranceCompany')}</span>
           </div>
         </Label>
         <Select
@@ -51,7 +54,7 @@ const BasicProjectInfo: React.FC<BasicProjectInfoProps> = ({
           onValueChange={(value) => onChange("insuranceCompany", value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select insurance company" />
+            <SelectValue placeholder={t('projectEditor.selectInsurance')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Gjensidige">Gjensidige</SelectItem>
@@ -74,14 +77,14 @@ const BasicProjectInfo: React.FC<BasicProjectInfoProps> = ({
         <Label htmlFor="projectNumber">
           <div className="flex items-center gap-1">
             <Hash className="h-4 w-4" />
-            <span>Project Number</span>
+            <span>{t('projectEditor.projectNumber')}</span>
           </div>
         </Label>
         <Input
           id="projectNumber"
           value={projectNumber || ""}
           onChange={(e) => onChange("projectNumber", e.target.value)}
-          placeholder="e.g., PRJ-2023-001"
+          placeholder={t('projectEditor.projectNumberPlaceholder')}
         />
       </div>
     </div>

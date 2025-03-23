@@ -5,10 +5,12 @@ import { LogOut, User, Home } from "lucide-react";
 import { logout, getCurrentUser } from '@/services/authService';
 import { toast } from 'sonner';
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTranslation } from 'react-i18next';
 
 const AdminHeader: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     try {
@@ -34,7 +36,7 @@ const AdminHeader: React.FC = () => {
         size="sm"
         onClick={handleLogout}
         className="rounded-full h-8 w-8 p-0 flex items-center justify-center"
-        title="Logout"
+        title={t('buttons.logout')}
       >
         <LogOut className="h-4 w-4" />
       </Button>
@@ -51,9 +53,9 @@ const AdminHeader: React.FC = () => {
               />
             </Link>
             <div className="flex flex-col">
-              <h1 className="text-lg sm:text-xl font-semibold">Admin Dashboard</h1>
+              <h1 className="text-lg sm:text-xl font-semibold">{t('admin.dashboard')}</h1>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Welcome back, {currentUser?.name || 'User'}
+                {t('welcome.message')}, {currentUser?.name || t('welcome.user')}
               </p>
             </div>
           </div>

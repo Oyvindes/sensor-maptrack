@@ -1,16 +1,18 @@
 
 import React from "react";
 import { UserRound, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ProjectMetadataProps {
   creatorName?: string;
   createdAt?: string;
 }
-
 const ProjectMetadata: React.FC<ProjectMetadataProps> = ({
   creatorName,
   createdAt
 }) => {
+  const { t } = useTranslation();
+  
   if (!creatorName && !createdAt) return null;
   
   return (
@@ -19,13 +21,13 @@ const ProjectMetadata: React.FC<ProjectMetadataProps> = ({
         {creatorName && (
           <div className="flex items-center gap-2">
             <UserRound className="h-4 w-4" />
-            <span>Created by: {creatorName}</span>
+            <span>{t('projectEditor.createdBy')} {creatorName}</span>
           </div>
         )}
         {createdAt && (
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            <span>Created on: {createdAt}</span>
+            <span>{t('projectEditor.createdOn')} {createdAt}</span>
           </div>
         )}
       </div>

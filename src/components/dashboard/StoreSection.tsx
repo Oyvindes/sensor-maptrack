@@ -13,6 +13,7 @@ import ShoppingCart from './ShoppingCart';
 import CheckoutForm from './CheckoutForm';
 import ProductForm from './ProductForm';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
 
 // Define a cart item type
 interface CartItem {
@@ -28,6 +29,8 @@ interface StoreSectionProps {
 }
 
 const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
+  const { t } = useTranslation();
+  
   const [activeTab, setActiveTab] = useState<string>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -122,7 +125,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
       } catch (err) {
         console.error('Error fetching store data:', err);
         setError('Failed to load store content. Please try again later.');
-        toast.error('Failed to load store content');
+        toast.error(t('store.error'));
       } finally {
         setIsLoading(false);
       }
@@ -315,20 +318,20 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
   };
 
   const getStatusBadge = (status: Purchase['status']) => {
-    const statusConfig: Record<Purchase['status'], { color: string, label: string }> = {
-      pending: { color: 'bg-yellow-500', label: 'Pending' },
-      in_progress: { color: 'bg-blue-500', label: 'In Progress' },
-      packaging: { color: 'bg-purple-500', label: 'Packaging' },
-      sent: { color: 'bg-green-500', label: 'Sent' },
-      invoiced: { color: 'bg-indigo-500', label: 'Invoiced' },
-      completed: { color: 'bg-green-700', label: 'Completed' }
+    const statusConfig: Record<Purchase['status'], { color: string, translationKey: string }> = {
+      pending: { color: 'bg-yellow-500', translationKey: 'store.status.pending' },
+      in_progress: { color: 'bg-blue-500', translationKey: 'store.status.inProgress' },
+      packaging: { color: 'bg-purple-500', translationKey: 'store.status.packaging' },
+      sent: { color: 'bg-green-500', translationKey: 'store.status.sent' },
+      invoiced: { color: 'bg-indigo-500', translationKey: 'store.status.invoiced' },
+      completed: { color: 'bg-green-700', translationKey: 'store.status.completed' }
     };
     
     const config = statusConfig[status];
     
     return (
       <Badge className={`${config.color} text-white`}>
-        {config.label}
+        {t(config.translationKey)}
       </Badge>
     );
   };
@@ -337,7 +340,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
     return (
       <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading store content...</p>
+        <p className="mt-4 text-muted-foreground">{t('store.loading')}</p>
       </div>
     );
   }
@@ -345,13 +348,13 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
   if (error) {
     return (
       <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
-        <div className="text-destructive mb-2">Error</div>
+        <div className="text-destructive mb-2">{t('store.error')}</div>
         <p className="text-center">{error}</p>
-        <Button 
+        <Button
           className="mt-4"
           onClick={() => window.location.reload()}
         >
-          Retry
+          {t('buttons.retry')}
         </Button>
       </div>
     );
@@ -359,28 +362,28 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
 
   return (
     <div className={`w-full animate-fade-up [animation-delay:300ms] ${className}`}>
-      <h1 className="text-2xl font-bold mb-2">Sensor Store</h1>
+      <h1 className="text-2xl font-bold mb-2">{t('store.title')}</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4 flex flex-wrap">
           <TabsTrigger value="products" className="flex flex-col">
             <Tag className="h-4 w-4" />
-            <span className="text-[10px] mt-1">Products</span>
+            <span className="text-[10px] mt-1">{t('store.products')}</span>
           </TabsTrigger>
           {currentUser?.role !== 'user' && (
             <TabsTrigger value="cart" className="flex flex-col">
               <ShoppingCartIcon className="h-4 w-4" />
-              <span className="text-[10px] mt-1">Cart {cartItems.length > 0 && `(${cartItems.length})`}</span>
+              <span className="text-[10px] mt-1">{t('store.cart')} {cartItems.length > 0 && `(${cartItems.length})`}</span>
             </TabsTrigger>
           )}
           <TabsTrigger value="purchases" className="flex flex-col">
             <Package className="h-4 w-4" />
-            <span className="text-[10px] mt-1">Purchases</span>
+            <span className="text-[10px] mt-1">{t('store.purchases')}</span>
           </TabsTrigger>
           {isSiteAdmin && (
             <TabsTrigger value="all-purchases" className="flex flex-col">
               <ShoppingCartIcon className="h-4 w-4" />
-              <span className="text-[10px] mt-1">All</span>
+              <span className="text-[10px] mt-1">{t('store.all')}</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -392,7 +395,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                 <Button onClick={handleCreateProduct} className="h-12 px-4">
                   <span className="flex flex-col items-center gap-1">
                     <Plus className="h-4 w-4" />
-                    <span className="text-[10px]">New</span>
+                    <span className="text-[10px]">{t('buttons.new')}</span>
                   </span>
                 </Button>
               </div>
@@ -430,11 +433,11 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                         className="gap-2"
                       >
                         <ShoppingCartIcon className="h-4 w-4" />
-                        Add to Cart
+                        {t('store.addToCart')}
                       </Button>
                     ) : (
                       <div className="text-xs text-muted-foreground italic">
-                        Contact an administrator to order
+                        {t('store.contactAdmin')}
                       </div>
                     )}
                     {isSiteAdmin && (
@@ -446,7 +449,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                           className="gap-2"
                         >
                           <Pencil className="h-4 w-4" />
-                          Edit
+                          {t('buttons.edit')}
                         </Button>
                         <Button
                           variant="outline"
@@ -455,7 +458,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                           className="gap-2 text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
-                          Delete
+                          {t('buttons.delete')}
                         </Button>
                       </div>
                     )}
@@ -466,7 +469,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
             
             {products.length === 0 && (
               <div className="text-center p-8 bg-muted rounded-lg">
-                <p className="text-muted-foreground">No products available.</p>
+                <p className="text-muted-foreground">{t('store.noProducts')}</p>
               </div>
             )}
           </TabsContent>
@@ -685,7 +688,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
               return false;
             }).length === 0 && (
               <div className="text-center p-8 bg-muted rounded-lg">
-                <p className="text-muted-foreground">You haven't made any purchases yet.</p>
+                <p className="text-muted-foreground">{t('store.noPurchases')}</p>
               </div>
             )}
           </div>
@@ -717,7 +720,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                             title="Generate Proforma Invoice"
                           >
                             <FileText className="h-4 w-4" />
-                            Invoice
+                            {t('store.invoice')}
                           </Button>
                           <select
                             className="text-xs border rounded p-1.5 bg-background text-foreground min-w-[120px] dark:border-gray-700"
@@ -760,12 +763,12 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                               }
                             }}
                           >
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="packaging">Packaging</option>
-                            <option value="sent">Sent</option>
-                            <option value="invoiced">Invoiced</option>
-                            <option value="completed">Completed</option>
+                            <option value="pending">{t('store.status.pending')}</option>
+                            <option value="in_progress">{t('store.status.inProgress')}</option>
+                            <option value="packaging">{t('store.status.packaging')}</option>
+                            <option value="sent">{t('store.status.sent')}</option>
+                            <option value="invoiced">{t('store.status.invoiced')}</option>
+                            <option value="completed">{t('store.status.completed')}</option>
                           </select>
                         </div>
                       </div>
@@ -910,7 +913,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                                   }
                                 }}
                               >
-                                Update Reference
+                                {t('store.updateReference')}
                               </Button>
                             </div>
                           </div>
@@ -992,7 +995,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                                   }
                                 }}
                               >
-                                Update Tracking Info
+                                {t('store.updateTracking')}
                               </Button>
                             </div>
                           </div>
@@ -1005,7 +1008,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                                 rel="noopener noreferrer"
                                 className="text-blue-500 hover:underline"
                               >
-                                Track Package
+                                {t('store.trackPackage')}
                               </a>
                             </p>
                           )}
@@ -1026,7 +1029,7 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
               
               {purchases.length === 0 && (
                 <div className="text-center p-8 bg-muted rounded-lg">
-                  <p className="text-muted-foreground">No purchases have been made yet.</p>
+                  <p className="text-muted-foreground">{t('store.noPurchasesAll')}</p>
                 </div>
               )}
             </div>

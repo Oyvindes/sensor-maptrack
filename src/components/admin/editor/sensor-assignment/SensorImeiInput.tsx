@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScanBarcode, Plus, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface SensorImeiInputProps {
   imeiInput: string;
@@ -20,6 +21,8 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
   onScanQR,
   onAddSensor
 }) => {
+  const { t } = useTranslation();
+  
   // Add state to track the visibility of the scanner with animation
   const [isVisible, setIsVisible] = useState(showScanner);
   
@@ -40,7 +43,7 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
     <div className="mb-4">
       <div className="flex gap-2 mb-2">
         <Input
-          placeholder="Enter sensor IMEI number"
+          placeholder={t('projectEditor.enterSensorImei')}
           value={imeiInput}
           onChange={onImeiChange}
           className="flex-1"
@@ -50,8 +53,8 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
           variant="outline"
           size="icon"
           disabled={scanning}
-          aria-label="Scan QR code"
-          title="Scan QR code to get IMEI"
+          aria-label={t('projectEditor.scanQrCode')}
+          title={t('projectEditor.scanQrCode')}
         >
           {scanning ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -60,7 +63,7 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
           )}
         </Button>
         <Button onClick={onAddSensor} disabled={!imeiInput.trim()}>
-          <Plus className="h-4 w-4 mr-1" /> Add
+          <Plus className="h-4 w-4 mr-1" /> {t('projectEditor.add')}
         </Button>
       </div>
       
@@ -80,8 +83,8 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
           </div>
           <p className="text-sm text-muted-foreground">
             {scanning
-              ? "Accessing camera... Please allow camera permissions when prompted"
-              : "Point camera at sensor QR code to capture IMEI"}
+              ? t('projectEditor.accessingCamera')
+              : t('projectEditor.pointCamera')}
           </p>
         </div>
       </div>

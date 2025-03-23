@@ -4,6 +4,7 @@ import { SensorFolder, Company } from '@/types/users';
 import ProjectsMap from './ProjectsMap';
 import ProjectsList from './ProjectsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTranslation } from 'react-i18next';
 
 interface ProjectsSectionProps {
 	projects: SensorFolder[];
@@ -25,6 +26,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 	onProjectStatusChange,
 	onProjectDelete
 }) => {
+	const { t } = useTranslation();
 	const [currentTab, setCurrentTab] = useState<string>('map');
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -43,7 +45,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 	return (
 		<SectionContainer>
 			<SectionTitle className="text-lg sm:text-xl md:text-2xl">
-				Projects Overview
+				{t('projects.overview')}
 			</SectionTitle>
 
 			<Tabs
@@ -56,13 +58,13 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 						value="map"
 						className="text-xs sm:text-sm h-7 sm:h-9"
 					>
-						Map View
+						{t('map.mapView')}
 					</TabsTrigger>
 					<TabsTrigger
 						value="list"
 						className="text-xs sm:text-sm h-7 sm:h-9"
 					>
-						List View
+						{t('map.listView')}
 					</TabsTrigger>
 				</TabsList>
 
@@ -78,7 +80,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 						</div>
 						<div className="flex flex-col glass-card rounded-xl h-full">
 							<h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 animate-fade-up [animation-delay:350ms]">
-								Running Projects
+								{t('projects.running')}
 							</h3>
 							<div className="flex-1 overflow-hidden">
 								<ProjectsList
@@ -102,7 +104,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 h-[calc(100vh-200px)]">
 						<div className="flex flex-col glass-card rounded-xl h-full">
 							<h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 animate-fade-up [animation-delay:350ms]">
-								Running Projects
+								{t('projects.running')}
 							</h3>
 							<div className="flex-1 overflow-hidden">
 								<ProjectsList
@@ -122,7 +124,7 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
 						<div className="flex flex-col glass-card rounded-xl h-full">
 							<h3 className="text-sm sm:text-base font-semibold p-2 sm:p-3 animate-fade-up [animation-delay:350ms]">
-								Stopped Projects
+								{t('projects.stopped')}
 							</h3>
 							<div className="flex-1 overflow-hidden">
 								<ProjectsList

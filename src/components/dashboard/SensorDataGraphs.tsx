@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SensorFolder } from '@/types/users';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import {
   LineChart,
   Line,
@@ -150,11 +151,21 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
   project: initialProject,
   onClose
 }) => {
+  const { t } = useTranslation();
   const [project, setProject] = useState<SensorFolder>(initialProject);
   const { setProjects } = useProjectData();
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [sensorInfoMap, setSensorInfoMap] = useState<Record<string, SensorInfo>>({});
   const [isDataSelectionOpen, setIsDataSelectionOpen] = useState(false);
+  
+  // Define valueConfigs inside the component to use translations
+  const valueConfigs = {
+    humidity: { color: '#4444ff', label: t('sensorData.concrete') },
+    adc1: { color: '#8B4513', label: 'Wood' },
+    temperature: { color: '#ff4444', label: t('sensorData.temperature') },
+    battery: { color: '#44ff44', label: t('tracking.battery') },
+    signal: { color: '#ff44ff', label: 'Signal' }
+  };
 
   useEffect(() => {
     const fetchSensorInfo = async () => {
@@ -241,7 +252,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">
-          {project.name} - Live Sensor Data
+          {project.name} - {t('sensorData.liveSensorData')}
         </h2>
         <div className="flex gap-4">
           <button
@@ -251,7 +262,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
                       hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="flex flex-col items-center gap-1">
-              <span className="text-[10px]">{isGeneratingReport ? 'Generating...' : 'Report'}</span>
+              <span className="text-[10px]">{isGeneratingReport ? t('sensorData.generating') : t('sensorData.report')}</span>
             </span>
           </button>
           <button
@@ -260,7 +271,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
                       hover:bg-secondary/90 transition-colors"
           >
             <span className="flex flex-col items-center gap-1">
-              <span className="text-[10px]">Close</span>
+              <span className="text-[10px]">{t('sensorData.close')}</span>
             </span>
           </button>
         </div>
@@ -278,7 +289,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
                 <h3 className="text-xl font-semibold">{sensorName}</h3>
                 <Card>
                   <CardHeader>
-                    <CardTitle>No data available</CardTitle>
+                    <CardTitle>{t('sensorData.noData')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">

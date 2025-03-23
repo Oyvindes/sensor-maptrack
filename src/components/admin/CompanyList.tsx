@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SectionContainer, SectionTitle } from "@/components/Layout";
 import { Company } from "@/types/users";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 interface CompanyListProps {
   companies: Company[];
@@ -13,16 +14,18 @@ interface CompanyListProps {
   canCreateCompany?: boolean;
 }
 
-const CompanyList: React.FC<CompanyListProps> = ({ 
-  companies, 
-  onCompanySelect, 
+const CompanyList: React.FC<CompanyListProps> = ({
+  companies,
+  onCompanySelect,
   onAddNew,
   onViewUsers,
   canCreateCompany = false
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <SectionContainer>
-      <SectionTitle className="mb-2">Manage Companies</SectionTitle>
+      <SectionTitle className="mb-2">{t('admin.manageCompanies')}</SectionTitle>
       {canCreateCompany && (
         <div className="flex justify-start mb-6">
           <Button
@@ -31,7 +34,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
             className="h-12 px-4"
           >
             <Plus className="h-4 w-4" />
-            <span className="text-[10px] mt-1">New</span>
+            <span className="text-[10px] mt-1">{t('buttons.new')}</span>
           </Button>
         </div>
       )}
@@ -46,14 +49,14 @@ const CompanyList: React.FC<CompanyListProps> = ({
               <Building className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               <h3 className="font-medium text-sm sm:text-base">{company.name}</h3>
               <Badge variant={company.status === "active" ? "default" : "secondary"} className="text-[10px] sm:text-xs px-1.5 py-0 sm:px-2 sm:py-0.5">
-                {company.status}
+                {t(`admin.${company.status}`)}
               </Badge>
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">
-              Industry: {company.industry}
+              {t('admin.industry')}: {t(`admin.${company.industry.toLowerCase().replace(/\s+/g, '')}`)}
             </div>
             <div className="text-[10px] sm:text-xs text-muted-foreground mb-2 sm:mb-4">
-              Created: {company.createdAt}
+              {t('admin.created')}: {company.createdAt}
             </div>
             <div className="flex justify-start mt-1 sm:mt-2">
               <Button
@@ -63,7 +66,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 onClick={() => onCompanySelect(company)}
               >
                 <Pencil className="h-4 w-4" />
-                <span className="text-[10px] mt-1">Edit</span>
+                <span className="text-[10px] mt-1">{t('buttons.edit')}</span>
               </Button>
               {/* Users button removed */}
             </div>

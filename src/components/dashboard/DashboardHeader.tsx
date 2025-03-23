@@ -4,8 +4,10 @@ import { Plus, Settings, LogOut } from "lucide-react";
 import { getCurrentUser, logout } from "@/services/authService";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { toast } from "sonner";
 import { hasAdminAccess } from "@/utils/authUtils";
+import { useTranslation } from "react-i18next";
 
 interface DashboardHeaderProps {
   onAddNewProject?: () => void;
@@ -19,6 +21,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
   const isAdmin = hasAdminAccess();
+  const { t } = useTranslation();
   
   const handleLogout = async () => {
     try {
@@ -38,13 +41,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <>
     <div className="fixed top-2 right-2 z-50 flex items-center gap-2">
+      <LanguageSwitcher />
       <ThemeToggle />
       <Button
         variant="outline"
         size="sm"
         onClick={handleLogout}
         className="rounded-full h-8 w-8 p-0 flex items-center justify-center"
-        title="Logout"
+        title={t('buttons.logout')}
       >
         <LogOut className="h-4 w-4" />
       </Button>
@@ -64,9 +68,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               />
             </Link>
             <div className="flex flex-col">
-              <h1 className="text-lg sm:text-xl font-semibold">Dashboard</h1>
+              <h1 className="text-lg sm:text-xl font-semibold">{t('navigation.dashboard')}</h1>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Welcome back, {currentUser?.name || 'User'}
+                {t('welcome.message')}, {currentUser?.name || t('welcome.user')}
               </p>
             </div>
           </div>
@@ -79,7 +83,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 className="h-7 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
               >
                 <Plus className="w-4 h-4" />
-                <span className="text-[10px] mt-1">New</span>
+                <span className="text-[10px] mt-1">{t('buttons.new')}</span>
               </Button>
             )}
             {/* Logout button moved to top-right corner */}

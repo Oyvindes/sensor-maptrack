@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Location } from '@/types/sensors';
 import { Button } from '@/components/ui/button';
 import { getAddressCoordinates } from '@/services/geocodingService';
+import { useTranslation } from 'react-i18next';
 
 interface ProjectsMapProps {
 	projects: SensorFolder[];
@@ -20,6 +21,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 	onProjectSelect,
 	className
 }) => {
+	const { t } = useTranslation();
 	// State to track geocoded projects
 	const [geocodedProjects, setGeocodedProjects] = useState<SensorFolder[]>(
 		[]
@@ -170,9 +172,9 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 				<h3 className="font-bold text-sm">{device.name}</h3>
 				<div className="grid gap-0.5 text-xs">
 					{device.projectNumber && (
-						<p>Project #: {device.projectNumber}</p>
+						<p>{t('projects.projectNumber')} {device.projectNumber}</p>
 					)}
-					<p>Sensors: {device.sensorCount}</p>
+					<p>{t('projects.sensors')} {device.sensorCount}</p>
 				</div>
 				<Button
 					size="sm"
@@ -184,7 +186,7 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 						}
 					}}
 				>
-					More <ArrowRight className="ml-1 w-3 h-3" />
+					{t('projects.more')} <ArrowRight className="ml-1 w-3 h-3" />
 				</Button>
 			</div>
 		);
@@ -196,8 +198,8 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 				<div className="h-full flex items-center justify-center">
 					<p className="text-muted-foreground">
 						{!isGeocodingComplete
-							? 'Geocoding addresses...'
-							: 'Loading projects map...'}
+							? t('map.geocoding')
+							: t('map.loading')}
 					</p>
 				</div>
 			</div>
@@ -210,10 +212,10 @@ const ProjectsMap: React.FC<ProjectsMapProps> = ({
 				<div className="h-full flex flex-col items-center justify-center space-y-2">
 					<MapPin className="h-12 w-12 text-muted-foreground opacity-50" />
 					<p className="text-muted-foreground">
-						No running projects found
+						{t('projects.noRunning')}
 					</p>
 					<p className="text-xs text-muted-foreground">
-						Start a project to see it on the map
+						{t('projects.startProject')}
 					</p>
 				</div>
 			</div>
