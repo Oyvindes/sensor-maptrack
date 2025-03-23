@@ -13,6 +13,11 @@ import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "./se
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { hasAdminAccess } from "./utils/authUtils";
 import StatePreserver from "@/components/StatePreserver";
+import Overview from "./pages/Overview";
+import Projects from "./pages/Projects";
+import Track from "./pages/Track";
+import Support from "./pages/Support";
+import Shop from "./pages/Shop";
 
 // Authentication guard component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -73,23 +78,65 @@ const App = () => {
             <Sonner />
             <Routes>
               {/* Redirect root to dashboard if authenticated, otherwise to login */}
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
-                  isUserAuthenticated() ? 
-                  <Navigate to="/index" replace /> : 
+                  isUserAuthenticated() ?
+                  <Navigate to="/overview" replace /> :
                   <Navigate to="/login" replace />
-                } 
+                }
               />
               <Route path="/login" element={<Login />} />
-              <Route 
-                path="/index" 
+              
+              {/* Legacy route - redirect to overview */}
+              <Route
+                path="/index"
+                element={<Navigate to="/overview" replace />}
+              />
+              
+              {/* Dashboard tab routes */}
+              <Route
+                path="/overview"
                 element={
                   <ProtectedRoute>
-                    <Index />
+                    <Overview />
                   </ProtectedRoute>
-                } 
+                }
               />
+              <Route
+                path="/projects"
+                element={
+                  <ProtectedRoute>
+                    <Projects />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/track"
+                element={
+                  <ProtectedRoute>
+                    <Track />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/support"
+                element={
+                  <ProtectedRoute>
+                    <Support />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/shop"
+                element={
+                  <ProtectedRoute>
+                    <Shop />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Admin route */}
               <Route
                 path="/admin"
                 element={
@@ -98,6 +145,8 @@ const App = () => {
                   </AdminRoute>
                 }
               />
+              
+              {/* Sensor health check route */}
               <Route
                 path="/sensor-health-check"
                 element={
@@ -106,6 +155,7 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

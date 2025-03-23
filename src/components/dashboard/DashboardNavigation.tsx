@@ -6,10 +6,12 @@ import {
 	Radar,
 	HelpCircle,
 	Store,
-	Stethoscope
+	Stethoscope,
+	ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { hasAdminAccess } from '@/utils/authUtils';
 
 type DashboardView = 'dashboard' | 'projects' | 'tracking' | 'help' | 'store';
 
@@ -61,6 +63,25 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 					label="Shop"
 				/>
 
+				{/* Admin tab - Only visible to admin users */}
+				{hasAdminAccess() && (
+					<div className="group relative">
+						<Link to="/admin" className="inline-flex">
+							<Button
+								variant="ghost"
+								className={cn(
+									'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+									'border-transparent text-muted-foreground hover:text-foreground'
+								)}
+								aria-label="Admin"
+							>
+								<ShieldCheck className="w-4 h-4" />
+								<span className="text-[10px] mt-1">Admin</span>
+							</Button>
+						</Link>
+					</div>
+				)}
+
 				{/* Sensor Health Check - Direct link to the page */}
 				<div className="group relative">
 					<Link to="/sensor-health-check" className="inline-flex">
@@ -83,6 +104,15 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 	);
 };
 
+// Map view types to URLs
+const viewToUrl = {
+	dashboard: '/overview',
+	projects: '/projects',
+	tracking: '/track',
+	help: '/support',
+	store: '/shop'
+};
+
 interface NavigationButtonProps {
 	view: DashboardView;
 	currentView: DashboardView;
@@ -99,23 +129,26 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
 	label
 }) => {
 	const isActive = currentView === view;
+	const url = viewToUrl[view];
 
 	return (
 		<div className="group relative">
-			<Button
-				variant="ghost"
-				className={cn(
-					'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
-					isActive
-						? 'border-primary text-primary'
-						: 'border-transparent text-muted-foreground hover:text-foreground'
-				)}
-				onClick={() => onViewChange(view)}
-				aria-label={label}
-			>
-				{icon}
-				<span className="text-[10px] mt-1">{label}</span>
-			</Button>
+			<Link to={url} className="inline-flex">
+				<Button
+					variant="ghost"
+					className={cn(
+						'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+						isActive
+							? 'border-primary text-primary'
+							: 'border-transparent text-muted-foreground hover:text-foreground'
+					)}
+					onClick={() => onViewChange(view)}
+					aria-label={label}
+				>
+					{icon}
+					<span className="text-[10px] mt-1">{label}</span>
+				</Button>
+			</Link>
 			{/* Removed redundant tooltip */}
 		</div>
 	);

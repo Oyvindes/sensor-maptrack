@@ -73,19 +73,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <span className="text-[10px] mt-1">New</span>
               </Button>
             )}
-            {isAdmin && (
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="h-7 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <Link to="/admin">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-[10px] mt-1">Admin</span>
-                </Link>
-              </Button>
-            )}
+            {/* Admin button removed as requested */}
             <Button
               variant="outline"
               size="sm"

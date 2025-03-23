@@ -15,12 +15,16 @@ import StoreSection from './dashboard/StoreSection';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-
 // View types for the dashboard
-type DashboardView = 'dashboard' | 'projects' | 'tracking' | 'help' | 'store';
+export type DashboardView = 'dashboard' | 'projects' | 'tracking' | 'help' | 'store';
 
-const Dashboard: React.FC = () => {
-	const [currentView, setCurrentView] = useState<DashboardView>('dashboard');
+interface DashboardProps {
+	initialView?: DashboardView;
+	onViewChange?: (view: DashboardView) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ initialView = 'dashboard', onViewChange }) => {
+	const [currentView, setCurrentView] = useState<DashboardView>(initialView);
 	const [companies, setCompanies] = useState<Company[]>([]);
 	const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
 
@@ -61,6 +65,10 @@ const Dashboard: React.FC = () => {
 	// Toggle between views
 	const handleViewChange = (view: DashboardView) => {
 		setCurrentView(view);
+		// Call the onViewChange prop if provided
+		if (onViewChange) {
+			onViewChange(view);
+		}
 	};
 
 	return (
