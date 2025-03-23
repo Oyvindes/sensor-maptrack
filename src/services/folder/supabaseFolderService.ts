@@ -24,6 +24,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
       project_end_date,
       sensor_locations,
       sensor_zones,
+      sensor_types,
       pdf_records (
         id,
         filename,
@@ -113,11 +114,12 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         status: (folder.status as 'running' | 'stopped') || 'stopped',
         createdAt: folder.created_at.split('T')[0],
         updatedAt: folder.updated_at.split('T')[0],
-        projectStartDate: folder.project_start_date?.split('T')[0] || '',
-        projectEndDate: folder.project_end_date?.split('T')[0] || '',
+        projectStartDate: folder.project_start_date || '',
+        projectEndDate: folder.project_end_date || '',
         assignedSensorImeis,
         sensorLocations: folder.sensor_locations || {},
         sensorZones: folder.sensor_zones || {},
+        sensorTypes: folder.sensor_types || {},
         pdfHistory
       };
     });
@@ -191,7 +193,8 @@ export const saveSensorFolder = async (
       status: folder.status || 'stopped',
       updated_at: new Date().toISOString(),
       sensor_locations: folder.sensorLocations || {},
-      sensor_zones: folder.sensorZones || {}
+      sensor_zones: folder.sensorZones || {},
+      sensor_types: folder.sensorTypes || {}
     };
 
     // Verify the company exists in the database
@@ -324,6 +327,7 @@ export const saveSensorFolder = async (
         updated_at,
         sensor_locations,
         sensor_zones,
+        sensor_types,
         pdf_records (
           id,
           filename,
@@ -345,11 +349,13 @@ export const saveSensorFolder = async (
         companyId: folderData.company_id,
         sensorLocations: updatedFolder.sensor_locations || {},
         sensorZones: updatedFolder.sensor_zones || {},
+        sensorTypes: updatedFolder.sensor_types || {},
         pdfHistory: updatedFolder.pdf_records?.map(record => ({
           id: record.id,
           filename: record.filename,
           createdAt: record.created_at,
-          creatorName: record.creator_name
+          creatorName: record.creator_name,
+          type: 'pdf' // Default to 'pdf' for all existing records
         })) || []
       },
       message: isNewFolder

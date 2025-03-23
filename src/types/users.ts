@@ -18,14 +18,18 @@ export interface User {
 	isCompanyAdmin?: boolean; // New field to mark users as company admins
 }
 
-export interface PdfRecord {
+export interface ReportRecord {
 	id: string;
 	filename: string;
 	createdAt: string;
 	createdBy?: string;
 	creatorName?: string;
 	blobUrl?: string; // For immediate viewing in the session
+	type: 'pdf' | 'html'; // Type of report
 }
+
+// For backward compatibility
+export type PdfRecord = ReportRecord;
 
 export interface SensorPlacementImage {
 	sensorId: string;
@@ -66,7 +70,7 @@ export interface SensorFolder {
   stoppedAt?: string; // Timestamp when project was last stopped
   projectStartDate?: string; // Calendar date when project is scheduled to start
   projectEndDate?: string; // Calendar date when project is scheduled to end
-  pdfHistory?: PdfRecord[]; // History of generated PDF reports
+  pdfHistory?: ReportRecord[]; // History of generated reports (PDF and HTML)
   sensorPlacementImages?: SensorPlacementImage[]; // Images showing sensor placements
   sensorImages?: string[]; // Simple array of image URLs for sensor placements
   hasImageIssues?: boolean; // Flag indicating if there are issues with sensor images

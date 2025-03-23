@@ -64,16 +64,16 @@ export const startProjectDataCollection = (project: SensorFolder) => {
 		return;
 	}
 
-	// Check if project has defined start/end dates and if current date is within that period
-	const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+	// Check if project has defined start/end dates and if current datetime is within that period
+	const currentDateTime = new Date().toISOString(); // Get current datetime in ISO format
 	
-	if (project.projectStartDate && currentDate < project.projectStartDate) {
-		console.log(`Project ${project.id} has not started yet. Scheduled to start on ${project.projectStartDate}`);
+	if (project.projectStartDate && currentDateTime < project.projectStartDate) {
+		console.log(`Project ${project.id} has not started yet. Scheduled to start on ${new Date(project.projectStartDate).toLocaleString()}`);
 		return;
 	}
 	
-	if (project.projectEndDate && currentDate > project.projectEndDate) {
-		console.log(`Project ${project.id} has ended on ${project.projectEndDate}`);
+	if (project.projectEndDate && currentDateTime > project.projectEndDate) {
+		console.log(`Project ${project.id} has ended on ${new Date(project.projectEndDate).toLocaleString()}`);
 		return;
 	}
 
@@ -84,11 +84,11 @@ export const startProjectDataCollection = (project: SensorFolder) => {
 
 	// Start collection for each sensor
 	const interval = setInterval(async () => {
-		// Check if project is still within date range on each collection cycle
-		const now = new Date().toISOString().split('T')[0];
+		// Check if project is still within datetime range on each collection cycle
+		const now = new Date().toISOString();
 		if ((project.projectStartDate && now < project.projectStartDate) ||
 			(project.projectEndDate && now > project.projectEndDate)) {
-			console.log(`Project ${project.id} is outside scheduled period. Stopping data collection.`);
+			console.log(`Project ${project.id} is outside scheduled datetime period. Stopping data collection.`);
 			stopProjectDataCollection(project.id);
 			return;
 		}

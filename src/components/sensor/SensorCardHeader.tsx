@@ -12,6 +12,7 @@ type SensorCardHeaderProps = {
   primaryType: SensorType;
   expanded: boolean;
   onToggle: () => void;
+  sensorType?: 'wood' | 'concrete';
 };
 
 const SensorCardHeader: React.FC<SensorCardHeaderProps> = ({
@@ -20,6 +21,7 @@ const SensorCardHeader: React.FC<SensorCardHeaderProps> = ({
   primaryType,
   expanded,
   onToggle,
+  sensorType,
 }) => {
   const sensorColor = getSensorColor(primaryType);
   const IconComponent = getSensorIconComponent(primaryType);
@@ -30,7 +32,14 @@ const SensorCardHeader: React.FC<SensorCardHeaderProps> = ({
         <div className={cn("sensor-pulse", sensorColor)}>
           <IconComponent className="h-6 w-6" />
         </div>
-        <span className="font-medium">{name}</span>
+        <div className="flex flex-col">
+          <span className="font-medium">{name}</span>
+          {sensorType && (
+            <span className="text-xs text-muted-foreground capitalize">
+              {sensorType} sensor
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <div 

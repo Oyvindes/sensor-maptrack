@@ -1,16 +1,21 @@
 import { SensorFolder } from '@/types/users';
 import { format } from 'date-fns';
 import { fetchSensors } from './sensor/supabaseSensorService';
+import { htmlToBlob, saveReportRecord } from './report/reportService';
+import { getCurrentUser } from './authService';
 
 /**
  * Generate an HTML report for a project and open it in a new tab
  * @param project The project to generate a report for
  * @param dataTypes Array of data types to include in the report (temperature, humidity, battery, signal, adc1)
+ * @param saveToHistory Whether to save the report to the project history
+ * @returns Updated project with new report history if saveToHistory is true
  */
 export async function generateHtmlReport(
   project: SensorFolder,
-  dataTypes: string[] = ['temperature', 'humidity', 'battery', 'signal', 'adc1']
-): Promise<void> {
+  dataTypes: string[] = ['temperature', 'humidity', 'battery', 'signal', 'adc1'],
+  saveToHistory: boolean = true
+): Promise<SensorFolder> {
   try {
     // Fetch sensor data for the project
     const allSensors = await fetchSensors();
@@ -76,9 +81,16 @@ export async function generateHtmlReport(
             border-radius: 5px;
             min-width: 120px;
           }
+          .chart-section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin-bottom: 30px;
+          }
+          .chart-title {
+            margin-bottom: 10px;
+          }
           .chart-container {
             height: 300px;
-            margin-bottom: 30px;
             background-color: #f9f9f9;
             border-radius: 5px;
             padding: 10px;
@@ -91,16 +103,99 @@ export async function generateHtmlReport(
           }
           @media print {
             body {
-              padding: 0;
+              padding: 20px;
               margin: 0;
+              color: #333;
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
             }
-            .chart-container {
-              break-inside: avoid;
-              page-break-inside: avoid;
+            h1, h2, h3 {
+              color: #222;
+            }
+            .project-info {
+              background-color: #f5f5f5 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+              color-adjust: exact;
+              padding: 15px;
+              border-radius: 5px;
+              margin-bottom: 20px;
             }
             .sensor-section {
               break-inside: avoid;
               page-break-inside: avoid;
+              border: 1px solid #ddd !important;
+              border-radius: 5px;
+              padding: 15px;
+              margin-bottom: 30px;
+            }
+            .sensor-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 15px;
+            }
+            .sensor-info {
+              background-color: #f0f8ff !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+              color-adjust: exact;
+              padding: 8px;
+              border-radius: 4px;
+              margin-bottom: 15px;
+              border-left: 4px solid #4444ff !important;
+            }
+            .values-container {
+              display: flex !important;
+              flex-wrap: wrap !important;
+              gap: 20px !important;
+              margin-bottom: 20px !important;
+            }
+            .values-column {
+              flex: 1 !important;
+              min-width: 300px !important;
+              border: 1px solid #eee !important;
+              padding: 10px !important;
+              border-radius: 5px !important;
+            }
+            .sensor-values {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 15px;
+              margin-bottom: 20px;
+            }
+            .sensor-value {
+              padding: 10px;
+              border-radius: 5px;
+              min-width: 120px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+              color-adjust: exact;
+            }
+            .chart-section {
+              break-inside: avoid;
+              page-break-inside: avoid;
+              margin-bottom: 30px;
+            }
+            .chart-title {
+              margin-bottom: 10px;
+              break-after: avoid;
+              page-break-after: avoid;
+            }
+            .chart-container {
+              break-inside: avoid;
+              page-break-inside: avoid;
+              height: 300px;
+              background-color: #f9f9f9 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+              color-adjust: exact;
+              border-radius: 5px;
+              padding: 10px;
+            }
+            canvas {
+              max-width: 100%;
+              height: auto !important;
             }
           }
         </style>
@@ -153,7 +248,6 @@ export async function generateHtmlReport(
         <div class="sensor-section">
           <div class="sensor-header">
             <h2>${displayName}</h2>
-            <div>${locationInfo ? `(${locationInfo})` : ''}</div>
           </div>
       `;
 
@@ -189,11 +283,88 @@ export async function generateHtmlReport(
       // Sort by time
       processedValues.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
-      // Get latest values for each selected data type
+      // Get start and end values for each selected data type
       if (processedValues.length > 0) {
+        const firstValue = processedValues[0];
         const latestValue = processedValues[processedValues.length - 1];
         
-        htmlContent += `<h3>Latest Values</h3><div class="sensor-values">`;
+        // Add CSS for the values container
+        htmlContent += `
+          <style>
+            .sensor-info {
+              background-color: #f0f8ff;
+              padding: 8px;
+              border-radius: 4px;
+              margin-bottom: 15px;
+              border-left: 4px solid #4444ff;
+            }
+            .values-container {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 20px;
+              margin-bottom: 20px;
+            }
+            .values-column {
+              flex: 1;
+              min-width: 300px;
+              border: 1px solid #eee;
+              padding: 10px;
+              border-radius: 5px;
+            }
+          </style>
+        `;
+        
+        htmlContent += `
+          <!-- Sensor Info -->
+          <div class="sensor-info">
+            <strong>Placement:</strong> ${sensorLocation || 'Not specified'} |
+            <strong>Zone:</strong> ${sensorZone ? `${sensorZone} zone` : 'Not specified'} |
+            <strong>Material Type:</strong> ${sensorType || 'Not specified'}
+          </div>
+          
+          <div class="values-container">
+            <div class="values-column">
+              <h3>Start Values (${format(new Date(firstValue.time), 'yyyy-MM-dd HH:mm')})</h3>
+              <div class="sensor-values">
+        `;
+        
+        // Add start values
+        for (const dataType of dataTypes) {
+          // Skip humidity or adc1 based on sensor type setting
+          if ((dataType === 'humidity' && sensorType === 'wood') ||
+              (dataType === 'adc1' && sensorType === 'concrete')) {
+            continue;
+          }
+
+          if (dataType in valueConfigs) {
+            const config = valueConfigs[dataType as keyof typeof valueConfigs];
+            let displayValue;
+            
+            // Get the appropriate value based on data type
+            if (dataType === 'battery') {
+              displayValue = firstValue.batteryPercentage;
+            } else if (dataType === 'signal') {
+              displayValue = firstValue.signalPercentage;
+            } else {
+              displayValue = firstValue[dataType];
+            }
+            
+            htmlContent += `
+              <div class="sensor-value" style="background-color: ${config.color}20 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label}</div>
+                <div style="font-size: 1.2em;">${displayValue.toFixed(1)}${config.unit}</div>
+              </div>
+            `;
+          }
+        }
+        
+        htmlContent += `
+              </div>
+            </div>
+            <div class="values-column">
+              <h3>Latest Values (${format(new Date(latestValue.time), 'yyyy-MM-dd HH:mm')})</h3>
+              <div class="sensor-values">
+        `;
         
         for (const dataType of dataTypes) {
           // Skip humidity or adc1 based on sensor type setting
@@ -216,15 +387,19 @@ export async function generateHtmlReport(
             }
             
             htmlContent += `
-              <div class="sensor-value" style="background-color: ${config.color}20; border: 1px solid ${config.color}">
-                <div style="color: ${config.color}; font-weight: bold;">${config.label}</div>
+              <div class="sensor-value" style="background-color: ${config.color}20 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label}</div>
                 <div style="font-size: 1.2em;">${displayValue.toFixed(1)}${config.unit}</div>
               </div>
             `;
           }
         }
         
-        htmlContent += `</div>`;
+        htmlContent += `
+              </div>
+            </div>
+          </div>
+        `;
 
         // Add charts for each data type
         for (const dataType of dataTypes) {
@@ -239,9 +414,11 @@ export async function generateHtmlReport(
             const chartId = `chart-${sensor.imei}-${dataType}`;
             
             htmlContent += `
-              <h3>${config.label} Chart</h3>
-              <div class="chart-container">
-                <canvas id="${chartId}"></canvas>
+              <div class="chart-section">
+                <h3 class="chart-title">${config.label} Chart</h3>
+                <div class="chart-container">
+                  <canvas id="${chartId}"></canvas>
+                </div>
               </div>
             `;
           }
@@ -340,6 +517,9 @@ export async function generateHtmlReport(
                   options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                      duration: 0 // Disable animations for better print rendering
+                    },
                     scales: {
                       y: {
                         beginAtZero: ${dataType === 'temperature' ? 'false' : 'true'},
@@ -367,9 +547,18 @@ export async function generateHtmlReport(
     // Add auto-print functionality and close script/body/html tags
     htmlContent += `
             // Auto-trigger print dialog after charts are rendered
+            // Use a longer timeout to ensure charts are fully rendered
             setTimeout(function() {
-              window.print();
-            }, 1000);
+              // Force a repaint before printing
+              document.body.style.display = 'none';
+              document.body.offsetHeight; // Force reflow
+              document.body.style.display = '';
+              
+              // Print after a short delay to allow the repaint to complete
+              setTimeout(function() {
+                window.print();
+              }, 100);
+            }, 2000);
           };
         </script>
       </body>
@@ -386,7 +575,43 @@ export async function generateHtmlReport(
       throw new Error('Failed to open new window. Pop-up blocker might be enabled.');
     }
 
-    return;
+    // Save the HTML report to the project history if requested
+    if (saveToHistory && project.id) {
+      try {
+        const currentUser = getCurrentUser();
+        const timestamp = new Date().toISOString();
+        const filename = `${project.name}_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
+        
+        // Convert HTML to blob
+        const htmlBlob = htmlToBlob(htmlContent);
+        
+        // Save the report to the database
+        const result = await saveReportRecord(project.id, {
+          filename,
+          createdAt: timestamp,
+          creatorName: currentUser?.name,
+          createdBy: currentUser?.id,
+          blob: htmlBlob,
+          type: 'html'
+        });
+        
+        if (result.success && result.data) {
+          // Update the project with the new report
+          const updatedProject = { ...project };
+          updatedProject.pdfHistory = [
+            ...(updatedProject.pdfHistory || []),
+            result.data
+          ];
+          
+          return updatedProject;
+        }
+      } catch (saveError) {
+        console.error('Error saving HTML report to history:', saveError);
+        // Continue even if saving fails - the report is still opened in a new tab
+      }
+    }
+
+    return project;
   } catch (error) {
     console.error('Error generating HTML report:', error);
     throw error;

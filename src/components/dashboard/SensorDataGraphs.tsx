@@ -12,7 +12,7 @@ import {
   ReferenceLine,
   Brush
 } from 'recharts';
-import ProjectPdfHistory from './ProjectPdfHistory';
+import ProjectReportHistory from './ProjectReportHistory';
 import ReportDataSelectionDialog, { ReportFormat } from './ReportDataSelectionDialog';
 import { toast } from 'sonner';
 import { useProjectData } from '@/hooks/useProjectData';
@@ -196,25 +196,28 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
       setIsGeneratingReport(true);
       setIsDataSelectionOpen(false);
 
+      let updatedProject;
+      
       if (format === 'pdf') {
         // Generate PDF report
         const { downloadProjectReport } = await import('@/services/pdfService');
-        const updatedProject = await downloadProjectReport(project, selectedDataTypes);
-
+        updatedProject = await downloadProjectReport(project, selectedDataTypes);
+        toast.success('PDF report generated successfully');
+      } else {
+        // Generate HTML report
+        const { generateHtmlReport } = await import('@/services/htmlReportService');
+        updatedProject = await generateHtmlReport(project, selectedDataTypes, true);
+        toast.success('HTML report opened in new tab');
+      }
+      
+      // Update the project state with the new report
+      if (updatedProject) {
         setProject(updatedProject);
         setProjects((prevProjects) =>
           prevProjects.map((p) =>
             p.id === updatedProject.id ? updatedProject : p
           )
         );
-
-        toast.success('PDF report generated successfully');
-      } else {
-        // Generate HTML report
-        const { generateHtmlReport } = await import('@/services/htmlReportService');
-        await generateHtmlReport(project, selectedDataTypes);
-        
-        toast.success('HTML report opened in new tab');
       }
     } catch (error) {
       console.error(`Error generating ${format} report:`, error);
@@ -407,7 +410,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
       </div>
 
       <div className="mt-8">
-        <ProjectPdfHistory
+        <ProjectReportHistory
           project={project}
           className="animate-fade-up [animation-delay:300ms]"
         />

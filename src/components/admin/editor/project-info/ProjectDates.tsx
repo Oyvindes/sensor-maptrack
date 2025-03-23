@@ -2,6 +2,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { SensorFolder } from "@/types/users";
 import { Calendar } from "lucide-react";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Input } from "@/components/ui/input";
 
 interface ProjectDatesProps {
@@ -21,20 +22,19 @@ const ProjectDates: React.FC<ProjectDatesProps> = ({
         <Label htmlFor="projectStartDate">
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            <span>Project Start Date</span>
+            <span>Project Start Date & Time</span>
             <span className="text-red-500 ml-1">*</span>
           </div>
         </Label>
-        <Input
-          id="projectStartDate"
-          type="date"
-          value={projectStartDate || ""}
-          onChange={(e) => onChange("projectStartDate", e.target.value)}
+        <DateTimePicker
+          date={projectStartDate ? new Date(projectStartDate) : undefined}
+          setDate={(date) => onChange("projectStartDate", date ? date.toISOString() : "")}
+          placeholder="Select start date and time"
+          disabled={false}
           className="w-full"
-          required
         />
         <p className="text-sm text-muted-foreground">
-          Only data collected from this date will be displayed
+          Only data collected from this date and time will be displayed
         </p>
       </div>
 
@@ -42,25 +42,24 @@ const ProjectDates: React.FC<ProjectDatesProps> = ({
         <Label htmlFor="projectEndDate">
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            <span>Project End Date</span>
+            <span>Project End Date & Time</span>
             <span className="text-muted-foreground ml-1">(Optional)</span>
           </div>
         </Label>
-        <Input
-          id="projectEndDate"
-          type="date"
-          value={projectEndDate || ""}
-          onChange={(e) => onChange("projectEndDate", e.target.value)}
+        <DateTimePicker
+          date={projectEndDate ? new Date(projectEndDate) : undefined}
+          setDate={(date) => onChange("projectEndDate", date ? date.toISOString() : "")}
+          placeholder="Select end date and time (optional)"
+          disabled={false}
           className="w-full"
-          min={projectStartDate || undefined}
         />
         {projectStartDate && projectEndDate && new Date(projectEndDate) < new Date(projectStartDate) && (
           <p className="text-red-500 text-sm mt-1">
-            End date cannot be before start date
+            End date and time cannot be before start date and time
           </p>
         )}
         <p className="text-sm text-muted-foreground">
-          If set, data collection will automatically stop on this date
+          If set, data collection will automatically stop on this date and time
         </p>
       </div>
     </div>

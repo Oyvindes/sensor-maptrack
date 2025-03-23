@@ -87,6 +87,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
 				primaryType="temperature"
 				expanded={expanded}
 				onToggle={handleToggle}
+				sensorType={sensor.sensorType}
 			/>
 
 			{expanded && values && values.length > 0 && (
