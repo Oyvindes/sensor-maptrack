@@ -39,7 +39,8 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
 		handleSubmit,
 		handleCompanyChange,
 		handleSensorLocationChange,
-		handleSensorZoneChange
+		handleSensorZoneChange,
+		handleSensorTypeChange
 	} = useFolderEditor(folder, onSave);
 
 	return (
@@ -75,8 +76,10 @@ const SensorFolderEditor: React.FC<SensorFolderEditorProps> = ({
 						companyId={formData.companyId}
 						sensorLocations={formData.sensorLocations}
 						sensorZones={formData.sensorZones}
+						sensorTypes={formData.sensorTypes}
 						onSensorLocationChange={handleSensorLocationChange}
 						onSensorZoneChange={handleSensorZoneChange}
+						onSensorTypeChange={handleSensorTypeChange}
 					/>
 				</div>
 

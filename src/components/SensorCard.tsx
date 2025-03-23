@@ -8,7 +8,8 @@ export type SensorType =
 	| 'humidity'
 	| 'battery'
 	| 'proximity'
-	| 'signal';
+	| 'signal'
+	| 'adc1';
 
 export type SensorData = {
 	id: string;
@@ -20,6 +21,7 @@ export type SensorData = {
 	imei?: string;
 	folderId?: string;
 	projectName?: string;
+	sensorType?: 'wood' | 'concrete';
 };
 
 export type SensorDataValues = {

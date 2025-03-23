@@ -2,7 +2,7 @@ import React from 'react';
 import { SensorData } from '@/components/SensorCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Thermometer, Droplets, Battery, Signal, Clock } from 'lucide-react';
+import { Thermometer, Droplets, Battery, Signal, Clock, Gauge } from 'lucide-react';
 
 interface SensorDataDisplayProps {
   sensor: SensorData | null;
@@ -63,6 +63,7 @@ const SensorDataDisplay: React.FC<SensorDataDisplayProps> = ({
   const humidity = getLatestValue('humidity');
   const battery = getLatestValue('battery');
   const signal = getLatestValue('signal');
+  const adc1 = getLatestValue('adc1');
   
   // Get the last seen timestamp
   const lastSeen = sensor?.values && sensor.values.length > 0
@@ -159,18 +160,20 @@ const SensorDataDisplay: React.FC<SensorDataDisplayProps> = ({
             </div>
           </div>
           
-          {/* Humidity */}
-          <div className="flex items-center gap-2">
-            <div className="bg-blue-500/10 p-1.5 sm:p-2 rounded-full">
-              <Droplets className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
+          {/* Concrete (Humidity) - Only show if sensor type is not set to wood */}
+          {(!sensor.sensorType || sensor.sensorType !== 'wood') && (
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-500/10 p-1.5 sm:p-2 rounded-full">
+                <Droplets className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Concrete</p>
+                <p className="text-sm sm:text-base font-medium">
+                  {humidity !== null ? `${humidity.toFixed(1)}%` : 'N/A'}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Humidity</p>
-              <p className="text-sm sm:text-base font-medium">
-                {humidity !== null ? `${humidity.toFixed(1)}%` : 'N/A'}
-              </p>
-            </div>
-          </div>
+          )}
           
           {/* Battery */}
           <div className="flex items-center gap-2">
@@ -193,6 +196,21 @@ const SensorDataDisplay: React.FC<SensorDataDisplayProps> = ({
               <p className="text-sm sm:text-base font-medium">{formatSignal(signal)}</p>
             </div>
           </div>
+          
+          {/* Wood (ADC1) - Only show if sensor type is not set to concrete */}
+          {(!sensor.sensorType || sensor.sensorType !== 'concrete') && (
+            <div className="flex items-center gap-2">
+              <div className="bg-amber-700/10 p-1.5 sm:p-2 rounded-full">
+                <Gauge className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Wood</p>
+                <p className="text-sm sm:text-base font-medium">
+                  {adc1 !== null ? `${adc1.toFixed(1)}%` : 'N/A'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Last Seen */}
