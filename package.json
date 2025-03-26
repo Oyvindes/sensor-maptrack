@@ -13,7 +13,8 @@
 		"lint": "eslint .",
 		"preview": "vite preview",
 		"server": "node server/server.js",
-		"start:all": "concurrently \"npm run dev\" \"npm run server\""
+		"start:all": "concurrently \"npm run dev\" \"npm run server\"",
+		"start": "node app.js"
 	},
 	"dependencies": {
 		"@capacitor/barcode-scanner": "^2.0.3",
@@ -77,6 +78,7 @@
 		"lucide-react": "^0.462.0",
 		"mqtt": "^5.10.4",
 		"next-themes": "^0.3.0",
+		"node-fetch": "^3.3.2",
 		"papaparse": "^5.5.2",
 		"qrcode": "^1.5.4",
 		"react": "^18.3.1",
