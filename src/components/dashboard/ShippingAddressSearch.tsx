@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface ShippingAddressSearchProps {
   shippingAddress: string;
@@ -30,6 +31,7 @@ const ShippingAddressSearch: React.FC<ShippingAddressSearchProps> = ({
   shippingCountry,
   onChange
 }) => {
+  const { t } = useTranslation();
   const [addressQuery, setAddressQuery] = useState("");
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -79,11 +81,11 @@ const ShippingAddressSearch: React.FC<ShippingAddressSearchProps> = ({
       } else {
         setSuggestions([]);
         setShowSuggestions(false);
-        toast.warning("No matching addresses found. Please try a different search term.");
+        toast.warning(t('store.noAddressFound'));
       }
     } catch (error) {
       console.error("Error fetching address suggestions:", error);
-      toast.error("Failed to fetch address data. Please check your connection and try again.");
+      toast.error(t('store.fetchAddressError'));
       setSuggestions([]);
       setShowSuggestions(false);
     } finally {
@@ -102,7 +104,12 @@ const ShippingAddressSearch: React.FC<ShippingAddressSearchProps> = ({
     onChange("shippingPostalCode", suggestion.postcode);
     onChange("shippingCountry", suggestion.country);
     
-    toast.success(`Address set to ${suggestion.address}, ${suggestion.postcode} ${suggestion.city}, ${suggestion.country}`);
+    toast.success(t('store.addressSet', {
+      address: suggestion.address,
+      postcode: suggestion.postcode,
+      city: suggestion.city,
+      country: suggestion.country
+    }));
     
     setShowSuggestions(false);
     setAddressQuery("");
@@ -113,7 +120,7 @@ const ShippingAddressSearch: React.FC<ShippingAddressSearchProps> = ({
       <Label htmlFor="addressSearch">
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
-          <span>Search for Norwegian address</span>
+          <span>{t('store.searchNorwegianAddress')}</span>
         </div>
       </Label>
       <div className="relative">
@@ -122,7 +129,7 @@ const ShippingAddressSearch: React.FC<ShippingAddressSearchProps> = ({
             id="addressSearch"
             value={addressQuery}
             onChange={(e) => setAddressQuery(e.target.value)}
-            placeholder="Search for Norwegian address..."
+            placeholder={t('store.searchNorwegianAddressPlaceholder')}
             className="flex-1"
           />
           <Button 
@@ -149,7 +156,7 @@ const ShippingAddressSearch: React.FC<ShippingAddressSearchProps> = ({
                     {suggestion.postcode} {suggestion.city}, {suggestion.country}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Coordinates: [{suggestion.lat}, {suggestion.lng}]
+                    {t('store.coordinates')}: [{suggestion.lat}, {suggestion.lng}]
                   </div>
                 </div>
               ))}
