@@ -79,48 +79,48 @@ const ReportDataSelectionDialog: React.FC<ReportDataSelectionDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
-      <DialogContent className="sm:max-w-md z-[9999] bg-white text-black border-gray-200">
+      <DialogContent className="sm:max-w-md z-[9999] bg-background text-foreground border-border">
         <DialogHeader>
-          <DialogTitle className="text-black">Generate Report</DialogTitle>
-          <DialogDescription className="text-gray-600">
+          <DialogTitle>Generate Report</DialogTitle>
+          <DialogDescription>
             Choose which sensor data to include in the report for {projectName}
           </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <Tabs defaultValue="html" onValueChange={(value) => setReportFormat(value as ReportFormat)}>
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+            <TabsList className="grid w-full grid-cols-2 bg-muted">
               <TabsTrigger
                 value="html"
-                className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=active]:font-semibold"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-semibold"
               >
                 <Printer className="h-4 w-4" />
                 <span>HTML (Print)</span>
               </TabsTrigger>
               <TabsTrigger
                 value="pdf"
-                className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm data-[state=active]:font-semibold"
+                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-semibold"
               >
                 <FileText className="h-4 w-4" />
                 <span>PDF</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="html" className="pt-4">
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 HTML report will open in a new tab and automatically trigger the print dialog.
                 This provides better graph quality and layout.
               </p>
             </TabsContent>
             <TabsContent value="pdf" className="pt-4">
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 PDF report will be generated and saved to the project history.
               </p>
             </TabsContent>
           </Tabs>
 
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" size="sm" onClick={handleSelectAll} className="text-black border-gray-300">Select All</Button>
-            <Button variant="outline" size="sm" onClick={handleSelectNone} className="text-black border-gray-300">Select None</Button>
+            <Button variant="outline" size="sm" onClick={handleSelectAll}>Select All</Button>
+            <Button variant="outline" size="sm" onClick={handleSelectNone}>Select None</Button>
           </div>
           
           {dataTypes.map((dataType) => (
@@ -129,11 +129,11 @@ const ReportDataSelectionDialog: React.FC<ReportDataSelectionDialogProps> = ({
                 id={`checkbox-${dataType.id}`}
                 checked={dataType.isSelected}
                 onCheckedChange={() => handleCheckboxChange(dataType.id)}
-                className="border-gray-400 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                className="border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <Label
                 htmlFor={`checkbox-${dataType.id}`}
-                className="flex items-center text-black"
+                className="flex items-center text-foreground"
               >
                 <span 
                   className="inline-block w-3 h-3 mr-2 rounded-full" 
@@ -146,8 +146,8 @@ const ReportDataSelectionDialog: React.FC<ReportDataSelectionDialogProps> = ({
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="text-black border-gray-300">Cancel</Button>
-          <Button variant="outline" onClick={handleConfirm}>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="default" onClick={handleConfirm}>
             Generate {reportFormat === 'html' ? 'HTML' : 'PDF'} Report
           </Button>
         </DialogFooter>
