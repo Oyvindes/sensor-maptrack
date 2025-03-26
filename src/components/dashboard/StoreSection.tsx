@@ -319,12 +319,12 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
 
   const getStatusBadge = (status: Purchase['status']) => {
     const statusConfig: Record<Purchase['status'], { color: string, translationKey: string }> = {
-      pending: { color: 'bg-yellow-500', translationKey: 'store.status.pending' },
-      in_progress: { color: 'bg-blue-500', translationKey: 'store.status.inProgress' },
-      packaging: { color: 'bg-purple-500', translationKey: 'store.status.packaging' },
-      sent: { color: 'bg-green-500', translationKey: 'store.status.sent' },
-      invoiced: { color: 'bg-indigo-500', translationKey: 'store.status.invoiced' },
-      completed: { color: 'bg-green-700', translationKey: 'store.status.completed' }
+      pending: { color: 'bg-yellow-500', translationKey: 'store.orderStatus.pending' },
+      in_progress: { color: 'bg-blue-500', translationKey: 'store.orderStatus.inProgress' },
+      packaging: { color: 'bg-purple-500', translationKey: 'store.orderStatus.packaging' },
+      sent: { color: 'bg-green-500', translationKey: 'store.orderStatus.sent' },
+      invoiced: { color: 'bg-indigo-500', translationKey: 'store.orderStatus.invoiced' },
+      completed: { color: 'bg-green-700', translationKey: 'store.orderStatus.completed' }
     };
     
     const config = statusConfig[status];
@@ -763,12 +763,12 @@ const StoreSection: React.FC<StoreSectionProps> = ({ className }) => {
                               }
                             }}
                           >
-                            <option value="pending">{t('store.status.pending')}</option>
-                            <option value="in_progress">{t('store.status.inProgress')}</option>
-                            <option value="packaging">{t('store.status.packaging')}</option>
-                            <option value="sent">{t('store.status.sent')}</option>
-                            <option value="invoiced">{t('store.status.invoiced')}</option>
-                            <option value="completed">{t('store.status.completed')}</option>
+                            <option value="pending">{t('store.orderStatus.pending')}</option>
+                            <option value="in_progress">{t('store.orderStatus.inProgress')}</option>
+                            <option value="packaging">{t('store.orderStatus.packaging')}</option>
+                            <option value="sent">{t('store.orderStatus.sent')}</option>
+                            <option value="invoiced">{t('store.orderStatus.invoiced')}</option>
+                            <option value="completed">{t('store.orderStatus.completed')}</option>
                           </select>
                         </div>
                       </div>
