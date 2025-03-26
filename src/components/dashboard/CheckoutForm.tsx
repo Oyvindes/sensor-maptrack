@@ -9,6 +9,7 @@ import { storeService } from '@/services/store';
 import { toast } from 'sonner';
 import { Loader2, Minus, Plus, Trash2 } from 'lucide-react';
 import ShippingAddressSearch from './ShippingAddressSearch';
+import { useTranslation } from 'react-i18next';
 
 interface CartItem {
   product: Product;
@@ -30,6 +31,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   onUpdateQuantity,
   onRemoveItem
 }) => {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreatePurchaseDto>({
     items: [], // Will be set during submission
@@ -79,11 +81,11 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         items: purchaseItems
       });
 
-      toast.success('Purchase completed successfully!');
+      toast.success(t('store.purchaseCompleted'));
       onSuccess();
     } catch (error) {
       console.error('Error creating purchase:', error);
-      toast.error('Failed to complete purchase. Please try again.');
+      toast.error(t('store.purchaseError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -99,23 +101,23 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Complete Your Purchase</CardTitle>
+        <CardTitle>{t('store.completeYourPurchase')}</CardTitle>
         <CardDescription>
-          Please provide your shipping and contact information to complete your purchase.
+          {t('store.provideShippingInfo')}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">Order Summary</h3>
+            <h3 className="text-lg font-medium">{t('store.orderSummary')}</h3>
             {items.map(item => (
               <div key={item.product.id} className="flex items-center justify-between py-2 border-b">
                 <div className="flex-1">
                   <span className="font-medium">{item.product.name}</span>
                   <div className="text-sm text-muted-foreground">
-                    {item.product.price} kr each
+                    {item.product.price} {t('store.krEach')}
                     <span className={item.product.pricing_type === 'monthly' ? 'text-blue-600 ml-2' : 'text-muted-foreground ml-2'}>
-                      ({item.product.pricing_type === 'monthly' ? 'Monthly Fee' : 'One-time Cost'})
+                      ({item.product.pricing_type === 'monthly' ? t('store.monthlyFee') : t('store.oneTimeCost')})
                     </span>
                   </div>
                 </div>
@@ -155,55 +157,55 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                   </div>
                 ) : (
                   <div className="text-right">
-                    <span>{item.quantity} × {item.product.price} kr</span>
+                    <span>{item.quantity} × {item.product.price} {t('store.kr')}</span>
                   </div>
                 )}
                 <div className="w-24 text-right">
-                  {(item.product.price * item.quantity).toFixed(2)} kr
+                  {(item.product.price * item.quantity).toFixed(2)} {t('store.kr')}
                 </div>
               </div>
             ))}
             <div className="space-y-2 py-2">
               {onetimeTotal > 0 && (
                 <div className="flex justify-between">
-                  <span>One-time Costs</span>
-                  <span>{onetimeTotal.toFixed(2)} kr</span>
+                  <span>{t('store.oneTimeCosts')}</span>
+                  <span>{onetimeTotal.toFixed(2)} {t('store.kr')}</span>
                 </div>
               )}
               {monthlyTotal > 0 && (
                 <div className="flex justify-between text-blue-600">
-                  <span>Monthly Fees</span>
-                  <span>{monthlyTotal.toFixed(2)} kr/month</span>
+                  <span>{t('store.monthlyFees')}</span>
+                  <span>{monthlyTotal.toFixed(2)} {t('store.krPerMonth')}</span>
                 </div>
               )}
               {/* Only show total if there are one-time costs */}
               {onetimeTotal > 0 && (
                 <div className="flex justify-between font-bold pt-2 border-t">
-                  <span>Total (One-time)</span>
-                  <span>{onetimeTotal.toFixed(2)} kr</span>
+                  <span>{t('store.totalOneTime')}</span>
+                  <span>{onetimeTotal.toFixed(2)} {t('store.kr')}</span>
                 </div>
               )}
               {/* Add note about monthly fees if present */}
               {monthlyTotal > 0 && (
                 <div className="text-sm text-muted-foreground pt-2">
-                  * Monthly fees will be billed separately
+                  {t('store.monthlyFeesBilledSeparately')}
                 </div>
               )}
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Shipping Information</h3>
+            <h3 className="text-lg font-medium">{t('store.shippingInformation')}</h3>
             
             {/* Company Name Field */}
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
+              <Label htmlFor="companyName">{t('store.companyName')}</Label>
               <Input
                 id="companyName"
                 name="companyName"
                 value={formData.companyName}
                 onChange={handleChange}
-                placeholder="Enter your company name"
+                placeholder={t('store.enterCompanyName')}
                 required
               />
             </div>
@@ -219,7 +221,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="shippingAddress">Address</Label>
+                <Label htmlFor="shippingAddress">{t('store.address')}</Label>
                 <Input
                   id="shippingAddress"
                   name="shippingAddress"
@@ -230,7 +232,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="shippingCity">City</Label>
+                  <Label htmlFor="shippingCity">{t('store.city')}</Label>
                   <Input
                     id="shippingCity"
                     name="shippingCity"
@@ -240,7 +242,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="shippingPostalCode">Postal Code</Label>
+                  <Label htmlFor="shippingPostalCode">{t('store.postalCode')}</Label>
                   <Input
                     id="shippingPostalCode"
                     name="shippingPostalCode"
@@ -251,7 +253,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="shippingCountry">Country</Label>
+                <Label htmlFor="shippingCountry">{t('store.country')}</Label>
                 <Input
                   id="shippingCountry"
                   name="shippingCountry"
@@ -264,10 +266,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">Contact Information</h3>
+            <h3 className="text-lg font-medium">{t('store.contactInformation')}</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="contactEmail">Email</Label>
+                <Label htmlFor="contactEmail">{t('store.contactEmail')}</Label>
                 <Input
                   id="contactEmail"
                   name="contactEmail"
@@ -278,7 +280,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contactPhone">Phone</Label>
+                <Label htmlFor="contactPhone">{t('store.contactPhone')}</Label>
                 <Input
                   id="contactPhone"
                   name="contactPhone"
@@ -291,43 +293,43 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="customerReference">Your Reference Number (Optional)</Label>
+            <Label htmlFor="customerReference">{t('store.yourReferenceNumber')}</Label>
             <Input
               id="customerReference"
               name="customerReference"
               value={formData.customerReference || ''}
               onChange={handleChange}
-              placeholder="Your purchase order or reference number for invoicing"
+              placeholder={t('store.referenceNumberPlaceholder')}
             />
             <p className="text-xs text-muted-foreground">
-              This reference will appear on your invoice and can be used to track your order.
+              {t('store.referenceNumberHelp')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="orderDetails">Additional Order Details (Optional)</Label>
+            <Label htmlFor="orderDetails">{t('store.additionalOrderDetails')}</Label>
             <Textarea
               id="orderDetails"
               name="orderDetails"
               value={formData.orderDetails || ''}
               onChange={handleChange}
-              placeholder="Any special instructions or requirements for your order"
+              placeholder={t('store.orderDetailsPlaceholder')}
               rows={3}
             />
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {t('buttons.cancel')}
           </Button>
           <Button type="submit" variant="outline" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
+                {t('store.processing')}
               </>
             ) : (
-              'Complete Purchase'
+              t('store.completePurchase')
             )}
           </Button>
         </CardFooter>
