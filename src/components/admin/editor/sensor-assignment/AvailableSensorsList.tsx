@@ -2,10 +2,11 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Power, Thermometer } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface AvailableSensorsListProps {
-	availableSensors: Array<{ imei: string; name: string }>;
+	availableSensors: Array<{ imei: string; name: string; sensorType?: string }>;
 	assignedSensorImeis: string[];
 	onSensorToggle: (sensorImei: string, checked: boolean) => void;
 }
@@ -50,7 +51,14 @@ const AvailableSensorsList: React.FC<AvailableSensorsListProps> = ({
 								isAssigned ? 'font-medium' : ''
 							}`}
 						>
-							{sensor.name}
+							<div className="flex items-center gap-2">
+								{sensor.sensorType === 'power' ? (
+									<Power className="h-3 w-3 text-green-500" />
+								) : (
+									<Thermometer className="h-3 w-3 text-blue-500" />
+								)}
+								<span>{sensor.name}</span>
+							</div>
 						</Label>
 						{isAssigned && (
 							<Badge

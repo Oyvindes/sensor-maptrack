@@ -7,7 +7,8 @@ import {
 	HelpCircle,
 	Store,
 	Stethoscope,
-	ShieldCheck
+	ShieldCheck,
+	Power
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -85,6 +86,44 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 					</div>
 				)}
 
+				{/* Power Dashboard - Direct link to the power dashboard page */}
+				<div className="group relative">
+					<Link to="/power" className="inline-flex">
+						<Button
+							variant="ghost"
+							className={cn(
+								'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+								window.location.pathname === '/power'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
+							)}
+							aria-label="Power Dashboard"
+						>
+							<Power className="w-4 h-4" />
+							<span className="text-[10px] mt-1">Power</span>
+						</Button>
+					</Link>
+				</div>
+
+				{/* Power Plugs - Direct link to the power plugs page */}
+				<div className="group relative">
+					<Link to="/power-plugs" className="inline-flex">
+						<Button
+							variant="ghost"
+							className={cn(
+								'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
+								window.location.pathname === '/power-plugs'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
+							)}
+							aria-label="Power Plugs"
+						>
+							<Power className="w-4 h-4" />
+							<span className="text-[10px] mt-1">Plugs</span>
+						</Button>
+					</Link>
+				</div>
+
 				{/* Sensor Health Check - Direct link to the page */}
 				<div className="group relative">
 					<Link to="/sensor-health-check" className="inline-flex">
@@ -92,7 +131,9 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 							variant="ghost"
 							className={cn(
 								'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
-								'border-transparent text-muted-foreground hover:text-foreground'
+								window.location.pathname === '/sensor-health-check'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
 							)}
 							aria-label={t('navigation.check')}
 						>
@@ -131,8 +172,9 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
 	icon,
 	label
 }) => {
-	const isActive = currentView === view;
 	const url = viewToUrl[view];
+	// Check if this is the active view based on both the currentView prop and the current URL
+	const isActive = currentView === view || window.location.pathname === url;
 
 	return (
 		<div className="group relative">

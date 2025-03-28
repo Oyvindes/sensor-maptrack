@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { v5 as uuidv5 } from 'uuid';
 
 /**
  * Checks if a string is a valid UUID
@@ -54,10 +55,17 @@ export const mapCompanyIdToUUID = async (companyId: string): Promise<string | nu
 };
 
 /**
+ * Generate a deterministic UUID based on a namespace and a name
+ */
+export const generateDeterministicUUID = (namespace: string, name: string): string => {
+  return uuidv5(name, namespace);
+};
+
+/**
  * Synchronous version of mapCompanyIdToUUID that uses a fallback mapping
  * This is used when an async function cannot be used
  */
-export const mapCompanyIdToUUIDSync = (companyId: string): string | null => {
+export const mapCompanyIdToUUIDSync = (companyId: string): string => {
   // If it's already a UUID, return it as-is
   if (isValidUUID(companyId)) {
     return companyId;
@@ -72,15 +80,13 @@ export const mapCompanyIdToUUIDSync = (companyId: string): string | null => {
   // Note: This is a fallback and may not be accurate
   // It's better to use the async version whenever possible
   console.warn('Using fallback company mapping. This may not be accurate.');
-  const fallbackMap: Record<string, string> = {
-    'system': '00000000-0000-0000-0000-000000000000',
-    'company-001': '11111111-1111-1111-1111-111111111111',
-    'company-002': '22222222-2222-2222-2222-222222222222',
-    'company-003': '33333333-3333-3333-3333-333333333333',
-    'company-004': '44444444-4444-4444-4444-444444444444'
-  };
   
-  return fallbackMap[companyId] || null;
+  // Instead of using hardcoded UUIDs, we'll use a deterministic UUID generation
+  // based on the company ID to ensure consistency
+  const namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // A fixed namespace UUID
+  const uuid = generateDeterministicUUID(namespace, companyId);
+  
+  return uuid;
 };
 
 /**

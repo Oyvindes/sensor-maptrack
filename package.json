@@ -14,7 +14,9 @@
 		"preview": "vite preview",
 		"server": "node server/server.js",
 		"start:all": "concurrently \"npm run dev\" \"npm run server\"",
-		"start": "node app.js"
+		"start": "node app.js",
+		"open-chrome": "node -e \"setTimeout(() => { const { exec } = require('child_process'); const cmd = process.platform === 'win32' ? 'start chrome http://localhost:8080' : (process.platform === 'darwin' ? 'open -a \\'Google Chrome\\' http://localhost:8080' : 'google-chrome http://localhost:8080'); exec(cmd); }, 3000)\"",
+		"dev:chrome": "npm run start:all & npm run open-chrome"
 	},
 	"dependencies": {
 		"@capacitor/barcode-scanner": "^2.0.3",

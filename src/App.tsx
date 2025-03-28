@@ -9,6 +9,9 @@ import Admin from "@/pages/Admin";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import SensorHealthCheck from "@/pages/SensorHealthCheck";
+import PowerDashboard from "@/pages/PowerDashboard";
+import PowerSensorTest from "@/pages/PowerSensorTest";
+import PowerPlugs from "@/pages/PowerPlugs";
 import { initializeAuthService, isUserAuthenticated, getCurrentUser } from "@/services/authService";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
@@ -79,94 +82,124 @@ const App = () => {
               <StatePreserver />
               <Toaster />
               <Sonner />
-            <Routes>
-              {/* Redirect root to dashboard if authenticated, otherwise to login */}
-              <Route
-                path="/"
-                element={
-                  isUserAuthenticated() ?
-                  <Navigate to="/overview" replace /> :
-                  <Navigate to="/login" replace />
-                }
-              />
-              <Route path="/login" element={<Login />} />
-              
-              {/* Legacy route - redirect to overview */}
-              <Route
-                path="/index"
-                element={<Navigate to="/overview" replace />}
-              />
-              
-              {/* Dashboard tab routes */}
-              <Route
-                path="/overview"
-                element={
-                  <ProtectedRoute>
-                    <Overview />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/projects"
-                element={
-                  <ProtectedRoute>
-                    <Projects />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/track"
-                element={
-                  <ProtectedRoute>
-                    <Track />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/support"
-                element={
-                  <ProtectedRoute>
-                    <Support />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/shop"
-                element={
-                  <ProtectedRoute>
-                    <Shop />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* Admin route */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <Admin />
-                  </AdminRoute>
-                }
-              />
-              
-              {/* Sensor health check route */}
-              <Route
-                path="/sensor-health-check"
-                element={
-                  <ProtectedRoute>
-                    <SensorHealthCheck />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </LanguageProvider>
-  </ThemeProvider>
+              <Routes>
+                {/* Redirect root to dashboard if authenticated, otherwise to login */}
+                <Route
+                  path="/"
+                  element={
+                    isUserAuthenticated() ?
+                    <Navigate to="/overview" replace /> :
+                    <Navigate to="/login" replace />
+                  }
+                />
+                <Route path="/login" element={<Login />} />
+                
+                {/* Legacy route - redirect to overview */}
+                <Route
+                  path="/index"
+                  element={<Navigate to="/overview" replace />}
+                />
+                
+                {/* Dashboard tab routes */}
+                <Route
+                  path="/overview"
+                  element={
+                    <ProtectedRoute>
+                      <Overview />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/projects"
+                  element={
+                    <ProtectedRoute>
+                      <Projects />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/track"
+                  element={
+                    <ProtectedRoute>
+                      <Track />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/support"
+                  element={
+                    <ProtectedRoute>
+                      <Support />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/shop"
+                  element={
+                    <ProtectedRoute>
+                      <Shop />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Admin route */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <Admin />
+                    </AdminRoute>
+                  }
+                />
+                
+                {/* Sensor health check route */}
+                <Route
+                  path="/sensor-health-check"
+                  element={
+                    <ProtectedRoute>
+                      <SensorHealthCheck />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Power dashboard route */}
+                <Route
+                  path="/power"
+                  element={
+                    <ProtectedRoute>
+                      <PowerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Power plugs route */}
+                <Route
+                  path="/power-plugs"
+                  element={
+                    <ProtectedRoute>
+                      <PowerPlugs />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Power sensor test route */}
+                <Route
+                  path="/power-test"
+                  element={
+                    <ProtectedRoute>
+                      <PowerSensorTest />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 };
 

@@ -272,7 +272,33 @@ export const deleteDevice = async (
       async () => {
         console.log('Deleting device with ID:', deviceId);
         
-        // Delete the device
+        // First, delete any device positions
+        const positionsResult = await supabase
+          .from('device_positions')
+          .delete()
+          .eq('device_id', deviceId);
+          
+        if (positionsResult.error) {
+          console.error('Error deleting device positions:', positionsResult.error);
+          // Continue with deletion even if positions deletion fails
+        } else {
+          console.log('Successfully deleted device positions for device ID:', deviceId);
+        }
+        
+        // Next, delete the corresponding tracking object
+        const trackingResult = await supabase
+          .from('tracking_objects')
+          .delete()
+          .eq('id', deviceId);
+          
+        if (trackingResult.error) {
+          console.error('Error deleting tracking object:', trackingResult.error);
+          // Continue with device deletion even if tracking object deletion fails
+        } else {
+          console.log('Successfully deleted tracking object with ID:', deviceId);
+        }
+        
+        // Finally delete the device
         return await supabase
           .from('devices')
           .delete()

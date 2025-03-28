@@ -1,10 +1,12 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { SensorType } from "@/components/SensorCard";
 import { getSensorColor, getSensorIconComponent } from "@/utils/sensorUtils";
 import { getStatusIndicatorColor } from "@/utils/sensorCardUtils";
+import { Button } from "@/components/ui/button";
 
 type SensorCardHeaderProps = {
   name: string;
@@ -12,7 +14,7 @@ type SensorCardHeaderProps = {
   primaryType: SensorType;
   expanded: boolean;
   onToggle: () => void;
-  sensorType?: 'wood' | 'concrete';
+  sensorType?: 'wood' | 'concrete' | 'power';
 };
 
 const SensorCardHeader: React.FC<SensorCardHeaderProps> = ({
@@ -25,6 +27,11 @@ const SensorCardHeader: React.FC<SensorCardHeaderProps> = ({
 }) => {
   const sensorColor = getSensorColor(primaryType);
   const IconComponent = getSensorIconComponent(primaryType);
+
+  // Function to handle dashboard button click without triggering card expansion
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the click from bubbling up to the card
+  };
 
   return (
     <div className="flex justify-between items-start">
@@ -42,11 +49,27 @@ const SensorCardHeader: React.FC<SensorCardHeaderProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div 
+        {sensorType === 'power' && (
+          <Link
+            to="/power"
+            onClick={handleDashboardClick}
+            className="mr-1"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+            >
+              <ExternalLink className="h-3.5 w-3.5 mr-1" />
+              Dashboard
+            </Button>
+          </Link>
+        )}
+        <div
           className={cn(
-            "h-2.5 w-2.5 rounded-full", 
+            "h-2.5 w-2.5 rounded-full",
             getStatusIndicatorColor(status)
-          )} 
+          )}
         />
         <span className="text-xs text-muted-foreground">
           {status === "online" ? "Live" : status === "warning" ? "Warning" : "Offline"}

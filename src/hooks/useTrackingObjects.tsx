@@ -71,10 +71,19 @@ export const useTrackingObjects = () => {
 
   const deleteTrackingObject = useCallback(async (deviceId: string) => {
     try {
+      // First check if the device exists
+      const deviceExists = devices.some(device => device.id === deviceId) ||
+                          trackingObjects.some(obj => obj.id === deviceId);
+      
+      if (!deviceExists) {
+        toast.error('Device not found. It may have been deleted already.');
+        return false;
+      }
+      
       const result = await deleteDevice(deviceId);
 
       if (!result.success) {
-        toast.error('Failed to delete device');
+        toast.error(`Failed to delete device: ${result.message}`);
         return false;
       }
 
@@ -83,10 +92,11 @@ export const useTrackingObjects = () => {
       return true;
     } catch (error) {
       console.error('Error in deleteTrackingObject:', error);
-      toast.error('Failed to delete tracking object');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to delete tracking object: ${errorMessage}`);
       return false;
     }
-  }, [fetchData]);
+  }, [fetchData, devices, trackingObjects]);
 
   useEffect(() => {
     fetchData();

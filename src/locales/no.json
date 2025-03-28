@@ -128,6 +128,25 @@
     "concrete": "Betong",
     "wood": "Tre",
     "availableSensors": "Tilgjengelige Sensorer",
+    "powerPlugs": {
+      "title": "Strømplugger",
+      "dashboard": "Strømplugger Dashbord",
+      "add": "Legg til Strømplugg",
+      "edit": "Rediger Strømplugg",
+      "name": "Strømplugg Navn",
+      "namePlaceholder": "Skriv inn et beskrivende navn for denne strømpluggen",
+      "scanQR": "Skann QR",
+      "scanning": "Skanner...",
+      "noPlugsFound": "Ingen strømplugger funnet",
+      "addToGetStarted": "Legg til en strømplugg for å komme i gang",
+      "imeiDescription": "IMEI brukes for enhetsidentifikasjon og autentisering",
+      "energy": "Energiforbruk",
+      "statistics": "Statistikk",
+      "totalEnergy": "Totalt Energiforbruk",
+      "totalCost": "Total Kostnad",
+      "lastToggled": "Sist Slått Av/På",
+      "noConsumptionData": "Ingen forbruksdata tilgjengelig"
+    },
     "noSensorsAvailable": "Ingen sensorer tilgjengelig for dette selskapet",
     "assigned": "Tildelt"
   },
@@ -160,6 +179,7 @@
     "company": "Selskap",
     "selectCompany": "Velg selskap",
     "assignedSensors": "Tildelte sensorer",
+    "assignedSensorsAndPlugs": "Tildelte sensorer og strømplugger",
     "availableSensors": "Tilgjengelige sensorer",
     "noSensorsAvailable": "Ingen sensorer er tilgjengelige for dette selskapet. Gå til Sensorer-fanen for å legge til sensorer til dette selskapet først.",
     "selectCompanyForSensors": "Vennligst velg et selskap for å se tilgjengelige sensorer.",
@@ -171,6 +191,7 @@
     "failedToScan": "Kunne ikke skanne QR-kode",
     "scanningError": "Det oppstod en feil under skanning",
     "enterSensorImei": "Skriv inn sensor IMEI-nummer",
+    "enterSensorOrPlugImei": "Skriv inn sensor eller strømplugg IMEI-nummer",
     "scanQrCode": "Skann QR-kode for å få IMEI",
     "add": "Legg til",
     "accessingCamera": "Får tilgang til kamera... Tillat kameratillatelser når du blir bedt om det",
@@ -197,6 +218,14 @@
     "email": "E-post",
     "password": "Passord",
     "submit": "Logg inn"
+  },
+  "common": {
+    "on": "På",
+    "off": "Av",
+    "turnOn": "Slå På",
+    "turnOff": "Slå Av",
+    "toggling": "Bytter...",
+    "never": "Aldri"
   },
   "store": {
     "title": "Sensorbutikk",

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import SensorCardHeader from './sensor/SensorCardHeader';
 import SensorValueDisplay from './sensor/SensorValueDisplay';
+import PowerDashboardButton from './power/PowerDashboardButton';
 
 export type SensorType =
 	| 'temperature'
@@ -9,7 +10,8 @@ export type SensorType =
 	| 'battery'
 	| 'proximity'
 	| 'signal'
-	| 'adc1';
+	| 'adc1'
+	| 'power';
 
 export type SensorData = {
 	id: string;
@@ -21,7 +23,7 @@ export type SensorData = {
 	imei?: string;
 	folderId?: string;
 	projectName?: string;
-	sensorType?: 'wood' | 'concrete';
+	sensorType?: 'wood' | 'concrete' | 'power';
 };
 
 export type SensorDataValues = {
@@ -98,6 +100,20 @@ const SensorCard: React.FC<SensorCardProps> = ({
 							sensorValue={sensorValue}
 						/>
 					))}
+				</div>
+			)}
+
+			{sensor.sensorType === 'power' && (
+				<div
+					className="mt-4 flex justify-between items-center"
+					onClick={(e) => e.stopPropagation()} // Prevent card expansion when button is clicked
+				>
+					<PowerDashboardButton
+						deviceId={sensor.id}
+						deviceName={sensor.name}
+						size="sm"
+						showLabel={true}
+					/>
 				</div>
 			)}
 

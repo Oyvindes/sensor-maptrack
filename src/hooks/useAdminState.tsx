@@ -6,6 +6,7 @@ import {
 	fetchTrackingObjects
 } from '@/services/sensorService';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
+import { fetchPowerSensors } from '@/services/sensor/fetchPowerSensors';
 import { toast } from 'sonner';
 import { Company, User, SensorFolder } from '@/types/users';
 import { Device, Sensor, TrackingObject } from '@/types/sensors';
@@ -21,7 +22,10 @@ export type AdminMode =
 	| 'listDevices'
 	| 'editDevice'
 	| 'listFolders'
-	| 'editFolder';
+	| 'editFolder'
+	| 'importSensors'
+	| 'importPowerSensors'
+	| 'deleteSensors';
 
 export type AdminTab =
 	| 'companies'
@@ -39,7 +43,7 @@ export function useAdminState() {
 	);
 	const [selectedUser, setSelectedUser] = useState<User | null>(null);
 	const [selectedSensor, setSelectedSensor] = useState<
-		(SensorData & { folderId?: string; companyId?: string }) | null
+		(SensorData & { folderId?: string; companyId?: string; imei?: string }) | null
 	>(null);
 	const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
 	const [selectedFolder, setSelectedFolder] = useState<SensorFolder | null>(
@@ -49,7 +53,7 @@ export function useAdminState() {
 	const [companies, setCompanies] = useState<Company[]>([]);
 	const [users, setUsers] = useState<User[]>([]);
 	const [sensors, setSensors] = useState<
-		(SensorData & { folderId?: string; companyId?: string })[]
+		(SensorData & { folderId?: string; companyId?: string; imei?: string })[]
 	>([]);
 	const [devices, setDevices] = useState<Device[]>([]);
 	const [trackingObjects, setTrackingObjects] = useState<TrackingObject[]>(
@@ -71,6 +75,41 @@ export function useAdminState() {
 			console.error('Error fetching devices/tracking:', error);
 			setDevices([]);
 			setTrackingObjects([]);
+		}
+	}, []);
+
+	// Create a memoized function for loading sensors
+	const loadSensors = useCallback(async () => {
+		try {
+			// Fetch regular sensors
+			const sensorsData = await fetchSensors();
+			
+			// Fetch power sensors
+			const powerSensorsData = await fetchPowerSensors();
+			
+			// Combine regular and power sensors
+			const allSensors = [
+				...sensorsData.map((sensor) => {
+					// Ensure sensor has values array and add folderId if it exists
+					if (!sensor.values || !Array.isArray(sensor.values)) {
+						// Convert old format to new format if needed
+						return {
+							...sensor,
+							values: [] // Use empty array of SensorDataValues type
+						};
+					}
+					return sensor;
+				}),
+				...powerSensorsData // Power sensors already have the correct format
+			];
+			
+			console.log('Loaded sensors:', sensorsData.length);
+			console.log('Loaded power sensors:', powerSensorsData.length);
+			console.log('Total sensors:', allSensors.length);
+			
+			setSensors(allSensors);
+		} catch (error) {
+			console.error('Error fetching sensors:', error);
 		}
 	}, []);
 
@@ -96,28 +135,6 @@ export function useAdminState() {
 		fetchData();
 
 		// Fetch sensors
-		const loadSensors = async () => {
-			try {
-				const sensorsData = await fetchSensors();
-				// Make sure all sensors have the values property properly set
-				setSensors(
-					sensorsData.map((sensor) => {
-						// Ensure sensor has values array and add folderId if it exists
-						if (!sensor.values || !Array.isArray(sensor.values)) {
-							// Convert old format to new format if needed
-							return {
-								...sensor,
-								values: [] // Use empty array of SensorDataValues type
-							};
-						}
-						return sensor;
-					})
-				);
-			} catch (error) {
-				console.error('Error fetching sensors:', error);
-			}
-		};
-
 		loadSensors();
 
 		// Fetch devices and tracking objects
@@ -129,12 +146,20 @@ export function useAdminState() {
 			loadDevicesAndTracking();
 		};
 		
+		// Listen for the custom sensor-updated event
+		const handleSensorUpdated = (event: Event) => {
+			console.log('Sensor updated event received in useAdminState, refreshing data...');
+			loadSensors();
+		};
+		
 		window.addEventListener('device-updated', handleDeviceUpdated);
+		window.addEventListener('sensor-updated', handleSensorUpdated);
 		
 		return () => {
 			window.removeEventListener('device-updated', handleDeviceUpdated);
+			window.removeEventListener('sensor-updated', handleSensorUpdated);
 		};
-	}, [loadDevicesAndTracking]);
+	}, [loadDevicesAndTracking, loadSensors]);
 
 	const handleTabChange = (value: string) => {
 		setActiveTab(value as AdminTab);
@@ -148,6 +173,11 @@ export function useAdminState() {
 				break;
 			case 'sensors':
 				setMode('listSensors');
+				// Force a refresh of sensors when switching to sensors tab
+				console.log('Switching to sensors tab, refreshing data...');
+				setTimeout(() => {
+					loadSensors();
+				}, 500);
 				break;
 			case 'devices':
 				setMode('listDevices');
@@ -191,6 +221,7 @@ export function useAdminState() {
 		sensorFolders,
 		setSensorFolders,
 		handleTabChange,
-		loadDevicesAndTracking // Export the function so it can be called from outside
+		loadDevicesAndTracking, // Export the function so it can be called from outside
+		loadSensors // Export the function so it can be called from outside
 	};
 }

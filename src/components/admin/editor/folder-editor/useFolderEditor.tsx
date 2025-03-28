@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { SensorFolder } from '@/types/users';
 import { toast } from 'sonner';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
+import { fetchPowerSensors } from '@/services/sensor/powerSensorService';
 import { isValidUUID, mapCompanyIdToUUID } from '@/utils/uuidUtils';
 
 export const useFolderEditor = (
@@ -15,7 +16,7 @@ export const useFolderEditor = (
 		sensorTypes: folder.sensorTypes || {}
 	});
 	const [availableSensors, setAvailableSensors] = useState<
-		Array<{ imei: string; name: string }>
+		Array<{ imei: string; name: string; sensorType?: string }>
 	>([]);
 	const [mapLocation, setMapLocation] = useState<{
 		lat: number;
@@ -45,10 +46,13 @@ export const useFolderEditor = (
 					`Fetching sensors for company: ${formData.companyId} (UUID: ${companyUuid})`
 				);
 
+				// Fetch both regular sensors and power plugs
 				const allSensors = await fetchSensors();
-				const filteredSensors: Array<{ imei: string; name: string }> = [];
+				const allPowerPlugs = await fetchPowerSensors();
+				
+				const filteredSensors: Array<{ imei: string; name: string; sensorType?: string }> = [];
 
-				// Process each sensor
+				// Process each regular sensor
 				for (const sensor of allSensors) {
 					// For debugging
 					console.log(`Sensor ${sensor.imei} has companyId: ${sensor.companyId}`);
@@ -82,9 +86,48 @@ export const useFolderEditor = (
 						});
 					}
 				}
+				
+				// Process each power plug
+				for (const powerPlug of allPowerPlugs) {
+					// For debugging
+					console.log(`Power Plug ${powerPlug.imei} has companyId: ${powerPlug.companyId}`);
 
+					if (!powerPlug.companyId || !formData.companyId) {
+						console.log(`Power Plug ${powerPlug.imei} or form has no companyId`);
+						continue;
+					}
+
+					// Get UUID for power plug's company ID
+					let plugCompanyUuid: string;
+					if (isValidUUID(powerPlug.companyId)) {
+						plugCompanyUuid = powerPlug.companyId;
+					} else {
+						plugCompanyUuid = await mapCompanyIdToUUID(powerPlug.companyId);
+					}
+
+					// Check against both the original ID and the UUID
+					const isMatch =
+						powerPlug.companyId === formData.companyId ||
+						powerPlug.companyId === companyUuid ||
+						plugCompanyUuid === companyUuid ||
+						plugCompanyUuid === formData.companyId;
+
+					console.log(`Power Plug ${powerPlug.imei} match status: ${isMatch}`);
+
+					if (isMatch) {
+						filteredSensors.push({
+							imei: powerPlug.imei,
+							name: powerPlug.name,
+							sensorType: 'power'
+						});
+					}
+				}
+
+				const regularSensors = filteredSensors.filter(s => !s.sensorType);
+				const powerPlugs = filteredSensors.filter(s => s.sensorType === 'power');
+				
 				console.log(
-					`Found ${filteredSensors.length} sensors for company ${formData.companyId}`
+					`Found ${regularSensors.length} sensors and ${powerPlugs.length} power plugs for company ${formData.companyId}`
 				);
 				setAvailableSensors(filteredSensors);
 			} catch (error) {

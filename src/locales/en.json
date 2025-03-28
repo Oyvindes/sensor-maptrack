@@ -128,6 +128,25 @@
     "concrete": "Concrete",
     "wood": "Wood",
     "availableSensors": "Available Sensors",
+    "powerPlugs": {
+      "title": "Power Plugs",
+      "dashboard": "Power Plugs Dashboard",
+      "add": "Add Power Plug",
+      "edit": "Edit Power Plug",
+      "name": "Power Plug Name",
+      "namePlaceholder": "Enter a descriptive name for this power plug",
+      "scanQR": "Scan QR",
+      "scanning": "Scanning...",
+      "noPlugsFound": "No power plugs found",
+      "addToGetStarted": "Add a power plug to get started",
+      "imeiDescription": "The IMEI is used for device identification and authentication",
+      "energy": "Energy Consumption",
+      "statistics": "Statistics",
+      "totalEnergy": "Total Energy",
+      "totalCost": "Total Cost",
+      "lastToggled": "Last Toggled",
+      "noConsumptionData": "No consumption data available"
+    },
     "noSensorsAvailable": "No sensors available for this company",
     "assigned": "Assigned"
   },
@@ -160,6 +179,7 @@
     "company": "Company",
     "selectCompany": "Select company",
     "assignedSensors": "Assigned Sensors",
+    "assignedSensorsAndPlugs": "Assigned Sensors & Power Plugs",
     "availableSensors": "Available Sensors",
     "noSensorsAvailable": "No sensors are available for this company. Please go to the Sensors tab to add sensors to this company first.",
     "selectCompanyForSensors": "Please select a company to see available sensors.",
@@ -171,6 +191,7 @@
     "failedToScan": "Failed to scan QR code",
     "scanningError": "An error occurred while scanning",
     "enterSensorImei": "Enter sensor IMEI number",
+    "enterSensorOrPlugImei": "Enter sensor or power plug IMEI number",
     "scanQrCode": "Scan QR code to get IMEI",
     "add": "Add",
     "accessingCamera": "Accessing camera... Please allow camera permissions when prompted",
@@ -197,6 +218,14 @@
     "email": "Email",
     "password": "Password",
     "submit": "Sign In"
+  },
+  "common": {
+    "on": "On",
+    "off": "Off",
+    "turnOn": "Turn On",
+    "turnOff": "Turn Off",
+    "toggling": "Toggling...",
+    "never": "Never"
   },
   "store": {
     "title": "Sensor Store",

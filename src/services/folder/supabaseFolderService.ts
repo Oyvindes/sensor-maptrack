@@ -76,19 +76,40 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
 
     if (error) throw error;
 
-    // Fetch folder-sensor relationships
+    // Fetch folder-sensor relationships for regular sensors
     const { data: folderSensors, error: relError } = await supabase
       .from('folder_sensors')
       .select('folder_id, sensor_imei');
 
     if (relError) throw relError;
+    
+    // Fetch power plugs with folder_id set
+    const { data: folderPowerPlugs, error: powerPlugsError } = await supabase
+      .from('power_sensors')
+      .select('id, imei, folder_id')
+      .not('folder_id', 'is', null);
+      
+    if (powerPlugsError) {
+      console.warn('Error fetching power plugs with folder assignments:', powerPlugsError);
+      // Continue even if there's an error fetching power plugs
+    }
 
     // Map the database results to SensorFolder format
     const formattedFolders: SensorFolder[] = data.map((folder: any) => {
-      // Find all sensors assigned to this folder
+      // Find all regular sensors assigned to this folder
       const assignedSensorImeis = folderSensors
         .filter((fs) => fs.folder_id === folder.id)
         .map((fs) => fs.sensor_imei);
+        
+      // Find all power plugs assigned to this folder
+      const assignedPowerPlugImeis = folderPowerPlugs
+        ? folderPowerPlugs
+            .filter((pp) => pp.folder_id === folder.id)
+            .map((pp) => pp.imei)
+        : [];
+        
+      // Combine regular sensors and power plugs
+      const allAssignedImeis = [...assignedSensorImeis, ...assignedPowerPlugImeis];
       
       // Handle case where created_by and creator_name might not exist yet
       const createdBy = 'created_by' in folder ? folder.created_by : '';
@@ -162,7 +183,7 @@ export const fetchSensorFolders = async (): Promise<SensorFolder[]> => {
         // Preserve the full ISO string with time information
         projectStartDate: folder.project_start_date || '',
         projectEndDate: folder.project_end_date || '',
-        assignedSensorImeis,
+        assignedSensorImeis: allAssignedImeis,
         sensorLocations: folder.sensor_locations || {},
         sensorZones: folder.sensor_zones || {},
         sensorTypes: folder.sensor_types || {},
@@ -246,9 +267,15 @@ export const saveSensorFolder = async (
       sensor_types: folder.sensorTypes || {}
     };
     
-    // Only add creator fields if they exist in the folder object
+    // Only add creator fields if they exist in the folder object and are valid UUIDs
     if (folder.createdBy) {
-      folderData.created_by = folder.createdBy;
+      // Check if it's a valid UUID before adding it
+      if (isValidUUID(folder.createdBy)) {
+        folderData.created_by = folder.createdBy;
+      } else {
+        console.warn(`Invalid UUID format for createdBy: ${folder.createdBy}, skipping this field`);
+        // Don't add the invalid UUID to avoid database errors
+      }
     }
     
     if (folder.creatorName) {
@@ -342,31 +369,104 @@ export const saveSensorFolder = async (
       folder.assignedSensorImeis &&
       folder.assignedSensorImeis.length > 0
     ) {
-      const sensorRelations = folder.assignedSensorImeis.map(
-        (sensorImei) => ({
-          folder_id: folderId,
-          sensor_imei: sensorImei
-        })
+      // First, we need to separate regular sensors from power plugs
+      // Query the power_sensors table to get all power plug IMEIs
+      const { data: powerPlugs, error: powerPlugsError } = await supabase
+        .from('power_sensors')
+        .select('imei')
+        .in('imei', folder.assignedSensorImeis);
+      
+      if (powerPlugsError) {
+        console.warn('Error fetching power plugs:', powerPlugsError);
+        // Continue with the process even if we can't fetch power plugs
+      }
+      
+      // Create a set of power plug IMEIs for quick lookup
+      const powerPlugImeis = new Set(powerPlugs?.map(plug => plug.imei) || []);
+      
+      // Filter out regular sensors (those not in the power plugs set)
+      const regularSensorImeis = folder.assignedSensorImeis.filter(
+        imei => !powerPlugImeis.has(imei)
       );
-
-      const { error: insertError } = await supabase
-        .from('folder_sensors')
-        .insert(sensorRelations);
-
-      if (insertError) throw insertError;
+      
+      // Only insert regular sensors into folder_sensors table
+      if (regularSensorImeis.length > 0) {
+        const sensorRelations = regularSensorImeis.map(
+          (sensorImei) => ({
+            folder_id: folderId,
+            sensor_imei: sensorImei
+          })
+        );
+  
+        const { error: insertError } = await supabase
+          .from('folder_sensors')
+          .insert(sensorRelations);
+  
+        if (insertError) {
+          console.error('Error inserting sensor relations:', insertError);
+          throw insertError;
+        }
+      }
+      
+      // For power plugs, we need to handle them differently
+      // We could create a new table for folder_power_plugs or modify the database schema
+      // For now, let's log that we're skipping power plugs in the folder_sensors table
+      if (powerPlugImeis.size > 0) {
+        console.log(`Skipping ${powerPlugImeis.size} power plugs for folder_sensors table due to foreign key constraint`);
+        // TODO: Implement proper handling of power plugs in folders
+      }
     }
 
-    // Also update the folder_id in the sensors table
+    // Also update the folder_id in the sensors and power_sensors tables
     if (
       folder.assignedSensorImeis &&
       folder.assignedSensorImeis.length > 0
     ) {
-      const { error: updateError } = await supabase
-        .from('sensors')
-        .update({ folder_id: folderId })
+      // Query the power_sensors table to get all power plug IMEIs
+      const { data: powerPlugs, error: powerPlugsError } = await supabase
+        .from('power_sensors')
+        .select('imei')
         .in('imei', folder.assignedSensorImeis);
-
-      if (updateError) throw updateError;
+      
+      if (powerPlugsError) {
+        console.warn('Error fetching power plugs for update:', powerPlugsError);
+        // Continue with the process even if we can't fetch power plugs
+      }
+      
+      // Create a set of power plug IMEIs for quick lookup
+      const powerPlugImeis = new Set(powerPlugs?.map(plug => plug.imei) || []);
+      
+      // Filter out regular sensors (those not in the power plugs set)
+      const regularSensorImeis = folder.assignedSensorImeis.filter(
+        imei => !powerPlugImeis.has(imei)
+      );
+      const powerPlugImeiArray = Array.from(powerPlugImeis);
+      
+      // Update regular sensors
+      if (regularSensorImeis.length > 0) {
+        const { error: updateSensorsError } = await supabase
+          .from('sensors')
+          .update({ folder_id: folderId })
+          .in('imei', regularSensorImeis);
+  
+        if (updateSensorsError) {
+          console.error('Error updating sensors folder_id:', updateSensorsError);
+          throw updateSensorsError;
+        }
+      }
+      
+      // Update power plugs
+      if (powerPlugImeiArray.length > 0) {
+        const { error: updatePowerPlugsError } = await supabase
+          .from('power_sensors')
+          .update({ folder_id: folderId })
+          .in('imei', powerPlugImeiArray);
+  
+        if (updatePowerPlugsError) {
+          console.error('Error updating power_sensors folder_id:', updatePowerPlugsError);
+          throw updatePowerPlugsError;
+        }
+      }
     }
 
     // Get the folder with updated PDF records

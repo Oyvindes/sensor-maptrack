@@ -1,8 +1,8 @@
 
-import { ThermometerSnowflake, Gauge, Battery, Wifi, Zap } from "lucide-react";
+import { ThermometerSnowflake, Gauge, Battery, Wifi, Zap, Power } from "lucide-react";
 
 // Helper functions for sensor icons and colors
-export const getSensorColor = (type: "temperature" | "humidity" | "battery" | "proximity" | "signal" | "adc1"): string => {
+export const getSensorColor = (type: "temperature" | "humidity" | "battery" | "proximity" | "signal" | "adc1" | "power"): string => {
   switch (type) {
     case "temperature":
       return "text-sensor-temp";
@@ -16,13 +16,15 @@ export const getSensorColor = (type: "temperature" | "humidity" | "battery" | "p
       return "text-sensor-signal";
     case "adc1":
       return "text-sensor-adc1"; // Wood color (brown)
+    case "power":
+      return "text-green-500"; // Green for power sensors
     default:
       return "text-primary";
   }
 };
 
 // Return the icon component class rather than JSX
-export const getSensorIconComponent = (type: "temperature" | "humidity" | "battery" | "proximity" | "signal" | "adc1") => {
+export const getSensorIconComponent = (type: "temperature" | "humidity" | "battery" | "proximity" | "signal" | "adc1" | "power") => {
   switch (type) {
     case "temperature":
       return ThermometerSnowflake;
@@ -36,6 +38,8 @@ export const getSensorIconComponent = (type: "temperature" | "humidity" | "batte
       return Wifi;
     case "adc1":
       return Gauge; // Using Gauge icon for wood moisture
+    case "power":
+      return Power; // Power icon for smart plugs
     default:
       return Gauge;
   }

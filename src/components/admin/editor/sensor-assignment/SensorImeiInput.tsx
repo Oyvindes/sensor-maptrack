@@ -43,7 +43,7 @@ const SensorImeiInput: React.FC<SensorImeiInputProps> = ({
     <div className="mb-4">
       <div className="flex gap-2 mb-2">
         <Input
-          placeholder={t('projectEditor.enterSensorImei')}
+          placeholder={t('projectEditor.enterSensorOrPlugImei')}
           value={imeiInput}
           onChange={onImeiChange}
           className="flex-1"

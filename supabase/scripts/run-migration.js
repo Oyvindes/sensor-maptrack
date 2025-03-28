@@ -1,9 +1,14 @@
 // This script runs the migration SQL file against the Supabase database
 // Usage: node run-migration.js
 
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get the directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Get Supabase URL and key from environment variables or use defaults
 const supabaseUrl = process.env.SUPABASE_URL || 'http://localhost:54321';
@@ -12,12 +17,16 @@ const supabaseKey = process.env.VITE_SUPABASE_KEY || 'token';
 // Create Supabase client
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Get the migration file from command line arguments or use default
+const migrationFileName = process.argv[2] || '20250328_fix_tracking_objects_deletion.sql';
+console.log(`Using migration file: ${migrationFileName}`);
+
 // Path to the migration file
 const migrationFilePath = path.join(
 	__dirname,
 	'..',
 	'migrations',
-	'20250317_add_devices_table.sql'
+	migrationFileName
 );
 
 async function runMigration() {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { SensorData } from '@/components/SensorCard';
-import { Plus, Folder, Pencil, FileUp, Trash2 } from 'lucide-react';
+import { Plus, Folder, Pencil, FileUp, Trash2, Power } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionContainer, SectionTitle } from '@/components/Layout';
 import { getSensorColor, getSensorIconComponent } from '@/utils/sensorUtils';
@@ -11,7 +11,9 @@ interface SensorListProps {
 	sensors: (SensorData & { folderId?: string })[];
 	onSensorSelect: (sensor: SensorData & { folderId?: string }) => void;
 	onAddNew: () => void;
+	onAddNewPower?: () => void;
 	onImport: () => void;
+	onImportPower?: () => void;
 	onDelete: () => void;
 	currentUser?: User | null;
 }
@@ -20,7 +22,9 @@ const SensorList: React.FC<SensorListProps> = ({
 	sensors,
 	onSensorSelect,
 	onAddNew,
+	onAddNewPower,
 	onImport,
+	onImportPower,
 	onDelete,
 	currentUser
 }) => {
@@ -53,6 +57,19 @@ const SensorList: React.FC<SensorListProps> = ({
 							  <span className="text-[10px]">{t('buttons.import')}</span>
 							</span>
 						</Button>
+						{onImportPower && (
+							<Button
+								onClick={onImportPower}
+								size="sm"
+								variant="outline"
+								className="h-12 w-16 px-4"
+							>
+								<span className="flex flex-col items-center gap-1">
+									<Power className="h-4 w-4 text-green-500" />
+									<span className="text-[10px]">Import Power</span>
+								</span>
+							</Button>
+						)}
 						<Button
 							onClick={onDelete}
 							size="sm"
@@ -72,6 +89,18 @@ const SensorList: React.FC<SensorListProps> = ({
 						 <span className="text-[10px]">{t('buttons.new')}</span>
 					</span>
 				</Button>
+				{onAddNewPower && (
+					<Button
+						onClick={onAddNewPower}
+						size="sm"
+						className="h-12 w-16 px-4 bg-green-500 hover:bg-green-600"
+					>
+						<span className="flex flex-col items-center gap-1">
+							<Power className="h-4 w-4" />
+							<span className="text-[10px]">New Power</span>
+						</span>
+					</Button>
+				)}
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -80,7 +109,8 @@ const SensorList: React.FC<SensorListProps> = ({
 						sensor.values && sensor.values.length > 0
 							? sensor.values[0]
 							: null;
-					const IconComponent = getSensorIconComponent('temperature');
+					const sensorType = sensor.sensorType === 'power' ? 'power' as 'power' : 'temperature';
+					const IconComponent = getSensorIconComponent(sensorType);
 					const lastSeen = getLastSeenTime(sensor);
 
 					return (
@@ -91,9 +121,7 @@ const SensorList: React.FC<SensorListProps> = ({
 							<div className="flex items-center justify-between mb-2">
 								<div className="flex items-center gap-2">
 									<div
-										className={`sensor-pulse ${getSensorColor(
-											'temperature'
-										)}`}
+										className={`sensor-pulse ${getSensorColor(sensorType)}`}
 									>
 										<IconComponent className="h-5 w-5" />
 									</div>

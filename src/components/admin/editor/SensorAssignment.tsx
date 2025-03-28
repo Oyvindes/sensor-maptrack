@@ -4,14 +4,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'lucide-react';
 import { toast } from 'sonner';
 import SensorImeiInput from './sensor-assignment/SensorImeiInput';
-import AssignedSensorsList from './sensor-assignment/AssignedSensorsList';
+import AssignedSensorsListWithPlugs from './sensor-assignment/AssignedSensorsListWithPlugs';
 import AvailableSensorsList from './sensor-assignment/AvailableSensorsList';
 import { scanSensorQrCode } from '@/utils/cameraUtils';
 import { validateSensorForCompany } from '@/services/sensor/sensorApi';
 import { useTranslation } from 'react-i18next';
 
 interface SensorAssignmentProps {
-	availableSensors: Array<{ imei: string; name: string }>;
+	availableSensors: Array<{ imei: string; name: string; sensorType?: string }>;
 	assignedSensorImeis: string[];
 	onSensorToggle: (sensorImei: string, checked: boolean) => void;
 	companyId: string;
@@ -40,7 +40,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 	const [showScanner, setShowScanner] = useState(false);
 	const [scanning, setScanning] = useState(false);
 	const [assignedSensors, setAssignedSensors] = useState<
-		Array<{ imei: string; name: string }>
+		Array<{ imei: string; name: string; sensorType?: string }>
 	>([]);
 
 	useEffect(() => {
@@ -56,7 +56,8 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 				imei,
 				name:
 					sensorDetails?.name ||
-					`Sensor ${imei.replace('sensor-', '')}`
+					`Sensor ${imei.replace('sensor-', '')}`,
+				sensorType: sensorDetails?.sensorType || undefined
 			};
 		});
 		setAssignedSensors(sensorsWithDetails);
@@ -176,7 +177,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 		<div className="space-y-2">
 			<Label className="flex items-center gap-1">
 				<Link className="h-4 w-4" />
-				<span>{t('projectEditor.assignedSensors')}</span>
+				<span>{t('projectEditor.assignedSensorsAndPlugs')}</span>
 			</Label>
 
 			<Card>
@@ -190,7 +191,7 @@ const SensorAssignment: React.FC<SensorAssignmentProps> = ({
 						onAddSensor={handleAddSensor}
 					/>
 
-					<AssignedSensorsList
+					<AssignedSensorsListWithPlugs
 						assignedSensors={assignedSensors}
 						onRemoveSensor={handleRemoveSensor}
 						sensorLocations={sensorLocations}

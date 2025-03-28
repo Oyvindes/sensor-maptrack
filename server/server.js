@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { Client } from '@notionhq/client';
+import powerController from './api/powerController.js';
+import debugController from './api/debugController.js';
 
 const app = express();
 const port = 3001;
@@ -21,6 +23,10 @@ console.log('Using Notion token:', process.env.VITE_NOTION_TOKEN ? 'From .env fi
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+// API routes
+app.use('/api/device', powerController);
+app.use('/api/debug', debugController);
 
 // Route to get a page by ID
 app.get('/api/notion/page/:pageId', async (req, res) => {

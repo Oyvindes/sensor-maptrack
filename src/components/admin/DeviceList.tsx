@@ -58,20 +58,22 @@ const DeviceList: React.FC<DeviceListProps> = ({
         return;
       }
       
+      console.log(`Attempting to delete device: ${deviceToDelete.id} (${deviceToDelete.name})`);
       const success = await onDelete(deviceToDelete.id);
       
       if (!success) {
-        setError(`Failed to delete "${deviceToDelete.name}". Please try again.`);
-      }
-    } catch (error) {
-      console.error("Error during delete:", error);
-      setError(`An unexpected error occurred: ${error.message}`);
-    } finally {
-      setIsDeleting(false);
-      if (!error) {
+        setError(`Failed to delete "${deviceToDelete.name}". The device may not exist or you may not have permission to delete it.`);
+      } else {
+        // If successful, close the dialog
         setDeleteConfirmOpen(false);
         setDeviceToDelete(null);
       }
+    } catch (error) {
+      console.error("Error during delete:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setError(`An unexpected error occurred: ${errorMessage}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 

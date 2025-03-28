@@ -18,6 +18,10 @@ import ReportDataSelectionDialog, { ReportFormat } from './ReportDataSelectionDi
 import { toast } from 'sonner';
 import { useProjectData } from '@/hooks/useProjectData';
 import { fetchSensors } from '@/services/sensor/supabaseSensorService';
+import { fetchPowerSensors } from '@/services/sensor/powerSensorService';
+import { usePowerConsumption } from '@/hooks/usePowerConsumption';
+import { usePowerSensor } from '@/hooks/usePowerSensor';
+import { Power } from 'lucide-react';
 
 interface SensorDataGraphsProps {
   project: SensorFolder;
@@ -156,6 +160,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
   const { setProjects } = useProjectData();
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [sensorInfoMap, setSensorInfoMap] = useState<Record<string, SensorInfo>>({});
+  const [powerSensorMap, setPowerSensorMap] = useState<Record<string, any>>({});
   const [isDataSelectionOpen, setIsDataSelectionOpen] = useState(false);
   
   // Define valueConfigs inside the component to use translations
@@ -170,6 +175,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
   useEffect(() => {
     const fetchSensorInfo = async () => {
       try {
+        // Fetch regular sensors
         const allSensors = await fetchSensors();
         const sensorMap: Record<string, SensorInfo> = {};
 
@@ -182,6 +188,22 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         });
 
         setSensorInfoMap(sensorMap);
+        
+        // Fetch power sensors
+        const allPowerSensors = await fetchPowerSensors();
+        const powerMap: Record<string, any> = {};
+        
+        allPowerSensors.forEach((sensor) => {
+          powerMap[sensor.imei] = {
+            id: sensor.id,
+            imei: sensor.imei,
+            name: sensor.name,
+            status: sensor.status,
+            isPowerSensor: true
+          };
+        });
+        
+        setPowerSensorMap(powerMap);
       } catch (error) {
         console.error('Error fetching sensor info:', error);
       }
@@ -279,6 +301,24 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 
       <div className="grid grid-cols-1 gap-8">
         {project.assignedSensorImeis.map((sensorImei) => {
+          // Check if this is a power sensor
+          const isPowerSensor = powerSensorMap[sensorImei] !== undefined;
+          
+          if (isPowerSensor) {
+            // Render power sensor with consumption data and toggle button
+            const powerSensor = powerSensorMap[sensorImei];
+            return (
+              <PowerSensorDisplay
+                key={sensorImei}
+                sensorImei={sensorImei}
+                sensorName={powerSensor.name}
+                sensorId={powerSensor.id}
+                location={project.sensorLocations?.[sensorImei] || ''}
+              />
+            );
+          }
+          
+          // Regular sensor handling
           const data = generateData(sensorInfoMap, sensorImei, project).reverse();
           const latestData = data.length > 0 ? data[data.length - 1] : null;
           const sensorName = sensorInfoMap[sensorImei]?.name || `Sensor ${sensorImei}`;
@@ -433,6 +473,152 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         onConfirm={handleDataSelectionConfirm}
         projectName={project.name}
       />
+    </div>
+  );
+};
+
+// Power Sensor Display Component
+interface PowerSensorDisplayProps {
+  sensorImei: string;
+  sensorName: string;
+  sensorId: string;
+  location: string;
+}
+
+const PowerSensorDisplay: React.FC<PowerSensorDisplayProps> = ({
+  sensorImei,
+  sensorName,
+  sensorId,
+  location
+}) => {
+  const { t } = useTranslation();
+  const { consumptionData, statistics, timeRange, setTimeRange } = usePowerConsumption(sensorId);
+  const { deviceStatus, togglePower, toggling } = usePowerSensor(sensorId, sensorName);
+  
+  // Format the display name with location if available
+  const displayName = location ? `${sensorName} (${location})` : sensorName;
+  
+  // Format consumption data for the chart
+  const chartData = consumptionData.map(item => ({
+    time: new Date(item.timestamp).toISOString(),
+    energy: item.energy,
+    cost: item.cost || 0
+  }));
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-semibold flex items-center gap-2">
+          <Power className="h-5 w-5 text-green-500" />
+          {displayName}
+        </h3>
+        <div className="flex items-center gap-2">
+          <div className={`px-2 py-1 rounded-full text-xs ${deviceStatus?.power_state ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+            {deviceStatus?.power_state ? t('common.on') : t('common.off')}
+          </div>
+          <button
+            onClick={() => togglePower()}
+            disabled={toggling}
+            className={`px-3 py-1 rounded-md text-sm text-white ${deviceStatus?.power_state ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} ${toggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {toggling ? t('common.toggling') : deviceStatus?.power_state ? t('common.turnOff') : t('common.turnOn')}
+          </button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-sm">{t('powerPlugs.energy')}</CardTitle>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setTimeRange('24h')}
+                  className={`px-2 py-1 text-xs rounded ${timeRange === '24h' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+                >
+                  24h
+                </button>
+                <button
+                  onClick={() => setTimeRange('7d')}
+                  className={`px-2 py-1 text-xs rounded ${timeRange === '7d' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+                >
+                  7d
+                </button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px] w-full">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="time"
+                      height={30}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      }}
+                      interval="preserveStartEnd"
+                      minTickGap={60}
+                      padding={{ left: 20, right: 20 }}
+                      fontSize={12}
+                    />
+                    <YAxis />
+                    <Tooltip
+                      labelFormatter={(value) => new Date(value).toLocaleString()}
+                      formatter={(value: any) => [
+                        `${Number(value).toFixed(1)} Wh`,
+                        t('powerPlugs.energy')
+                      ]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="energy"
+                      stroke="#4444ff"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-muted-foreground">{t('powerPlugs.noConsumptionData')}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">{t('powerPlugs.statistics')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <div className="text-xs text-muted-foreground">{t('powerPlugs.totalEnergy')}</div>
+                  <div className="text-lg font-semibold">{statistics.kwhEnergy.toFixed(2)} kWh</div>
+                </div>
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <div className="text-xs text-muted-foreground">{t('powerPlugs.totalCost')}</div>
+                  <div className="text-lg font-semibold">${statistics.totalCost.toFixed(2)}</div>
+                </div>
+              </div>
+              <div className="bg-muted/30 p-3 rounded-md">
+                <div className="text-xs text-muted-foreground">{t('powerPlugs.lastToggled')}</div>
+                <div className="text-sm">
+                  {deviceStatus?.last_toggled_at
+                    ? new Date(deviceStatus.last_toggled_at).toLocaleString()
+                    : t('common.never')}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
