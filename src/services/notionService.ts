@@ -1,6 +1,8 @@
+import { getApiUrl } from '@/utils/apiUtils';
+
 // We'll use the proxy server instead of directly calling the Notion API
-// Using relative URL to leverage Vite's proxy configuration
-const API_BASE_URL = '/api/notion';
+// Base path for Notion API endpoints
+const NOTION_API_PATH = '/api/notion';
 
 export interface NotionBlock {
   id: string;
@@ -23,7 +25,9 @@ export const notionService = {
   async getPage(pageId: string): Promise<NotionPage> {
     try {
       // Use our proxy server to fetch the page data
-      const response = await fetch(`${API_BASE_URL}/page/${pageId}`);
+      const apiUrl = getApiUrl(`${NOTION_API_PATH}/page/${pageId}`);
+      console.log(`Fetching Notion page from: ${apiUrl}`);
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

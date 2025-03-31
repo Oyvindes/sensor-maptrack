@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { safeQuery } from '@/utils/databaseUtils';
 import { mapCompanyIdToUUID, mapCompanyIdToUUIDSync, mapCompanyUUIDToId } from '@/utils/uuidUtils';
 import { getCurrentUser } from '@/services/authService';
+import { getApiUrl } from '@/utils/apiUtils';
 
 /**
  * Check if a string is a valid UUID
@@ -268,7 +269,11 @@ export const togglePower = async (
     try {
       console.log(`Sending power toggle request for sensor ${sensorId}, state: ${newPowerState}`);
       
-      const response = await fetch('/api/device/power-toggle', {
+      // Get the full API URL using the utility function
+      const apiUrl = getApiUrl('/api/device/power-toggle');
+      console.log(`Sending request to: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
