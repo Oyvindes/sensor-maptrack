@@ -1,0 +1,12 @@
+{
+	"apps": [
+		{
+			"name": "sensor",
+			"instances": "1",
+			"script": "npm",
+			"args": "server",
+			"cwd": "./",
+			"max_memory_restart": "100M"
+		}
+	]
+}
