@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { fetchSensors } from './sensor/supabaseSensorService';
 import { htmlToBlob, saveReportRecord } from './report/reportService';
 import { getCurrentUser } from './authService';
+import { woodSensorToPercentage } from '@/utils/sensorUtils';
 
 /**
  * Generate an HTML report for a project and open it in a new tab
@@ -14,7 +15,8 @@ import { getCurrentUser } from './authService';
 export async function generateHtmlReport(
   project: SensorFolder,
   dataTypes: string[] = ['humidity', 'adc1', 'temperature', 'battery', 'signal'],
-  saveToHistory: boolean = true
+  saveToHistory: boolean = true,
+  selectedValueTypes?: Record<string, string[]> // Add parameter for selected value types
 ): Promise<SensorFolder> {
   try {
     // Fetch sensor data for the project
@@ -34,6 +36,24 @@ export async function generateHtmlReport(
 
     // Get the current theme from the document element
     const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    
+    // Add script to access selections in the new window
+    const selectionScript = `
+      <script>
+        // Function to check if a sensor is selected
+        function isSensorSelected(imei) {
+          if (!window.REPORT_SELECTIONS) return true;
+          return window.REPORT_SELECTIONS.selectedSensorImeis.includes(imei);
+        }
+        
+        // Function to check if a value is selected for a sensor
+        function isValueSelected(sensorImei, valueId) {
+          if (!window.REPORT_SELECTIONS) return true;
+          if (!window.REPORT_SELECTIONS.sensorValueSelections[sensorImei]) return true;
+          return window.REPORT_SELECTIONS.sensorValueSelections[sensorImei].includes(valueId);
+        }
+      </script>
+    `;
     
     // Start building the HTML content
     let htmlContent = `
@@ -244,6 +264,7 @@ export async function generateHtmlReport(
         </style>
         <!-- Include Chart.js for rendering charts -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        ${selectionScript}
       </head>
       <body>
         <h1>Project Report: ${project.name}</h1>
@@ -261,6 +282,16 @@ export async function generateHtmlReport(
 
     // Add sensor data sections
     for (const sensor of projectSensors) {
+      // Add a check in the HTML to skip sensors that aren't selected
+      htmlContent += `
+        <div class="sensor-section">
+          <script>
+            if (!isSensorSelected("${sensor.imei}")) {
+              document.currentScript.parentNode.style.display = "none";
+            }
+          </script>
+      `;
+
       // Get sensor location, zone, and type if available
       const sensorLocation = project.sensorLocations?.[sensor.imei] || '';
       const sensorZone = project.sensorZones?.[sensor.imei] || '';
@@ -288,7 +319,6 @@ export async function generateHtmlReport(
       }
 
       htmlContent += `
-        <div class="sensor-section">
           <div class="sensor-header">
             <h2>${displayName}</h2>
           </div>
@@ -391,23 +421,111 @@ export async function generateHtmlReport(
 
           if (dataType in valueConfigs) {
             const config = valueConfigs[dataType as keyof typeof valueConfigs];
-            let displayValue;
+            
+            // Handle main value if selected
+            const valueId = `${dataType}_value`;
+            
+            // Check if this value is selected for this sensor
+            const isValueSelected = selectedValueTypes &&
+                                   selectedValueTypes[sensor.imei] &&
+                                   selectedValueTypes[sensor.imei].includes(valueId);
+            
+            if (isValueSelected) {
+              htmlContent += `
+                <div class="sensor-value" style="background-color: ${config.color}20 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                  <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label}</div>
+                  <div style="font-size: 1.2em;">
+            `;
             
             // Get the appropriate value based on data type
+            let displayValue;
+            let displayText;
+            
             if (dataType === 'battery') {
               displayValue = firstValue.batteryPercentage;
+              displayText = `${displayValue.toFixed(1)}${config.unit}`;
             } else if (dataType === 'signal') {
               displayValue = firstValue.signalPercentage;
+              displayText = `${displayValue.toFixed(1)}${config.unit}`;
+            } else if (dataType === 'adc1') {
+              // Use the woodSensorToPercentage function for wood moisture
+              displayValue = firstValue[dataType];
+              displayText = woodSensorToPercentage(displayValue);
             } else {
               displayValue = firstValue[dataType];
+              displayText = `${displayValue.toFixed(1)}${config.unit}`;
             }
             
-            htmlContent += `
-              <div class="sensor-value" style="background-color: ${config.color}20 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
-                <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label}</div>
-                <div style="font-size: 1.2em;">${displayValue.toFixed(1)}${config.unit}</div>
-              </div>
-            `;
+            htmlContent += `${displayText}</div>
+                </div>
+              `;
+            }
+            
+            // Handle min value if applicable and if selected
+            if (['humidity', 'adc1', 'temperature'].includes(dataType)) {
+              const minValueId = `${dataType}_min`;
+              
+              // Check if this min value is selected for this sensor
+              const isMinSelected = selectedValueTypes &&
+                                   selectedValueTypes[sensor.imei] &&
+                                   selectedValueTypes[sensor.imei].includes(minValueId);
+              
+              if (isMinSelected) {
+                htmlContent += `
+                  <div class="sensor-value" style="background-color: ${config.color}10 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                    <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label} (Min)</div>
+                    <div style="font-size: 1.2em;">
+                `;
+                
+                // Get min value
+                let minValue = Math.min(...processedValues.map(v => v[dataType]));
+                let minDisplayText;
+                
+                if (dataType === 'adc1') {
+                  // Use the woodSensorToPercentage function for wood moisture
+                  minDisplayText = woodSensorToPercentage(minValue);
+                } else {
+                  minDisplayText = `${minValue.toFixed(1)}${config.unit}`;
+                }
+                
+                htmlContent += `${minDisplayText}</div>
+                  </div>
+                `;
+              }
+            }
+            
+            // Handle max value if applicable and if selected
+            if (['humidity', 'adc1', 'temperature'].includes(dataType)) {
+              const maxValueId = `${dataType}_max`;
+              
+              // Check if this max value is selected for this sensor
+              const isMaxSelected = selectedValueTypes &&
+                                   selectedValueTypes[sensor.imei] &&
+                                   selectedValueTypes[sensor.imei].includes(maxValueId);
+              
+              if (isMaxSelected) {
+                htmlContent += `
+                  <div class="sensor-value" style="background-color: ${config.color}10 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                    <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label} (Max)</div>
+                    <div style="font-size: 1.2em;">
+                `;
+                
+                // Get max value
+                let maxValue = Math.max(...processedValues.map(v => v[dataType]));
+                let maxDisplayText;
+                
+                if (dataType === 'adc1') {
+                  // Use the woodSensorToPercentage function for wood moisture
+                  maxDisplayText = woodSensorToPercentage(maxValue);
+                } else {
+                  maxDisplayText = `${maxValue.toFixed(1)}${config.unit}`;
+                }
+                
+                htmlContent += `${maxDisplayText}</div>
+                  </div>
+                `;
+              }
+            }
           }
         }
         
@@ -428,23 +546,109 @@ export async function generateHtmlReport(
 
           if (dataType in valueConfigs) {
             const config = valueConfigs[dataType as keyof typeof valueConfigs];
-            let displayValue;
+            const valueId = `${dataType}_value`;
+            
+            // Check if this value is selected for this sensor
+            const isValueSelected = selectedValueTypes &&
+                                   selectedValueTypes[sensor.imei] &&
+                                   selectedValueTypes[sensor.imei].includes(valueId);
+            
+            if (isValueSelected) {
+              htmlContent += `
+                <div class="sensor-value" style="background-color: ${config.color}20 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                  <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label}</div>
+                  <div style="font-size: 1.2em;">
+            `;
             
             // Get the appropriate value based on data type
+            let displayValue;
+            let displayText;
+            
             if (dataType === 'battery') {
               displayValue = latestValue.batteryPercentage;
+              displayText = `${displayValue.toFixed(1)}${config.unit}`;
             } else if (dataType === 'signal') {
               displayValue = latestValue.signalPercentage;
+              displayText = `${displayValue.toFixed(1)}${config.unit}`;
+            } else if (dataType === 'adc1') {
+              // Use the woodSensorToPercentage function for wood moisture
+              displayValue = latestValue[dataType];
+              displayText = woodSensorToPercentage(displayValue);
             } else {
               displayValue = latestValue[dataType];
+              displayText = `${displayValue.toFixed(1)}${config.unit}`;
             }
             
-            htmlContent += `
-              <div class="sensor-value" style="background-color: ${config.color}20 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
-                <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label}</div>
-                <div style="font-size: 1.2em;">${displayValue.toFixed(1)}${config.unit}</div>
-              </div>
-            `;
+            htmlContent += `${displayText}</div>
+                </div>
+              `;
+            }
+            
+            // Handle min value if applicable and if selected
+            if (['humidity', 'adc1', 'temperature'].includes(dataType)) {
+              const minValueId = `${dataType}_min`;
+              
+              // Check if this min value is selected for this sensor
+              const isMinSelected = selectedValueTypes &&
+                                   selectedValueTypes[sensor.imei] &&
+                                   selectedValueTypes[sensor.imei].includes(minValueId);
+              
+              if (isMinSelected) {
+                htmlContent += `
+                  <div class="sensor-value" style="background-color: ${config.color}10 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                    <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label} (Min)</div>
+                    <div style="font-size: 1.2em;">
+                `;
+                
+                // Get min value
+                let minValue = Math.min(...processedValues.map(v => v[dataType]));
+                let minDisplayText;
+                
+                if (dataType === 'adc1') {
+                  // Use the woodSensorToPercentage function for wood moisture
+                  minDisplayText = woodSensorToPercentage(minValue);
+                } else {
+                  minDisplayText = `${minValue.toFixed(1)}${config.unit}`;
+                }
+                
+                htmlContent += `${minDisplayText}</div>
+                  </div>
+                `;
+              }
+            }
+            
+            // Handle max value if applicable and if selected
+            if (['humidity', 'adc1', 'temperature'].includes(dataType)) {
+              const maxValueId = `${dataType}_max`;
+              
+              // Check if this max value is selected for this sensor
+              const isMaxSelected = selectedValueTypes &&
+                                   selectedValueTypes[sensor.imei] &&
+                                   selectedValueTypes[sensor.imei].includes(maxValueId);
+              
+              if (isMaxSelected) {
+                htmlContent += `
+                  <div class="sensor-value" style="background-color: ${config.color}10 !important; border: 1px solid ${config.color} !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+                    <div style="color: ${config.color} !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">${config.label} (Max)</div>
+                    <div style="font-size: 1.2em;">
+                `;
+                
+                // Get max value
+                let maxValue = Math.max(...processedValues.map(v => v[dataType]));
+                let maxDisplayText;
+                
+                if (dataType === 'adc1') {
+                  // Use the woodSensorToPercentage function for wood moisture
+                  maxDisplayText = woodSensorToPercentage(maxValue);
+                } else {
+                  maxDisplayText = `${maxValue.toFixed(1)}${config.unit}`;
+                }
+                
+                htmlContent += `${maxDisplayText}</div>
+                  </div>
+                `;
+              }
+            }
           }
         }
         
@@ -464,16 +668,25 @@ export async function generateHtmlReport(
 
           if (dataType in valueConfigs && processedValues.length > 1) {
             const config = valueConfigs[dataType as keyof typeof valueConfigs];
-            const chartId = `chart-${sensor.imei}-${dataType}`;
+            const valueId = `${dataType}_value`;
             
-            htmlContent += `
-              <div class="chart-section">
-                <h3 class="chart-title">${config.label} Chart</h3>
-                <div class="chart-container">
-                  <canvas id="${chartId}"></canvas>
+            // Check if this value is selected for this sensor
+            const isValueSelected = selectedValueTypes &&
+                                   selectedValueTypes[sensor.imei] &&
+                                   selectedValueTypes[sensor.imei].includes(valueId);
+            
+            if (isValueSelected) {
+              const chartId = `chart-${sensor.imei}-${dataType}`;
+              
+              htmlContent += `
+                <div class="chart-section">
+                  <h3 class="chart-title">${config.label} Chart</h3>
+                  <div class="chart-container">
+                    <canvas id="${chartId}"></canvas>
+                  </div>
                 </div>
-              </div>
-            `;
+              `;
+            }
           }
         }
       }
@@ -531,8 +744,16 @@ export async function generateHtmlReport(
             (dataType === 'adc1' && sensorType === 'concrete')) {
           continue;
         }
-
-        if (dataType in valueConfigs && processedValues.length > 1) {
+        
+        const valueId = `${dataType}_value`;
+        
+        // Check if this value is selected for this sensor
+        const isValueSelected = selectedValueTypes &&
+                               selectedValueTypes[sensor.imei] &&
+                               selectedValueTypes[sensor.imei].includes(valueId);
+        
+        // Only add chart initialization code if the value is selected
+        if (isValueSelected && dataType in valueConfigs && processedValues.length > 1) {
           const config = valueConfigs[dataType as keyof typeof valueConfigs];
           const chartId = `chart-${sensor.imei}-${dataType}`;
           
@@ -544,6 +765,12 @@ export async function generateHtmlReport(
             data = processedValues.map(v => v.batteryPercentage);
           } else if (dataType === 'signal') {
             data = processedValues.map(v => v.signalPercentage);
+          } else if (dataType === 'adc1') {
+            // For wood moisture, convert the raw values to percentages
+            data = processedValues.map(v => {
+              // Calculate percentage: (reading / 3600) * 100
+              return (v[dataType] / 3600) * 100;
+            });
           } else {
             data = processedValues.map(v => v[dataType]);
           }

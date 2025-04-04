@@ -1,85 +1,276 @@
-import React, { useState } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
+import { toast } from "sonner";
 
-export interface SensorDataType {
+export interface SensorValue {
   id: string;
   label: string;
-  color: string;
   isSelected: boolean;
 }
 
-export type ReportFormat = 'pdf' | 'html';
+export interface SensorInfo {
+  id: string;
+  imei: string;
+  name: string;
+  type: string;
+  typeLabel: string;
+  color: string;
+  location?: string;
+  zone?: string;
+  isSelected: boolean;
+  isExpanded: boolean;
+  values: SensorValue[];
+}
+
+export type ReportFormat = 'html';
 
 interface ReportDataSelectionDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (selectedDataTypes: string[], format: ReportFormat) => void;
   projectName: string;
+  project?: {
+    assignedSensorImeis?: string[];
+    sensorLocations?: Record<string, string>;
+    sensorZones?: Record<string, string>;
+    sensorTypes?: Record<string, string>;
+  };
 }
 
 const ReportDataSelectionDialog: React.FC<ReportDataSelectionDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  projectName
+  projectName,
+  project
 }) => {
-  // Define available data types with default selection
-  const defaultDataTypes: SensorDataType[] = [
-    { id: "humidity", label: "Concrete", color: "#4444ff", isSelected: true },
-    { id: "adc1", label: "Wood", color: "#8B4513", isSelected: true },
-    { id: "temperature", label: "Temperature", color: "#ff4444", isSelected: true },
-    { id: "battery", label: "Battery", color: "#44ff44", isSelected: true },
-    { id: "signal", label: "Signal", color: "#ff44ff", isSelected: true }
-  ];
-
-  const [dataTypes, setDataTypes] = useState<SensorDataType[]>(defaultDataTypes);
-  const [reportFormat, setReportFormat] = useState<ReportFormat>('html');
+  // Define value configurations for each sensor type
+  const valueConfigs: Record<string, SensorValue[]> = {
+    humidity: [
+      { id: "humidity_value", label: "Humidity (%)", isSelected: true },
+      { id: "humidity_min", label: "Min Value", isSelected: false },
+      { id: "humidity_max", label: "Max Value", isSelected: false }
+    ],
+    adc1: [
+      { id: "adc1_value", label: "Moisture (%)", isSelected: true },
+      { id: "adc1_min", label: "Min Value", isSelected: false },
+      { id: "adc1_max", label: "Max Value", isSelected: false }
+    ],
+    temperature: [
+      { id: "temperature_value", label: "Temperature (°C)", isSelected: true },
+      { id: "temperature_min", label: "Min Value", isSelected: false },
+      { id: "temperature_max", label: "Max Value", isSelected: false }
+    ],
+    battery: [
+      { id: "battery_value", label: "Battery Level (%)", isSelected: true },
+      { id: "battery_voltage", label: "Voltage", isSelected: false }
+    ],
+    signal: [
+      { id: "signal_strength", label: "Signal Strength", isSelected: true },
+      { id: "signal_quality", label: "Signal Quality", isSelected: false }
+    ],
+    power: [
+      { id: "power_state", label: "Power State", isSelected: true },
+      { id: "power_consumption", label: "Power Consumption", isSelected: true }
+    ]
+  };
   
-  const handleCheckboxChange = (id: string) => {
-    setDataTypes(dataTypes.map(dataType => 
-      dataType.id === id ? { ...dataType, isSelected: !dataType.isSelected } : dataType
+  // Type to color and label mapping
+  const typeConfig: Record<string, {color: string, label: string}> = {
+    humidity: { color: "#4444ff", label: "Concrete" },
+    adc1: { color: "#8B4513", label: "Wood" },
+    temperature: { color: "#ff4444", label: "Temperature" },
+    battery: { color: "#44ff44", label: "Battery" },
+    signal: { color: "#ff44ff", label: "Signal" },
+    power: { color: "#00cc00", label: "Power" }
+  };
+
+  const [sensors, setSensors] = useState<SensorInfo[]>([]);
+  const [reportFormat] = useState<ReportFormat>('html');
+  
+  // Initialize sensors from the project
+  useEffect(() => {
+    if (!project || !project.assignedSensorImeis || project.assignedSensorImeis.length === 0) {
+      setSensors([]);
+      return;
+    }
+    
+    const sensorsList: SensorInfo[] = [];
+    
+    // Add sensors to the list
+    project.assignedSensorImeis.forEach(imei => {
+      // Get sensor location, zone, and type if available
+      const location = project.sensorLocations?.[imei] || '';
+      const zone = project.sensorZones?.[imei] || '';
+      const type = project.sensorTypes?.[imei] || '';
+      
+      // Create a display name that includes location and zone
+      let displayName = location || `Sensor ${imei}`;
+      if (zone) {
+        displayName += ` (${zone} zone)`;
+      }
+      
+      // Determine sensor type
+      let sensorType = "humidity"; // Default to concrete/humidity
+      if (type === "wood") {
+        sensorType = "adc1";
+      } else if (type === "power") {
+        sensorType = "power";
+      }
+      
+      // Get the appropriate values for this sensor type
+      const sensorValues = [...(valueConfigs[sensorType] || [])];
+      
+      sensorsList.push({
+        id: imei,
+        imei: imei,
+        name: displayName,
+        type: sensorType,
+        typeLabel: typeConfig[sensorType]?.label || "Unknown",
+        color: typeConfig[sensorType]?.color || "#999999",
+        location: location,
+        zone: zone,
+        isSelected: true,
+        isExpanded: false,
+        values: sensorValues
+      });
+    });
+    
+    // Sort sensors by type and name
+    sensorsList.sort((a, b) => {
+      if (a.typeLabel !== b.typeLabel) {
+        return a.typeLabel.localeCompare(b.typeLabel);
+      }
+      return a.name.localeCompare(b.name);
+    });
+    
+    setSensors(sensorsList);
+  }, [project]);
+  
+  const handleSensorCheckboxChange = (sensorId: string) => {
+    setSensors(sensors.map(sensor => {
+      if (sensor.id === sensorId) {
+        // Toggle the sensor selection
+        const newIsSelected = !sensor.isSelected;
+        return {
+          ...sensor,
+          isSelected: newIsSelected,
+          // If deselecting the sensor, also deselect all its values
+          values: newIsSelected
+            ? sensor.values
+            : sensor.values.map(v => ({ ...v, isSelected: false }))
+        };
+      }
+      return sensor;
+    }));
+  };
+
+  const handleValueCheckboxChange = (sensorId: string, valueId: string) => {
+    setSensors(sensors.map(sensor => {
+      if (sensor.id === sensorId) {
+        return {
+          ...sensor,
+          // If any value is selected, the sensor should be selected too
+          isSelected: true,
+          values: sensor.values.map(value =>
+            value.id === valueId ? { ...value, isSelected: !value.isSelected } : value
+          )
+        };
+      }
+      return sensor;
+    }));
+  };
+  
+  const toggleSensorExpand = (sensorId: string) => {
+    setSensors(sensors.map(sensor => 
+      sensor.id === sensorId 
+        ? { ...sensor, isExpanded: !sensor.isExpanded }
+        : sensor
     ));
   };
 
   const handleSelectAll = () => {
-    setDataTypes(dataTypes.map(dataType => ({ ...dataType, isSelected: true })));
+    setSensors(sensors.map(sensor => ({
+      ...sensor,
+      isSelected: true,
+      values: sensor.values.map(v => ({ ...v, isSelected: true }))
+    })));
   };
 
   const handleSelectNone = () => {
-    setDataTypes(dataTypes.map(dataType => ({ ...dataType, isSelected: false })));
+    setSensors(sensors.map(sensor => ({
+      ...sensor,
+      isSelected: false,
+      values: sensor.values.map(v => ({ ...v, isSelected: false }))
+    })));
   };
   
   const handleConfirm = () => {
-    const selectedDataTypeIds = dataTypes
-      .filter(dataType => dataType.isSelected)
-      .map(dataType => dataType.id);
+    // Create a detailed selection object that includes both sensor and value selections
     
-    onConfirm(selectedDataTypeIds, reportFormat);
+    // First, collect only the selected sensors
+    const selectedSensors = sensors.filter(sensor => sensor.isSelected);
+    
+    // If no sensors are selected, don't generate a report
+    if (selectedSensors.length === 0) {
+      toast.error("Please select at least one sensor to include in the report");
+      return;
+    }
+    
+    // Create a detailed selection object
+    const detailedSelections = {
+      // List of selected sensor IMEIs
+      selectedSensorImeis: selectedSensors.map(s => s.imei),
+      
+      // Map of sensor IMEIs to their selected values
+      sensorValueSelections: {} as Record<string, string[]>
+    };
+    
+    // Standard data types to pass to the report generator
+    const standardDataTypes = ['humidity', 'adc1', 'temperature', 'battery', 'signal'];
+    
+    // For each selected sensor, record which values are selected
+    selectedSensors.forEach(sensor => {
+      // Get selected values for this sensor
+      const selectedValueIds = sensor.values
+        .filter(v => v.isSelected)
+        .map(v => v.id);
+      
+      // Store in the detailed selections
+      detailedSelections.sensorValueSelections[sensor.imei] = selectedValueIds;
+    });
+    
+    // Store the detailed selections in sessionStorage
+    sessionStorage.setItem('reportDetailedSelections', JSON.stringify(detailedSelections));
+    
+    // Pass the standard data types to the report generator
+    // The actual filtering will happen in the SensorDataGraphs component
+    onConfirm(standardDataTypes, reportFormat);
   };
 
-  // Reset selections when dialog opens
-  React.useEffect(() => {
-    if (isOpen) {
-      setDataTypes(defaultDataTypes);
-      setReportFormat('html'); // Default to HTML format
+  // Group sensors by type for display
+  const sensorsByType: Record<string, SensorInfo[]> = {};
+  sensors.forEach(sensor => {
+    if (!sensorsByType[sensor.typeLabel]) {
+      sensorsByType[sensor.typeLabel] = [];
     }
-  }, [isOpen]);
+    sensorsByType[sensor.typeLabel].push(sensor);
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
-      <DialogContent className="sm:max-w-md z-[9999] bg-background text-foreground border-border">
+      <DialogContent className="sm:max-w-md z-[9999] bg-background text-foreground border-border max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Generate Report</DialogTitle>
           <DialogDescription>
@@ -87,68 +278,101 @@ const ReportDataSelectionDialog: React.FC<ReportDataSelectionDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <Tabs defaultValue="html" onValueChange={(value) => setReportFormat(value as ReportFormat)}>
-            <TabsList className="grid w-full grid-cols-2 bg-muted">
-              <TabsTrigger
-                value="html"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-semibold"
-              >
-                <Printer className="h-4 w-4" />
-                <span>HTML (Print)</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="pdf"
-                className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:font-semibold"
-              >
-                <FileText className="h-4 w-4" />
-                <span>PDF</span>
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="html" className="pt-4">
-              <p className="text-sm text-muted-foreground mb-4">
+        <div className="grid gap-4 py-4 overflow-y-auto pr-2 max-h-[60vh]">
+          <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-md">
+            <Printer className="h-4 w-4" />
+            <div>
+              <h4 className="font-medium">HTML Report</h4>
+              <p className="text-sm text-muted-foreground">
                 HTML report will open in a new tab and automatically trigger the print dialog.
                 This provides better graph quality and layout.
               </p>
-            </TabsContent>
-            <TabsContent value="pdf" className="pt-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                PDF report will be generated and saved to the project history.
-              </p>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" size="sm" onClick={handleSelectAll}>Select All</Button>
             <Button variant="outline" size="sm" onClick={handleSelectNone}>Select None</Button>
           </div>
           
-          {dataTypes.map((dataType) => (
-            <div key={dataType.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`checkbox-${dataType.id}`}
-                checked={dataType.isSelected}
-                onCheckedChange={() => handleCheckboxChange(dataType.id)}
-                className="border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-              <Label
-                htmlFor={`checkbox-${dataType.id}`}
-                className="flex items-center text-foreground"
-              >
-                <span 
-                  className="inline-block w-3 h-3 mr-2 rounded-full" 
-                  style={{ backgroundColor: dataType.color }}
-                />
-                {dataType.label}
-              </Label>
+          {/* List sensors grouped by type */}
+          {Object.entries(sensorsByType).map(([typeLabel, typeSensors]) => (
+            <div key={typeLabel} className="space-y-2 border border-border rounded-md p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span
+                    className="inline-block w-3 h-3 rounded-full"
+                    style={{ backgroundColor: typeSensors[0]?.color || "#999999" }}
+                  />
+                  <span className="text-foreground font-medium">{typeLabel} ({typeSensors.length})</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                {typeSensors.map((sensor) => (
+                  <div key={sensor.id} className="border border-border/50 rounded-md overflow-hidden">
+                    <div 
+                      className="flex items-center p-2 hover:bg-muted/30 cursor-pointer"
+                      onClick={() => toggleSensorExpand(sensor.id)}
+                    >
+                      <Checkbox
+                        id={`sensor-${sensor.id}`}
+                        checked={sensor.isSelected}
+                        onCheckedChange={() => {
+                          handleSensorCheckboxChange(sensor.id);
+                        }}
+                        className="mr-2 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      />
+                      <div className="flex-1">
+                        <Label
+                          htmlFor={`sensor-${sensor.id}`}
+                          className="font-medium cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {sensor.name}
+                        </Label>
+                        <div className="text-xs text-muted-foreground">
+                          IMEI: {sensor.imei}
+                        </div>
+                      </div>
+                      <div className={`transform transition-transform ${sensor.isExpanded ? 'rotate-180' : ''}`}>
+                        ▼
+                      </div>
+                    </div>
+                    
+                    {sensor.isExpanded && (
+                      <div className="p-2 pl-8 border-t border-border/50 bg-muted/10 space-y-2">
+                        <div className="text-xs text-muted-foreground mb-1">Select values to include:</div>
+                        {sensor.values.map((value) => (
+                          <div key={value.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`value-${sensor.id}-${value.id}`}
+                              checked={value.isSelected}
+                              onCheckedChange={() => handleValueCheckboxChange(sensor.id, value.id)}
+                              className="h-3.5 w-3.5 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                            />
+                            <Label
+                              htmlFor={`value-${sensor.id}-${value.id}`}
+                              className="text-sm"
+                            >
+                              {value.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="mt-2 pt-2 border-t">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button variant="default" onClick={handleConfirm}>
-            Generate {reportFormat === 'html' ? 'HTML' : 'PDF'} Report
+            Generate HTML Report
           </Button>
         </DialogFooter>
       </DialogContent>

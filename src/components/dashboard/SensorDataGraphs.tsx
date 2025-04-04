@@ -3,6 +3,13 @@ import { SensorFolder } from '@/types/users';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { woodSensorToPercentage } from '@/utils/sensorUtils';
+
+// Declare the custom property on the Window interface
+declare global {
+  interface Window {
+    __REPORT_DETAILED_SELECTIONS__?: any;
+  }
+}
 import {
   LineChart,
   Line,
@@ -234,17 +241,75 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
 
       let updatedProject;
       
-      if (format === 'pdf') {
-        // Generate PDF report
-        const { downloadProjectReport } = await import('@/services/pdfService');
-        updatedProject = await downloadProjectReport(project, selectedDataTypes);
-        toast.success('PDF report generated successfully');
-      } else {
-        // Generate HTML report
-        const { generateHtmlReport } = await import('@/services/htmlReportService');
-        updatedProject = await generateHtmlReport(project, selectedDataTypes, true);
-        toast.success('HTML report opened in new tab');
+      // Get detailed selections from sessionStorage
+      const selectionsJson = sessionStorage.getItem('reportDetailedSelections');
+      const selections = selectionsJson ? JSON.parse(selectionsJson) : null;
+      
+      if (!selections) {
+        toast.error('Error: Selection data not found');
+        setIsGeneratingReport(false);
+        return;
       }
+      
+      // Create a custom project object with only the selected sensors and their data
+      const customProject = { ...project };
+      
+      // Create a modified HTML report generator that embeds selection information
+      const customReportGenerator = async () => {
+        // Import the original HTML report generator
+        const { generateHtmlReport } = await import('@/services/htmlReportService');
+        
+        // Create a custom version that embeds selection data in the HTML
+        const originalWindowOpen = window.open;
+        
+        // Override window.open to inject our selection data
+        window.open = function(...args) {
+          const newWindow = originalWindowOpen.apply(this, args);
+          
+          if (newWindow) {
+            // Add a script to the new window that defines the selections
+            const selectionScript = `
+              window.REPORT_SELECTIONS = ${JSON.stringify(selections)};
+              console.log("Selection data loaded:", window.REPORT_SELECTIONS);
+            `;
+            
+            // Inject the script directly into the document write stream
+            const originalWrite = newWindow.document.write;
+            newWindow.document.write = function(html) {
+              // Insert our script right after the opening <head> tag
+              const modifiedHtml = html.replace('<head>', '<head><script>' + selectionScript + '</script>');
+              return originalWrite.call(this, modifiedHtml);
+            };
+          }
+          
+          return newWindow;
+        };
+        
+        try {
+          // Extract selected value types from selections
+          const selectedValueTypes: Record<string, string[]> = {};
+          
+          // For each selected sensor, add only the selected value types
+          if (selections.sensorValueSelections) {
+            Object.entries(selections.sensorValueSelections).forEach(([sensorImei, valueIds]) => {
+              if (selections.selectedSensorImeis.includes(sensorImei)) {
+                selectedValueTypes[sensorImei] = valueIds as string[];
+              }
+            });
+          }
+          
+          // Call the original generator with our custom project and selected value types
+          return await generateHtmlReport(customProject, selectedDataTypes, true, selectedValueTypes);
+        } finally {
+          // Restore the original window.open
+          window.open = originalWindowOpen;
+        }
+      };
+      
+      // Generate the report using our custom generator
+      updatedProject = await customReportGenerator();
+      toast.success('HTML report opened in new tab');
+      sessionStorage.removeItem('reportDetailedSelections');
       
       // Update the project state with the new report
       if (updatedProject) {
@@ -256,8 +321,8 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         );
       }
     } catch (error) {
-      console.error(`Error generating ${format} report:`, error);
-      toast.error(`Failed to generate ${format} report`);
+      console.error('Error generating HTML report:', error);
+      toast.error('Failed to generate HTML report');
     } finally {
       setIsGeneratingReport(false);
     }
@@ -481,6 +546,7 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
         onClose={handleDataSelectionClose}
         onConfirm={handleDataSelectionConfirm}
         projectName={project.name}
+        project={project}
       />
     </div>
   );
