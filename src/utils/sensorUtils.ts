@@ -44,3 +44,19 @@ export const getSensorIconComponent = (type: "temperature" | "humidity" | "batte
       return Gauge;
   }
 };
+
+/**
+ * Transforms wood sensor readings (adc1) from the range 0-3600 to a percentage value.
+ * @param reading - The raw wood sensor reading (0-3600)
+ * @returns A string representing the percentage with one decimal place and % symbol
+ */
+export const woodSensorToPercentage = (reading: number): string => {
+  // Calculate percentage: (reading / 3600) * 100
+  const percentage = (reading / 3600) * 100;
+  
+  // Round to one decimal place and ensure it always shows one decimal place
+  const roundedPercentage = percentage.toFixed(1);
+  
+  // Return with % symbol
+  return `${roundedPercentage}%`;
+};

@@ -3,6 +3,7 @@ import { SensorData } from '@/components/SensorCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Thermometer, Droplets, Battery, Signal, Clock, Gauge } from 'lucide-react';
+import { woodSensorToPercentage } from '@/utils/sensorUtils';
 
 interface SensorDataDisplayProps {
   sensor: SensorData | null;
@@ -206,7 +207,7 @@ const SensorDataDisplay: React.FC<SensorDataDisplayProps> = ({
               <div>
                 <p className="text-[10px] sm:text-xs text-muted-foreground">Wood</p>
                 <p className="text-sm sm:text-base font-medium">
-                  {adc1 !== null ? `${adc1.toFixed(1)}%` : 'N/A'}
+                  {adc1 !== null ? woodSensorToPercentage(adc1) : 'N/A'}
                 </p>
               </div>
             </div>

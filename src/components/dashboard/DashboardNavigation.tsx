@@ -105,25 +105,6 @@ const DashboardNavigation: React.FC<DashboardNavigationProps> = ({
 					</Link>
 				</div>
 
-				{/* Power Plugs - Direct link to the power plugs page */}
-				<div className="group relative">
-					<Link to="/power-plugs" className="inline-flex">
-						<Button
-							variant="ghost"
-							className={cn(
-								'rounded-none border-b-2 -mb-px px-2 sm:px-4 py-2 h-auto min-w-[64px]',
-								window.location.pathname === '/power-plugs'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							)}
-							aria-label="Power Plugs"
-						>
-							<Power className="w-4 h-4" />
-							<span className="text-[10px] mt-1">Plugs</span>
-						</Button>
-					</Link>
-				</div>
-
 				{/* Sensor Health Check - Direct link to the page */}
 				<div className="group relative">
 					<Link to="/sensor-health-check" className="inline-flex">

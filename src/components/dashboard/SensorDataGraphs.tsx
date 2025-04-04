@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SensorFolder } from '@/types/users';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
+import { woodSensorToPercentage } from '@/utils/sensorUtils';
 import {
   LineChart,
   Line,
@@ -31,6 +32,7 @@ interface SensorDataGraphsProps {
 interface SensorValueDisplay {
   value: number;
   unit: string;
+  rawValue?: number; // Add optional rawValue property to store original sensor reading
 }
 
 interface SensorReading {
@@ -141,7 +143,8 @@ const generateData = (
           },
           adc1: {
             value: dataPoint.adc1 || 0,
-            unit: '%'
+            unit: '%',
+            rawValue: dataPoint.adc1 || 0 // Store the raw value for conversion
           }
         }
       });
@@ -387,8 +390,9 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
                         <div className="flex justify-between items-center">
                           <CardTitle className="text-sm">{config.label}</CardTitle>
                           <span className="text-lg font-bold" style={{ color: config.color }}>
-                            {currentValue.value.toFixed(1)}
-                            {currentValue.unit}
+                            {key === 'adc1'
+                              ? woodSensorToPercentage(currentValue.rawValue)
+                              : `${currentValue.value.toFixed(1)}${currentValue.unit}`}
                           </span>
                         </div>
                       </CardHeader>
@@ -435,10 +439,15 @@ const SensorDataGraphs: React.FC<SensorDataGraphsProps> = ({
                               <YAxis />
                               <Tooltip
                                 labelFormatter={(value) => new Date(value).toLocaleString()}
-                                formatter={(value: any) => [
-                                  `${Number(value).toFixed(1)}${currentValue.unit}`,
-                                  config.label
-                                ]}
+                                formatter={(value: any, name) => {
+                                  // Check if this is the adc1 (wood) data
+                                  if (name === 'values.adc1.value') {
+                                    // Use our conversion function for wood sensor values
+                                    return [woodSensorToPercentage(value), config.label];
+                                  }
+                                  // For other sensor types, use the original formatting
+                                  return [`${Number(value).toFixed(1)}${currentValue.unit}`, config.label];
+                                }}
                               />
                               <Line
                                 type="monotone"
